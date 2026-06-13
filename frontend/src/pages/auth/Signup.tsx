@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Mail, Phone, Lock, AlertCircle, Eye, EyeOff, Fingerprint } from "lucide-react";
+import { User, Mail, Phone, Lock, AlertCircle, Eye, EyeOff, Fingerprint, CheckCircle2 } from "lucide-react";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import { api, ApiError } from "../../lib/api";
 
@@ -13,6 +13,7 @@ export default function Signup() {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<{ verifyEmailLink?: string; otpCode?: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +26,7 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await api.post("/api/auth/register", {
+      const res = await api.post("/api/auth/register", {
         email,
         password,
         phone: phone.startsWith("+") ? phone : `+${phone}`,
@@ -33,8 +34,8 @@ export default function Signup() {
       });
       // Store phone for OTP verification
       sessionStorage.setItem('registrationPhone', phone.startsWith("+") ? phone : `+${phone}`);
-      // Registration successful — navigate to OTP verification
-      navigate("/verify-otp");
+      // Show success with dev verification info
+      setSuccess({ verifyEmailLink: res.verifyEmailLink, otpCode: res.otpCode });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed. Please try again.");
     } finally {
@@ -44,14 +45,73 @@ export default function Signup() {
 
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Sign up to book buses and send parcels in minutes."
+      title={success ? "Account created!" : "Create your account"}
+      subtitle={success
+        ? "Your account is ready. Verify your email and phone to log in."
+        : "Sign up to book buses and send parcels in minutes."}
       footer={
-        <>
-          Already have an account? <AuthLink to="/login">Log in</AuthLink>
-        </>
+        success ? null : (
+          <>
+            Already have an account? <AuthLink to="/login">Log in</AuthLink>
+          </>
+        )
       }
     >
+      {success ? (
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-semibold">Registration successful!</div>
+              <p className="text-xs mt-1">Verify your email and phone to start using Tapa.</p>
+            </div>
+          </div>
+
+          {success.verifyEmailLink && (
+            <div className="card p-4 border-flame-200 bg-flame-50/30">
+              <div className="flex items-center gap-2 text-xs font-semibold text-flame-700 mb-2">
+                🛠️ Dev mode — verification link
+              </div>
+              <a
+                href={success.verifyEmailLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full rounded-xl bg-flame-600 text-white text-center py-3 font-semibold text-sm hover:bg-flame-700 transition"
+              >
+                ✅ Click to verify email
+              </a>
+              <p className="mt-1.5 text-[10px] text-ink-400 break-all select-all">{success.verifyEmailLink}</p>
+            </div>
+          )}
+
+          {success.otpCode && (
+            <div className="card p-4 border-ink-200 bg-ink-50">
+              <div className="flex items-center gap-2 text-xs font-semibold text-ink-500 mb-2">
+                🛠️ Dev mode — OTP code
+              </div>
+              <div className="text-center">
+                <span className="text-3xl font-extrabold text-ink-900 tracking-widest select-all">{success.otpCode}</span>
+              </div>
+              <p className="mt-1.5 text-xs text-ink-400 text-center">Enter this code on the OTP verification page.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => navigate("/verify-otp")}
+            className="btn-primary w-full py-3.5"
+          >
+            Go to OTP Verification →
+          </button>
+
+          <button
+            onClick={() => navigate("/login")}
+            className="btn-outline w-full py-3"
+          >
+            I've verified — Log in
+          </button>
+        </div>
+      ) : (
+        <>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
@@ -168,6 +228,8 @@ export default function Signup() {
           Set up passkey
         </Link>
       </div>
+      </>
+      )}
     </AuthLayout>
   );
 }

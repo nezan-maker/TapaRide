@@ -145,8 +145,16 @@ export async function registerUser(dto: RegisterDto) {
   const otp = await generateOtp(user.phone);
   await sendOtpSms(user.phone, otp);
 
+  // In development, return tokens for easy testing/pitching
+  const devInfo: Record<string, string> = {};
+  if (env.NODE_ENV === "development") {
+    devInfo.verifyEmailLink = `${env.EMAIL_VERIFICATION_ORIGIN}/api/auth/verify-email?token=${emailToken}`;
+    devInfo.otpCode = otp;
+  }
+
   return {
     message: "Registration successful. Please verify your email and phone.",
+    ...devInfo,
   };
 }
 
