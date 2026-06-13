@@ -69,6 +69,7 @@ const iconMap: Record<string, string> = {
   rotateccw: 'fa-solid fa-arrow-rotate-left',
   search: 'fa-solid fa-magnifying-glass',
   settings: 'fa-solid fa-gear',
+  settingsicon: 'fa-solid fa-gear',
   shield: 'fa-solid fa-shield',
   shieldcheck: 'fa-solid fa-shield-halved',
   signoutalt: 'fa-solid fa-right-from-bracket',
