@@ -1,42 +1,31 @@
 import { useState } from 'react'
 import { NavLink, Outlet, Link, useLocation, ScrollRestoration } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Ticket,
-  Package,
-  CreditCard,
-  Settings as SettingsIcon,
-  Bell,
-  LogOut,
-  Menu,
-  X,
-  Plus,
-} from 'lucide-react'
 import Logo from '../../components/Logo'
 import { cn } from '../../lib/utils'
 
 import { useAuth } from '../../lib/auth'
+import Fa from '../../components/Fa';
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const { user, logout } = useAuth()
 
-  const nav: Array<{ to: string; label: string; icon: any; end?: boolean }> = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  const nav: Array<{ to: string; label: string; icon: string; end?: boolean }> = [
+    { to: '/dashboard', label: 'Dashboard', icon: 'layoutdashboard', end: true },
   ]
 
   if (user?.role === 'CLIENT' || user?.role === 'ORGANIZATION') {
     nav.push(
-      { to: '/dashboard/trips', label: 'My Trips', icon: Ticket },
-      { to: '/dashboard/parcels', label: 'My Parcels', icon: Package },
-      { to: '/dashboard/payments', label: 'Payment Methods', icon: CreditCard },
+      { to: '/dashboard/trips', label: 'My Trips', icon: 'ticket' },
+      { to: '/dashboard/parcels', label: 'My Parcels', icon: 'package' },
+      { to: '/dashboard/payments', label: 'Payment Methods', icon: 'creditcard' },
     )
   }
 
   nav.push(
-    { to: '/dashboard/notifications', label: 'Notifications', icon: Bell },
-    { to: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
+    { to: '/dashboard/notifications', label: 'Notifications', icon: 'bell' },
+    { to: '/dashboard/settings', label: 'Settings', icon: 'settingsicon' },
   )
 
   return (
@@ -50,7 +39,7 @@ export default function DashboardLayout() {
               className="grid h-10 w-10 place-items-center rounded-xl border border-ink-100 lg:hidden"
               aria-label="menu"
             >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {open ? <Fa name="x" className="h-5 w-5" /> : <Fa name="menu" className="h-5 w-5" />}
             </button>
             <Logo />
           </div>
@@ -59,7 +48,7 @@ export default function DashboardLayout() {
               to="/dashboard/notifications"
               className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-600 hover:bg-ink-50"
             >
-              <Bell className="h-5 w-5" />
+              <Fa name="bell" className="h-5 w-5" />
               <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-flame-600" />
             </Link>
             <div className="flex items-center gap-2">
@@ -107,7 +96,7 @@ export default function DashboardLayout() {
                   )
                 }
               >
-                <item.icon className="h-4 w-4" />
+                <Fa name={item.icon} className="h-4 w-4" />
                 {item.label}
               </NavLink>
             ))}
@@ -118,7 +107,7 @@ export default function DashboardLayout() {
               to="/search"
               className="btn-flame mt-4 w-full"
             >
-              <Plus className="h-4 w-4" /> New Booking
+              <Fa name="plus" className="h-4 w-4" /> New Booking
             </Link>
           )}
 
@@ -126,7 +115,7 @@ export default function DashboardLayout() {
             onClick={logout}
             className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-flame-600 hover:bg-flame-50 text-left"
           >
-            <LogOut className="h-4 w-4" /> Log Out
+            <Fa name="sign-out-alt" className="h-4 w-4" /> Log Out
           </button>
         </aside>
 

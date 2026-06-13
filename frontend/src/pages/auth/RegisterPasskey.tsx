@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { Fingerprint } from 'lucide-react'
 import AuthLayout from './AuthLayout'
 import PasskeyButton from '../../components/PasskeyButton'
+import Fa from '../../components/Fa';
 
 export default function RegisterPasskey() {
   const navigate = useNavigate()
@@ -25,7 +25,7 @@ export default function RegisterPasskey() {
         <div className="rounded-2xl bg-ink-50 p-6">
           <div className="flex items-start gap-4">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
-              <Fingerprint className="h-5 w-5" />
+              <Fa name="fingerprint" className="h-5 w-5" />
             </span>
             <div>
               <h3 className="font-semibold text-ink-900">What is a passkey?</h3>

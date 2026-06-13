@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Calendar, MapPin, DollarSign, Users, AlertCircle, CheckCircle } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
 import { rwf } from '../../lib/utils'
+import Fa from '../../components/Fa';
 
 interface Station {
   id: string
@@ -124,20 +124,20 @@ export default function ManagerDashboard() {
           onClick={() => setShowAddForm(!showAddForm)}
           className="btn bg-white text-ink-900 hover:bg-white/90 shrink-0"
         >
-          <Plus className="h-4 w-4" /> Schedule Journey
+          <Fa name="plus" className="h-4 w-4" /> Schedule Journey
         </button>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -202,7 +202,7 @@ export default function ManagerDashboard() {
             <div className="sm:col-span-2">
               <label className="label">Ticket Price (RWF)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="dollarsign" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
                   type="number"
                   className="input pl-9"
@@ -236,7 +236,7 @@ export default function ManagerDashboard() {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="card p-5 flex items-center gap-4">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-            <Calendar className="h-5 w-5" />
+            <Fa name="calendar" className="h-5 w-5" />
           </span>
           <div>
             <div className="text-2xl font-extrabold text-ink-900">{journeys.length}</div>
@@ -245,7 +245,7 @@ export default function ManagerDashboard() {
         </div>
         <div className="card p-5 flex items-center gap-4">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-            <Users className="h-5 w-5" />
+            <Fa name="users" className="h-5 w-5" />
           </span>
           <div>
             <div className="text-2xl font-extrabold text-ink-900">
@@ -256,7 +256,7 @@ export default function ManagerDashboard() {
         </div>
         <div className="card p-5 flex items-center gap-4">
           <span className="grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-            <MapPin className="h-5 w-5" />
+            <Fa name="map-pin" className="h-5 w-5" />
           </span>
           <div>
             <div className="text-2xl font-extrabold text-ink-900">{stations.length}</div>

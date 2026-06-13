@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ArrowRight, Plus, AlertCircle } from 'lucide-react'
 import { cn, rwf } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 interface Parcel {
   id: string
@@ -60,13 +60,13 @@ export default function MyParcels() {
           <p className="text-ink-500">Track and manage all your shipments.</p>
         </div>
         <Link to="/send-parcel" className="btn-primary">
-          <Plus className="h-4 w-4" /> Send Parcel
+          <Fa name="plus" className="h-4 w-4" /> Send Parcel
         </Link>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -82,7 +82,7 @@ export default function MyParcels() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="grid h-11 w-11 place-items-center rounded-xl bg-ink-50 text-ink-900">
-                    <Package className="h-5 w-5" />
+                    <Fa name="package" className="h-5 w-5" />
                   </span>
                   <div>
                     <div className="font-bold text-ink-900">
@@ -112,7 +112,7 @@ export default function MyParcels() {
                   to={`/track?code=${p.trackingCode}`}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-flame-600 hover:gap-2"
                 >
-                  Track <ArrowRight className="h-3 w-3" />
+                  Track <Fa name="arrow-right" className="h-3 w-3" />
                 </Link>
               </div>
             </div>

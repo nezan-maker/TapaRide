@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Mail, Phone, Lock, AlertCircle, Eye, EyeOff, Fingerprint, CheckCircle2 } from "lucide-react";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import { api, ApiError } from "../../lib/api";
+import Fa from '../../components/Fa';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export default function Signup() {
       {success ? (
         <div className="space-y-5">
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700 flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+            <Fa name="check-circle2" className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
               <div className="font-semibold">Registration successful!</div>
               <p className="text-xs mt-1">Verify your email and phone to start using Tapa.</p>
@@ -115,7 +115,7 @@ export default function Signup() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -123,7 +123,7 @@ export default function Signup() {
         <div>
           <label className="label">Full name</label>
           <div className="relative">
-            <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <Fa name="user" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <input
               className="input pl-9"
               placeholder="Amina Uwimana"
@@ -138,7 +138,7 @@ export default function Signup() {
           <div>
             <label className="label">Email</label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="mail" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 className="input pl-9"
                 placeholder="you@email.com"
@@ -151,7 +151,7 @@ export default function Signup() {
           <div>
             <label className="label">Phone</label>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 className="input pl-9"
                 placeholder="+250 7XX XXX XXX"
@@ -166,7 +166,7 @@ export default function Signup() {
         <div>
           <label className="label">Password</label>
           <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <Fa name="lock" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <input
               type={show ? "text" : "password"}
               className="input pl-9 pr-10"
@@ -181,7 +181,7 @@ export default function Signup() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900"
               aria-label="toggle password"
             >
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {show ? <Fa name="eyeoff" className="h-4 w-4" /> : <Fa name="eye" className="h-4 w-4" />}
             </button>
           </div>
           <p className="mt-1.5 text-xs text-ink-400">
@@ -215,7 +215,7 @@ export default function Signup() {
 
       <div className="rounded-2xl border border-ink-100 bg-ink-50 p-5 text-center">
         <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-          <Fingerprint className="h-5 w-5" />
+          <Fa name="fingerprint" className="h-5 w-5" />
         </span>
         <h3 className="mt-3 font-semibold text-ink-900">Secure your account</h3>
         <p className="mt-1 text-sm text-ink-600">

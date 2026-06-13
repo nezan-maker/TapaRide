@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Apple, Play } from 'lucide-react'
 import Logo from './Logo'
+import Fa from './Fa';
 
 const socials = [
   {
@@ -86,14 +86,14 @@ export default function Footer() {
           </p>
           <div className="space-y-3">
             <a href="#" className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 transition hover:bg-white/10">
-              <Apple className="h-6 w-6" />
+              <Fa name="apple" className="h-6 w-6" />
               <span className="text-left leading-tight">
                 <span className="block text-[10px] text-white/50">Download on the</span>
                 <span className="block text-sm font-semibold">App Store</span>
               </span>
             </a>
             <a href="#" className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 transition hover:bg-white/10">
-              <Play className="h-6 w-6" />
+              <Fa name="play" className="h-6 w-6" />
               <span className="text-left leading-tight">
                 <span className="block text-[10px] text-white/50">Get it on</span>
                 <span className="block text-sm font-semibold">Google Play</span>

@@ -1,15 +1,6 @@
 import { Link } from 'react-router-dom'
-import {
-  ArrowRight,
-  Smartphone,
-  Bus,
-  Package,
-  Search,
-  ShieldCheck,
-  Navigation,
-  Star,
-} from 'lucide-react'
 import SearchWidget from '../components/SearchWidget'
+import Fa from '../components/Fa';
 
 const popularDestinations = [
   { city: 'Huye', province: 'Southern Province', blurb: 'Explore the National Museum and cultural heritage sites.', image: 'https://images.unsplash.com/photo-1564936281287-5e55f6056e7c?w=400&h=300&fit=crop', trips: 24 },
@@ -20,7 +11,7 @@ const popularDestinations = [
 
 const services = [
   {
-    icon: Bus,
+    icon: 'bus',
     title: 'Book a Bus',
     blurb:
       'Travel comfortably across Rwanda with our network of premium buses. Real-time availability, secure payments, and digital tickets.',
@@ -30,7 +21,7 @@ const services = [
       'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=900&q=70',
   },
   {
-    icon: Package,
+    icon: 'package',
     title: 'Send a Parcel',
     blurb:
       'Fast, reliable, and trackable parcel delivery between major cities. From small envelopes to large cargo, we handle it with care.',
@@ -43,19 +34,19 @@ const services = [
 
 const steps = [
   {
-    icon: Search,
+    icon: 'search',
     title: 'Search & Compare',
     blurb:
       'Enter your route details to find available buses or calculate parcel delivery rates instantly.',
   },
   {
-    icon: ShieldCheck,
+    icon: 'shieldcheck',
     title: 'Book Securely',
     blurb:
       'Select your preferred seats and pay securely using Mobile Money or Card in just a few taps.',
   },
   {
-    icon: Navigation,
+    icon: 'navigation',
     title: 'Travel or Track',
     blurb:
       "Board with your digital ticket, or track your parcel's journey in real time until delivery.",
@@ -91,10 +82,10 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/search" className="btn-primary px-6 py-3.5 text-base">
-                Get Started <ArrowRight className="h-4 w-4" />
+                Get Started <Fa name="arrow-right" className="h-4 w-4" />
               </Link>
               <a href="#download" className="btn-outline px-6 py-3.5 text-base">
-                <Smartphone className="h-4 w-4" /> Download App
+                <Fa name="smartphone" className="h-4 w-4" /> Download App
               </a>
             </div>
             <div className="mt-10 grid max-w-md grid-cols-4 gap-4">
@@ -137,7 +128,7 @@ export default function Landing() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950/40 to-transparent" />
                 <span className="absolute bottom-4 left-4 grid h-11 w-11 place-items-center rounded-xl bg-white text-ink-900 shadow-soft">
-                  <s.icon className="h-5 w-5" />
+                  <Fa name={s.icon} className="h-5 w-5" />
                 </span>
               </div>
               <div className="p-6">
@@ -147,7 +138,7 @@ export default function Landing() {
                   to={s.to}
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-flame-600 transition hover:gap-2.5"
                 >
-                  {s.cta} <ArrowRight className="h-4 w-4" />
+                  {s.cta} <Fa name="arrow-right" className="h-4 w-4" />
                 </Link>
               </div>
             </div>
@@ -172,7 +163,7 @@ export default function Landing() {
               to="/search"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-900 hover:gap-2.5"
             >
-              View all routes <ArrowRight className="h-4 w-4" />
+              View all routes <Fa name="arrow-right" className="h-4 w-4" />
             </Link>
           </div>
 
@@ -219,7 +210,7 @@ export default function Landing() {
           {steps.map((s, i) => (
             <div key={s.title} className="relative text-center">
               <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-ink-900 text-white shadow-soft">
-                <s.icon className="h-6 w-6" />
+                <Fa name={s.icon} className="h-6 w-6" />
                 <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-flame-600 text-xs font-bold text-white">
                   {i + 1}
                 </span>
@@ -242,7 +233,7 @@ export default function Landing() {
             <div>
               <div className="mb-3 flex items-center gap-1 text-flame-500">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-current" />
+                  <Fa name="star" key={i} className="h-4 w-4 fill-current" />
                 ))}
                 <span className="ml-2 text-sm text-white/70">Loved by 50,000+ travelers</span>
               </div>

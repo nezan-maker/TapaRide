@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Package, User, MapPin, Phone, StickyNote, Plus, Minus, AlertCircle } from 'lucide-react'
 import { rwf } from '../lib/utils'
 import { api, ApiError } from '../lib/api'
+import Fa from '../components/Fa';
 
 export default function SendParcel() {
   const [searchParams] = useSearchParams()
@@ -72,7 +72,7 @@ export default function SendParcel() {
       <div className="bg-mist py-16">
         <div className="container-page mx-auto max-w-lg text-center">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-            <Package className="h-8 w-8" />
+            <Fa name="package" className="h-8 w-8" />
           </span>
           <h2 className="mt-5 text-2xl font-extrabold text-ink-900">Parcel Submitted!</h2>
           <p className="mt-2 text-ink-500">
@@ -97,7 +97,7 @@ export default function SendParcel() {
 
         {error && (
           <div className="mb-6 flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -107,7 +107,7 @@ export default function SendParcel() {
             <div>
               <label className="label">From</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9"
                   value={from}
@@ -124,7 +124,7 @@ export default function SendParcel() {
             <div>
               <label className="label">To</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9"
                   value={to}
@@ -143,7 +143,7 @@ export default function SendParcel() {
           <div>
             <label className="label">Receiver name</label>
             <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="user" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 className="input pl-9"
                 placeholder="e.g. Jean Paul"
@@ -157,7 +157,7 @@ export default function SendParcel() {
           <div>
             <label className="label">Receiver phone</label>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 className="input pl-9"
                 placeholder="+250 7XX XXX XXX"
@@ -177,7 +177,7 @@ export default function SendParcel() {
                 className="grid h-10 w-10 place-items-center rounded-xl border border-ink-100"
                 disabled={submitting}
               >
-                <Minus className="h-4 w-4" />
+                <Fa name="minus" className="h-4 w-4" />
               </button>
               <span className="w-16 text-center text-lg font-extrabold text-ink-900">{weight}</span>
               <button
@@ -186,7 +186,7 @@ export default function SendParcel() {
                 className="grid h-10 w-10 place-items-center rounded-xl border border-ink-100"
                 disabled={submitting}
               >
-                <Plus className="h-4 w-4" />
+                <Fa name="plus" className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -194,7 +194,7 @@ export default function SendParcel() {
           <div>
             <label className="label">Note (optional)</label>
             <div className="relative">
-              <StickyNote className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-400" />
+              <Fa name="stickynote" className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-400" />
               <textarea
                 className="input pl-9 pt-3 min-h-[80px] resize-none"
                 placeholder="Fragile, handle with care..."

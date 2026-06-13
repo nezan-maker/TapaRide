@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Calendar, MapPin, Download, Bus, Ticket, Navigation, AlertCircle } from 'lucide-react'
 import { cn, rwf } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 interface TripTicket {
   id: string
@@ -68,7 +68,7 @@ export default function MyTrips() {
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function MyTrips() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="grid h-9 w-9 place-items-center rounded-lg bg-ink-900 text-white">
-                    <Bus className="h-4 w-4" />
+                    <Fa name="bus" className="h-4 w-4" />
                   </span>
                   <div>
                     <div className="font-bold text-ink-900">
@@ -117,14 +117,14 @@ export default function MyTrips() {
               <div className="flex flex-wrap items-center justify-between gap-4 pt-3">
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   <span className="flex items-center gap-1.5 text-ink-500">
-                    <Calendar className="h-4 w-4 text-ink-300" />
+                    <Fa name="calendar" className="h-4 w-4 text-ink-300" />
                     {new Date(t.journey?.departureTime || t.createdAt).toLocaleDateString()}
                   </span>
                   <span className="flex items-center gap-1.5 text-ink-500">
-                    <Ticket className="h-4 w-4 text-ink-300" /> Seat {t.seatNumber}
+                    <Fa name="ticket" className="h-4 w-4 text-ink-300" /> Seat {t.seatNumber}
                   </span>
                   <span className="flex items-center gap-1.5 text-ink-500">
-                    <MapPin className="h-4 w-4 text-ink-300" /> {rwf(t.journey?.price || 0)}
+                    <Fa name="map-pin" className="h-4 w-4 text-ink-300" /> {rwf(t.journey?.price || 0)}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -134,10 +134,10 @@ export default function MyTrips() {
                         to={`/journey?tripId=${t.journey?.id || ''}`}
                         className="btn-flame px-4 py-2 text-xs"
                       >
-                        <Navigation className="h-3.5 w-3.5" /> Track Live
+                        <Fa name="navigation" className="h-3.5 w-3.5" /> Track Live
                       </Link>
                       <button className="btn-primary px-4 py-2 text-xs">
-                        <Download className="h-3.5 w-3.5" /> Ticket
+                        <Fa name="download" className="h-3.5 w-3.5" /> Ticket
                       </button>
                     </>
                   )}

@@ -1,14 +1,7 @@
 import { useState } from "react";
-import {
-  User,
-  Bell,
-  Globe,
-  Shield,
-  Fingerprint,
-  Trash2,
-} from "lucide-react";
 import { cn } from "../../lib/utils";
 import PasskeyButton from "../../components/PasskeyButton";
+import Fa from '../../components/Fa';
 
 export default function Settings() {
   return (
@@ -22,7 +15,7 @@ export default function Settings() {
 
       {/* Profile */}
       <div className="card p-6">
-        <SectionTitle icon={User} title="Profile" />
+        <SectionTitle icon="user" title="Profile" />
         <div className="mt-4 flex items-center gap-4">
           <img
             src="https://i.pravatar.cc/120?img=47"
@@ -44,7 +37,7 @@ export default function Settings() {
 
       {/* Notifications */}
       <div className="card p-6">
-        <SectionTitle icon={Bell} title="Notifications" />
+        <SectionTitle icon="bell" title="Notifications" />
         <div className="mt-4 space-y-1">
           <Toggle label="Trip reminders & updates" defaultOn />
           <Toggle label="Parcel tracking alerts" defaultOn />
@@ -55,7 +48,7 @@ export default function Settings() {
 
       {/* Preferences */}
       <div className="card p-6">
-        <SectionTitle icon={Globe} title="Preferences" />
+        <SectionTitle icon="globe" title="Preferences" />
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label className="label">Language</label>
@@ -77,14 +70,14 @@ export default function Settings() {
 
       {/* Security */}
       <div className="card p-6">
-        <SectionTitle icon={Shield} title="Security" />
+        <SectionTitle icon="shield" title="Security" />
 
         {/* Passkeys */}
         <div className="mt-4 rounded-xl border border-ink-100 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-lg bg-ink-900 text-white">
-                <Fingerprint className="h-5 w-5" />
+                <Fa name="fingerprint" className="h-5 w-5" />
               </span>
               <div>
                 <div className="font-semibold text-ink-900">Passkeys</div>
@@ -107,7 +100,7 @@ export default function Settings() {
                 <span className="text-xs text-ink-400">• Added 2 days ago</span>
               </div>
               <button className="text-ink-300 hover:text-flame-600">
-                <Trash2 className="h-4 w-4" />
+                <Fa name="trash2" className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -127,16 +120,16 @@ export default function Settings() {
 }
 
 function SectionTitle({
-  icon: Icon,
+  icon: iconName,
   title,
 }: {
-  icon: typeof User;
+  icon: string;
   title: string;
 }) {
   return (
     <h2 className="flex items-center gap-2 font-bold text-ink-900">
       <span className="grid h-8 w-8 place-items-center rounded-lg bg-ink-50 text-ink-900">
-        <Icon className="h-4 w-4" />
+        <Fa name={iconName} className="h-4 w-4" />
       </span>
       {title}
     </h2>

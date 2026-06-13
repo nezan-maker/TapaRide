@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, Check, Users, AlertCircle, Play, CheckCircle } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 interface Station {
   id: string
@@ -163,14 +163,14 @@ export default function DriverDashboard() {
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -192,15 +192,15 @@ export default function DriverDashboard() {
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-3 text-sm">
                   <div className="flex items-center gap-2 text-ink-600">
-                    <Calendar className="h-4 w-4 text-flame-600" />
+                    <Fa name="calendar" className="h-4 w-4 text-flame-600" />
                     <span>{new Date(activeJourney.departureTime).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2 text-ink-600">
-                    <Clock className="h-4 w-4 text-flame-600" />
+                    <Fa name="clock" className="h-4 w-4 text-flame-600" />
                     <span>{new Date(activeJourney.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div className="flex items-center gap-2 text-ink-600">
-                    <Users className="h-4 w-4 text-flame-600" />
+                    <Fa name="users" className="h-4 w-4 text-flame-600" />
                     <span>Vehicle: {activeJourney.vehicle?.plateNumber || 'N/A'}</span>
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export default function DriverDashboard() {
                               onClick={() => handleMarkStopReached(stop.id, stop.station?.id || '')}
                               className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1"
                             >
-                              <Play className="h-3 w-3 text-flame-600 fill-flame-600" /> Mark Reached
+                              <Fa name="play" className="h-3 w-3 text-flame-600 fill-flame-600" /> Mark Reached
                             </button>
                           )}
                         </div>
@@ -323,13 +323,13 @@ export default function DriverDashboard() {
             </form>
             {scanResult && (
               <div className="mt-4 flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
-                <Check className="h-4 w-4 shrink-0 mt-0.5" />
+                <Fa name="check" className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{scanResult}</span>
               </div>
             )}
             {scanError && (
               <div className="mt-4 flex items-start gap-2 rounded-xl bg-flame-50 p-3 text-xs text-flame-700">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <Fa name="alert-circle" className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{scanError}</span>
               </div>
             )}

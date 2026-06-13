@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { CreditCard, Wallet, AlertCircle, Lock, Unlock } from 'lucide-react'
 import { rwf } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 interface WalletStatus {
   id?: string
@@ -93,7 +93,7 @@ export default function PaymentMethods() {
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -108,7 +108,7 @@ export default function PaymentMethods() {
           <div className="card overflow-hidden">
             <div className="bg-gradient-to-r from-ink-900 to-ink-700 p-6 text-white">
               <div className="flex items-center gap-2 text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">
-                <Wallet className="h-4 w-4" /> Tapa Wallet
+                <Fa name="wallet" className="h-4 w-4" /> Tapa Wallet
               </div>
               <div className="text-3xl font-extrabold">
                 {isActive && balance != null ? rwf(balance) : '—'}
@@ -118,9 +118,9 @@ export default function PaymentMethods() {
                 {isActive && (
                   <span className="flex items-center gap-1">
                     · {wallet?.unlocked ? (
-                      <><Unlock className="h-3 w-3 text-emerald-400" /> Unlocked</>
+                      <><Fa name="unlock" className="h-3 w-3 text-emerald-400" /> Unlocked</>
                     ) : (
-                      <><Lock className="h-3 w-3 text-amber-400" /> Locked</>
+                      <><Fa name="lock" className="h-3 w-3 text-amber-400" /> Locked</>
                     )}
                   </span>
                 )}
@@ -139,7 +139,7 @@ export default function PaymentMethods() {
                     onClick={() => setShowUnlock(true)}
                     className="btn-primary flex-1 py-2.5 text-sm"
                   >
-                    <Unlock className="h-4 w-4" /> Unlock Wallet
+                    <Fa name="unlock" className="h-4 w-4" /> Unlock Wallet
                   </button>
                 )}
                 {isActive && wallet?.unlocked && (
@@ -199,7 +199,7 @@ export default function PaymentMethods() {
               </div>
             ) : (
               <div className="text-center py-8 text-ink-400 text-sm">
-                <CreditCard className="mx-auto h-8 w-8 text-ink-200 mb-2" />
+                <Fa name="creditcard" className="mx-auto h-8 w-8 text-ink-200 mb-2" />
                 {isActive ? 'No transactions yet.' : 'Set up your wallet to start transacting.'}
               </div>
             )}

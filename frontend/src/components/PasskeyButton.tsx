@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Fingerprint, Loader2, Check, AlertCircle } from 'lucide-react'
 import { cn } from '../lib/utils'
+import Fa from './Fa';
 import {
   getPasskeyAuthOptions,
   authenticateWithPasskey,
@@ -75,17 +75,17 @@ export default function PasskeyButton({ mode, onSuccess, onError, className }: P
       >
         {isLoading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Fa name="loader2" className="h-4 w-4 animate-spin" />
             <span>{mode === 'login' ? 'Authenticating...' : 'Registering...'}</span>
           </>
         ) : success ? (
           <>
-            <Check className="h-4 w-4 text-emerald-600" />
+            <Fa name="check" className="h-4 w-4 text-emerald-600" />
             <span>{mode === 'login' ? 'Authenticated!' : 'Registered!'}</span>
           </>
         ) : (
           <>
-            <Fingerprint className="h-4 w-4" />
+            <Fa name="fingerprint" className="h-4 w-4" />
             <span>{mode === 'login' ? 'Use Passkey' : 'Add Passkey'}</span>
           </>
         )}
@@ -93,14 +93,14 @@ export default function PasskeyButton({ mode, onSuccess, onError, className }: P
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && !isLoading && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <Check className="h-4 w-4 shrink-0" />
+          <Fa name="check" className="h-4 w-4 shrink-0" />
           <span>
             {mode === 'login' 
               ? 'Successfully authenticated with passkey!' 

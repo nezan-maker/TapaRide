@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { SlidersHorizontal, ArrowRight, Sun, Sunset, Moon, Bus, ChevronLeft, ChevronRight, Calendar, Pencil, AlertCircle } from 'lucide-react'
 import { cn, rwf } from '../lib/utils'
 import { api, ApiError } from '../lib/api'
+import Fa from '../components/Fa';
 
 interface BusTrip {
   id: string
@@ -15,9 +15,9 @@ interface BusTrip {
 }
 
 const departureWindows = [
-  { key: 'morning', label: 'Morning', sub: '6am–12pm', icon: Sun },
-  { key: 'afternoon', label: 'Afternoon', sub: '12pm–6pm', icon: Sunset },
-  { key: 'evening', label: 'Evening', sub: '6pm–10pm', icon: Moon },
+  { key: 'morning', label: 'Morning', sub: '6am–12pm', icon: "sun" },
+  { key: 'afternoon', label: 'Afternoon', sub: '12pm–6pm', icon: 'sunset' },
+  { key: 'evening', label: 'Evening', sub: '6pm–10pm', icon: "moon" },
 ]
 
 const ITEMS_PER_PAGE = 5
@@ -82,7 +82,7 @@ export default function SearchResults() {
             {from} → {to}
           </h1>
           <p className="mt-1 text-ink-500">
-            <Calendar className="mr-1 inline h-4 w-4" />
+            <Fa name="calendar" className="mr-1 inline h-4 w-4" />
             {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             {loading ? ' · Loading...' : ` · ${filtered.length} trip${filtered.length !== 1 ? 's' : ''} found`}
           </p>
@@ -90,7 +90,7 @@ export default function SearchResults() {
 
         {error && (
           <div className="mb-6 flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -104,7 +104,7 @@ export default function SearchResults() {
             {/* Filters */}
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-500">
-                <SlidersHorizontal className="h-4 w-4" /> Filter by
+                <Fa name="slidershorizontal" className="h-4 w-4" /> Filter by
               </span>
               {departureWindows.map((w) => (
                 <button
@@ -120,7 +120,7 @@ export default function SearchResults() {
                       : 'bg-white text-ink-500 hover:bg-ink-50',
                   )}
                 >
-                  <w.icon className={cn('h-4 w-4', timeFilter === w.key ? '' : 'text-ink-300')} />
+                  <Fa name={w.icon} className={cn('h-4 w-4', timeFilter === w.key ? '' : 'text-ink-300')} />
                   {w.label}
                   <span className="text-xs opacity-60">{w.sub}</span>
                 </button>
@@ -141,14 +141,14 @@ export default function SearchResults() {
                     <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:flex-nowrap">
                       <div className="flex min-w-0 flex-1 items-center gap-4">
                         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
-                          <Bus className="h-5 w-5" />
+                          <Fa name="bus" className="h-5 w-5" />
                         </span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-ink-900">
                               {depTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            <ArrowRight className="h-3 w-3 text-ink-300" />
+                            <Fa name="arrow-right" className="h-3 w-3 text-ink-300" />
                             <span className="font-bold text-ink-900">
                               {arrTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -222,7 +222,7 @@ export default function SearchResults() {
                   disabled={page === 0}
                   className="btn-outline py-2 px-4 text-sm disabled:opacity-30"
                 >
-                  <ChevronLeft className="h-4 w-4" /> Previous
+                  <Fa name="chevronleft" className="h-4 w-4" /> Previous
                 </button>
                 {Array.from({ length: pageCount }, (_, i) => (
                   <button
@@ -241,20 +241,20 @@ export default function SearchResults() {
                   disabled={page === pageCount - 1}
                   className="btn-outline py-2 px-4 text-sm disabled:opacity-30"
                 >
-                  Next <ChevronRight className="h-4 w-4" />
+                  Next <Fa name="chevronright" className="h-4 w-4" />
                 </button>
               </div>
             )}
           </>
         ) : (
           <div className="card p-10 text-center">
-            <Bus className="mx-auto h-12 w-12 text-ink-200" />
+            <Fa name="bus" className="mx-auto h-12 w-12 text-ink-200" />
             <h2 className="mt-4 text-xl font-bold text-ink-900">No trips found</h2>
             <p className="mt-2 text-ink-500">
               No available journeys from {from} to {to} on {new Date(date).toLocaleDateString()}.
             </p>
             <Link to="/" className="btn-primary mt-6 inline-flex">
-              <Pencil className="h-4 w-4" /> Modify Search
+              <Fa name="pencil" className="h-4 w-4" /> Modify Search
             </Link>
           </div>
         )}

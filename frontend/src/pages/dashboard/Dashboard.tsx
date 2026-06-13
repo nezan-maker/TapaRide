@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Ticket, Package, Wallet, ArrowRight, MapPin, Calendar, Plus, AlertCircle } from 'lucide-react'
 import { cn, rwf } from '../../lib/utils'
 import { useAuth } from '../../lib/auth'
 import { api, ApiError } from '../../lib/api'
@@ -8,6 +7,7 @@ import DriverDashboard from './DriverDashboard'
 import ManagerDashboard from './ManagerDashboard'
 import OwnerDashboard from './OwnerDashboard'
 import OrganizationDashboard from './OrganizationDashboard'
+import Fa from '../../components/Fa';
 
 const statusStyles: Record<string, string> = {
   PAID: 'bg-emerald-100 text-emerald-700',
@@ -120,14 +120,14 @@ function ClientDashboard() {
               : 'Ready for your next journey?'}
           </p>
           <Link to="/search" className="btn mt-5 bg-white text-ink-900 hover:bg-white/90">
-            <Plus className="h-4 w-4" /> Book a Trip
+            <Fa name="plus" className="h-4 w-4" /> Book a Trip
           </Link>
         </div>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -140,9 +140,9 @@ function ClientDashboard() {
         <>
           {/* Stats */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Stat icon={Ticket} label="Total Trips" value={String(recentTickets.length)} hint={`${upcomingCount} upcoming`} />
-            <Stat icon={Package} label="Parcels Sent" value={String(recentParcels.length)} hint={`${inTransitCount} in transit`} />
-            <Stat icon={Wallet} label="Total Spent" value={rwf(totalSpent)} hint="Lifetime" />
+            <Stat icon="ticket" label="Total Trips" value={String(recentTickets.length)} hint={`${upcomingCount} upcoming`} />
+            <Stat icon="package" label="Parcels Sent" value={String(recentParcels.length)} hint={`${inTransitCount} in transit`} />
+            <Stat icon="wallet" label="Total Spent" value={rwf(totalSpent)} hint="Lifetime" />
           </div>
 
           {/* Recent Trips */}
@@ -152,14 +152,14 @@ function ClientDashboard() {
                 {recentTickets.map((t) => (
                   <div key={t.id} className="flex flex-wrap items-center gap-3 py-3">
                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink-50 text-ink-900">
-                      <MapPin className="h-4 w-4" />
+                      <Fa name="map-pin" className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-ink-900">
                         {t.journey?.sourceStation?.name || 'N/A'} → {t.journey?.destinationStation?.name || 'N/A'}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-ink-400">
-                        <Calendar className="h-3 w-3" /> {new Date(t.journey?.departureTime || t.createdAt).toLocaleDateString()}
+                        <Fa name="calendar" className="h-3 w-3" /> {new Date(t.journey?.departureTime || t.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                     <span className="text-sm font-semibold text-ink-900">{rwf(t.journey?.price || 0)}</span>
@@ -184,7 +184,7 @@ function ClientDashboard() {
                 {recentParcels.map((p) => (
                   <div key={p.id} className="flex flex-wrap items-center gap-3 py-3">
                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink-50 text-ink-900">
-                      <Package className="h-4 w-4" />
+                      <Fa name="package" className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-ink-900">
@@ -211,11 +211,11 @@ function ClientDashboard() {
   )
 }
 
-function Stat({ icon: Icon, label, value, hint }: { icon: typeof Ticket; label: string; value: string; hint: string }) {
+function Stat({ icon, label, value, hint }: { icon: string; label: string; value: string; hint: string }) {
   return (
     <div className="card flex items-center gap-4 p-5">
       <span className="grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-        <Icon className="h-5 w-5" />
+        <Fa name={icon} className="h-5 w-5" />
       </span>
       <div>
         <div className="text-2xl font-extrabold text-ink-900">{value}</div>
@@ -232,7 +232,7 @@ function Section({ title, to, children }: { title: string; to: string; children:
       <div className="mb-2 flex items-center justify-between">
         <h2 className="font-bold text-ink-900">{title}</h2>
         <Link to={to} className="inline-flex items-center gap-1 text-sm font-semibold text-flame-600 hover:gap-2">
-          View all <ArrowRight className="h-4 w-4" />
+          View all <Fa name="arrow-right" className="h-4 w-4" />
         </Link>
       </div>
       {children}

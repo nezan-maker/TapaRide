@@ -1,26 +1,17 @@
 import { useState } from 'react'
-import {
-  LifeBuoy,
-  Mail,
-  Phone,
-  MessageCircle,
-  ChevronDown,
-  Bus,
-  Package,
-  CreditCard,
-} from 'lucide-react'
 import { cn } from '../lib/utils'
+import Fa from '../components/Fa';
 
 const channels = [
-  { icon: Phone, title: 'Call us', detail: '+250 788 000 000', note: 'Mon–Sun, 6am–10pm' },
-  { icon: Mail, title: 'Email', detail: 'support@taparide.rw', note: 'Replies within 24h' },
-  { icon: MessageCircle, title: 'Live chat', detail: 'Start a conversation', note: 'Avg. wait 2 min' },
+  { icon: 'phone', title: 'Call us', detail: '+250 788 000 000', note: 'Mon–Sun, 6am–10pm' },
+  { icon: 'mail', title: 'Email', detail: 'support@taparide.rw', note: 'Replies within 24h' },
+  { icon: 'message', title: 'Live chat', detail: 'Start a conversation', note: 'Avg. wait 2 min' },
 ]
 
 const categories = [
-  { icon: Bus, label: 'Bookings & Trips' },
-  { icon: Package, label: 'Parcels & Delivery' },
-  { icon: CreditCard, label: 'Payments & Refunds' },
+  { icon: 'bus', label: 'Bookings & Trips' },
+  { icon: 'package', label: 'Parcels & Delivery' },
+  { icon: 'creditcard', label: 'Payments & Refunds' },
 ]
 
 const faqs = [
@@ -50,7 +41,7 @@ export default function Support() {
       <section className="bg-gradient-to-b from-ink-900 to-ink-800 py-16 text-white">
         <div className="container-page mx-auto max-w-2xl text-center">
           <span className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white/10">
-            <LifeBuoy className="h-6 w-6" />
+            <Fa name="life-ring" className="h-6 w-6" />
           </span>
           <h1 className="text-3xl font-extrabold sm:text-4xl">How can we help?</h1>
           <p className="mt-2 text-white/70">
@@ -59,7 +50,7 @@ export default function Support() {
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {categories.map((c) => (
               <span key={c.label} className="chip bg-white/10 text-white">
-                <c.icon className="h-3.5 w-3.5" /> {c.label}
+                <Fa name={c.icon} className="h-3.5 w-3.5" /> {c.label}
               </span>
             ))}
           </div>
@@ -71,7 +62,7 @@ export default function Support() {
           {channels.map((c) => (
             <div key={c.title} className="card p-6 text-center">
               <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-ink-900 text-white">
-                <c.icon className="h-5 w-5" />
+                <Fa name={c.icon} className="h-5 w-5" />
               </span>
               <h3 className="mt-3 font-bold text-ink-900">{c.title}</h3>
               <div className="mt-1 font-semibold text-flame-600">{c.detail}</div>
@@ -92,7 +83,7 @@ export default function Support() {
                   className="flex w-full items-center justify-between gap-4 p-5 text-left"
                 >
                   <span className="font-semibold text-ink-900">{f.q}</span>
-                  <ChevronDown
+                  <Fa name="chevrondown"
                     className={cn(
                       'h-5 w-5 shrink-0 text-ink-400 transition',
                       open === i && 'rotate-180',

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { Menu, X, LayoutDashboard } from 'lucide-react'
 import Logo from './Logo'
 import { cn } from '../lib/utils'
 import { useAuth } from '../lib/auth'
+import Fa from './Fa';
 
 const links = [
   { to: '/search', label: 'Book a Trip' },
@@ -41,7 +41,7 @@ export default function Navbar() {
           {isLoggedIn ? (
             <>
               <Link to="/dashboard" className="btn-outline flex items-center gap-2 px-4 py-2.5">
-                <LayoutDashboard className="h-4 w-4" />
+                <Fa name="layout-dashboard" className="h-4 w-4" />
                 Dashboard
               </Link>
               <span className="text-sm text-ink-400 font-medium">
@@ -66,7 +66,7 @@ export default function Navbar() {
           onClick={() => setOpen((v) => !v)}
           className="grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-900 lg:hidden"
         >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {open ? <Fa name="x" className="h-5 w-5" /> : <Fa name="menu" className="h-5 w-5" />}
         </button>
       </nav>
 
@@ -92,7 +92,7 @@ export default function Navbar() {
               {isLoggedIn ? (
                 <>
                   <Link to="/dashboard" onClick={() => setOpen(false)} className="btn-primary">
-                    <LayoutDashboard className="h-4 w-4" /> Dashboard
+                    <Fa name="layout-dashboard" className="h-4 w-4" /> Dashboard
                   </Link>
                 </>
               ) : (

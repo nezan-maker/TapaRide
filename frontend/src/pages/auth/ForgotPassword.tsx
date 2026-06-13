@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Phone, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import AuthLayout, { AuthLink } from './AuthLayout'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 export default function ForgotPassword() {
   const [phone, setPhone] = useState('')
@@ -43,25 +43,25 @@ export default function ForgotPassword() {
       {sent ? (
         <div className="space-y-5">
           <div className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-700">
-            <CheckCircle2 className="h-6 w-6 shrink-0" />
+            <Fa name="check-circle2" className="h-6 w-6 shrink-0" />
             <p className="text-sm">Reset code sent successfully. Check your SMS messages.</p>
           </div>
           <Link to="/login" className="btn-outline w-full">
-            <ArrowLeft className="h-4 w-4" /> Back to login
+            <Fa name="arrow-left" className="h-4 w-4" /> Back to login
           </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
           <div>
             <label className="label">Phone number</label>
             <div className="relative">
-              <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 className="input pl-9"
                 placeholder="+250 7XX XXX XXX"

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ArrowLeftRight, Bus, Package, Search } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { api } from '../lib/api'
+import Fa from './Fa';
 
 export default function SearchWidget() {
   const navigate = useNavigate()
@@ -56,7 +56,7 @@ export default function SearchWidget() {
             tab === 'bus' ? 'bg-white text-ink-900 shadow-soft' : 'text-ink-400',
           )}
         >
-          <Bus className="h-4 w-4" /> Bus Tickets
+          <Fa name="bus" className="h-4 w-4" /> Bus Tickets
         </button>
         <button
           type="button"
@@ -66,7 +66,7 @@ export default function SearchWidget() {
             tab === 'parcel' ? 'bg-white text-ink-900 shadow-soft' : 'text-ink-400',
           )}
         >
-          <Package className="h-4 w-4" /> Send Parcel
+          <Fa name="package" className="h-4 w-4" /> Send Parcel
         </button>
       </div>
 
@@ -76,7 +76,7 @@ export default function SearchWidget() {
             <div className="flex-1">
               <label className="label">From</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9 appearance-none"
                   value={from}
@@ -96,12 +96,12 @@ export default function SearchWidget() {
               className="mb-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-ink-100 text-ink-400 hover:bg-ink-50"
               aria-label="Swap cities"
             >
-              <ArrowLeftRight className="h-4 w-4" />
+              <Fa name="arrowleftright" className="h-4 w-4" />
             </button>
             <div className="flex-1">
               <label className="label">To</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9 appearance-none"
                   value={to}
@@ -120,7 +120,7 @@ export default function SearchWidget() {
           <div>
             <label className="label">Travel date</label>
             <div className="relative">
-              <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+              <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 type="date"
                 className="input pl-9"
@@ -131,7 +131,7 @@ export default function SearchWidget() {
           </div>
 
           <button type="submit" className="btn-primary w-full py-3.5">
-            <Search className="h-4 w-4" /> Search Buses
+            <Fa name="search" className="h-4 w-4" /> Search Buses
           </button>
         </form>
       ) : (
@@ -146,7 +146,7 @@ export default function SearchWidget() {
             <div className="flex-1">
               <label className="label">From</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9 appearance-none"
                   value={from}
@@ -166,12 +166,12 @@ export default function SearchWidget() {
               className="mb-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-ink-100 text-ink-400 hover:bg-ink-50"
               aria-label="Swap cities"
             >
-              <ArrowLeftRight className="h-4 w-4" />
+              <Fa name="arrowleftright" className="h-4 w-4" />
             </button>
             <div className="flex-1">
               <label className="label">To</label>
               <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <select
                   className="input pl-9 appearance-none"
                   value={to}
@@ -188,7 +188,7 @@ export default function SearchWidget() {
           </div>
 
           <button type="submit" className="btn-outline w-full py-3.5">
-            <Package className="h-4 w-4" /> Send a Parcel
+            <Fa name="package" className="h-4 w-4" /> Send a Parcel
           </button>
         </form>
       )}

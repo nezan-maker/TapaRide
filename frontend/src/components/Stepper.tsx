@@ -1,5 +1,5 @@
-import { Check } from 'lucide-react'
 import { cn } from '../lib/utils'
+import Fa from './Fa';
 
 interface StepperProps {
   steps: string[]
@@ -23,7 +23,7 @@ export default function Stepper({ steps, current }: StepperProps) {
                   !done && !active && 'bg-ink-100 text-ink-400',
                 )}
               >
-                {done ? <Check className="h-4 w-4" /> : i + 1}
+                {done ? <Fa name="check" className="h-4 w-4" /> : i + 1}
               </span>
               <span
                 className={cn(

@@ -1,19 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import {
-  ChevronLeft,
-  Bus,
-  MapPin,
-  Calendar,
-  Tag,
-  ArrowRight,
-  User,
-  AlertCircle,
-  CheckCircle,
-} from 'lucide-react'
 import Stepper from '../components/Stepper'
 import { cn, rwf } from '../lib/utils'
 import { api, ApiError } from '../lib/api'
+import Fa from '../components/Fa';
 
 interface JourneyAvailability {
   journeyId: string
@@ -122,7 +112,7 @@ export default function Booking() {
     return (
       <div className="bg-mist pb-16 pt-20 text-center">
         <div className="container-page">
-          <Bus className="mx-auto h-12 w-12 text-ink-200" />
+          <Fa name="bus" className="mx-auto h-12 w-12 text-ink-200" />
           <h2 className="mt-4 text-xl font-bold text-ink-900">No journey selected</h2>
           <p className="mt-2 text-ink-500">Please search for a trip and select a journey to book.</p>
           <Link to="/search" className="btn-primary mt-6 inline-flex">
@@ -145,7 +135,7 @@ export default function Booking() {
         <div className="container-page py-12">
           <div className="mx-auto max-w-lg text-center">
             <span className="mx-auto grid h-16 w-16 animate-fade-in place-items-center rounded-full bg-emerald-100 text-emerald-600">
-              <CheckCircle className="h-8 w-8" />
+              <Fa name="checkcircle" className="h-8 w-8" />
             </span>
             <h1 className="mt-5 text-3xl font-extrabold text-ink-900">Booking confirmed!</h1>
             <p className="mt-2 text-ink-500">
@@ -163,22 +153,22 @@ export default function Booking() {
               </div>
               <div className="p-5 space-y-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-flame-600" />
+                  <Fa name="map-pin" className="h-4 w-4 text-flame-600" />
                   <span className="font-semibold text-ink-900">{dep?.sourceStation?.name || 'N/A'}</span>
-                  <ArrowRight className="h-3 w-3 text-ink-300" />
+                  <Fa name="arrow-right" className="h-3 w-3 text-ink-300" />
                   <span className="font-semibold text-ink-900">{dep?.destinationStation?.name || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-ink-500">
-                  <Calendar className="h-4 w-4" />
+                  <Fa name="calendar" className="h-4 w-4" />
                   <span>{dep?.departureTime ? new Date(dep.departureTime).toLocaleString() : 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-ink-400" />
+                  <Fa name="user" className="h-4 w-4 text-ink-400" />
                   <span className="text-ink-500">Seats:</span>
                   <span className="font-bold text-ink-900">{purchasedTickets.map(t => t.seatNumber).join(', ')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm font-bold text-ink-900">
-                  <Tag className="h-4 w-4 text-flame-600" /> Total: {rwf(total)}
+                  <Fa name="tag" className="h-4 w-4 text-flame-600" /> Total: {rwf(total)}
                 </div>
               </div>
             </div>
@@ -220,11 +210,11 @@ export default function Booking() {
         <div className="bg-ink-900 text-white">
           <div className="container-page flex flex-wrap items-center gap-x-4 gap-y-2 py-3 text-sm">
             <Link to="/search" className="flex items-center gap-1.5 font-semibold text-white/80 hover:text-white">
-              <ChevronLeft className="h-4 w-4" /> Back to Results
+              <Fa name="chevronleft" className="h-4 w-4" /> Back to Results
             </Link>
             <span className="hidden h-4 w-px bg-white/20 sm:block" />
             <span className="flex items-center gap-2 font-semibold">
-              <Bus className="h-4 w-4" /> {dep.sourceStation?.name || 'N/A'} → {dep.destinationStation?.name || 'N/A'}
+              <Fa name="bus" className="h-4 w-4" /> {dep.sourceStation?.name || 'N/A'} → {dep.destinationStation?.name || 'N/A'}
             </span>
             <span className="text-white/60">·</span>
             <span>{dep.vehicle?.plateNumber || 'N/A'}</span>
@@ -240,7 +230,7 @@ export default function Booking() {
         ) : error ? (
           <div className="mx-auto max-w-md">
             <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
             <button onClick={fetchAvailability} className="btn-outline mt-4 w-full">
@@ -311,18 +301,18 @@ export default function Booking() {
                 {dep && (
                   <div className="space-y-3 text-sm">
                     <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-flame-600" />
+                      <Fa name="map-pin" className="mt-0.5 h-4 w-4 shrink-0 text-flame-600" />
                       <div>
                         <div className="font-semibold text-ink-900">{dep.sourceStation?.name} → {dep.destinationStation?.name}</div>
                         <div className="text-xs text-ink-400">{dep.sourceStation?.location} → {dep.destinationStation?.location}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-ink-500">
-                      <Calendar className="h-4 w-4" />
+                      <Fa name="calendar" className="h-4 w-4" />
                       <span>{new Date(dep.departureTime).toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-2 text-ink-500">
-                      <Bus className="h-4 w-4" />
+                      <Fa name="bus" className="h-4 w-4" />
                       <span>{dep.vehicle?.plateNumber} ({dep.vehicle?.model})</span>
                     </div>
                   </div>

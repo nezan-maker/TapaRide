@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ShieldCheck, Bus, Package, Star } from 'lucide-react'
 import Logo from '../../components/Logo'
+import Fa from '../../components/Fa';
 
 export default function AuthLayout({
   title,
@@ -36,7 +36,7 @@ export default function AuthLayout({
         <div className="relative flex h-full flex-col justify-center px-14 text-white">
           <div className="mb-3 flex items-center gap-1 text-flame-500">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-current" />
+              <Fa key={i} name="star" className="h-4 w-4" />
             ))}
           </div>
           <h2 className="max-w-md text-4xl font-extrabold leading-tight">
@@ -47,9 +47,9 @@ export default function AuthLayout({
             payments, digital tickets, and live tracking.
           </p>
           <div className="mt-10 space-y-4">
-            <Feature icon={Bus} title="Premium buses across 15+ cities" />
-            <Feature icon={Package} title="Trackable parcel delivery" />
-            <Feature icon={ShieldCheck} title="Secure Mobile Money & card payments" />
+            <Feature icon="bus" title="Premium buses across 15+ cities" />
+            <Feature icon="package" title="Trackable parcel delivery" />
+            <Feature icon="shieldcheck" title="Secure Mobile Money & card payments" />
           </div>
         </div>
       </div>
@@ -57,11 +57,11 @@ export default function AuthLayout({
   )
 }
 
-function Feature({ icon: Icon, title }: { icon: typeof Bus; title: string }) {
+function Feature({ icon, title }: { icon: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10">
-        <Icon className="h-5 w-5" />
+        <Fa name={icon} className="h-5 w-5" />
       </span>
       <span className="text-sm font-medium text-white/90">{title}</span>
     </div>

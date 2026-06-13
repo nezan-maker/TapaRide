@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import PasskeyButton from "../../components/PasskeyButton";
 import { useAuth } from "../../lib/auth";
+import Fa from '../../components/Fa';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {displayError && (
           <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
             <span>{displayError}</span>
           </div>
         )}
@@ -74,7 +74,7 @@ export default function Login() {
         <div>
           <label className="label">Email or phone</label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <Fa name="mail" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <input
               className="input pl-9"
               placeholder="you@email.com"
@@ -96,7 +96,7 @@ export default function Login() {
             </Link>
           </div>
           <div className="relative">
-            <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <Fa name="lock" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
             <input
               type={show ? "text" : "password"}
               className="input px-9"
@@ -111,7 +111,7 @@ export default function Login() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900"
               aria-label="toggle password"
             >
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {show ? <Fa name="eyeoff" className="h-4 w-4" /> : <Fa name="eye" className="h-4 w-4" />}
             </button>
           </div>
         </div>

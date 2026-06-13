@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Bell, Ticket, Package, Megaphone, AlertCircle } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 interface NotificationItem {
   id: string
@@ -12,11 +12,11 @@ interface NotificationItem {
   createdAt: string
 }
 
-const iconMap: Record<string, typeof Bell> = {
-  TRIP: Ticket,
-  PARCEL: Package,
-  PROMO: Megaphone,
-  SYSTEM: Bell,
+const iconMap: Record<string, string> = {
+  TRIP: 'ticket',
+  PARCEL: 'package',
+  PROMO: 'megaphone',
+  SYSTEM: 'bell',
 }
 
 export default function Notifications() {
@@ -90,7 +90,7 @@ export default function Notifications() {
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -102,7 +102,7 @@ export default function Notifications() {
       ) : notifications.length > 0 ? (
         <div className="space-y-3">
           {notifications.map((n) => {
-            const Icon = iconMap[n.type] || Bell
+            const iconName = iconMap[n.type] || 'bell'
             return (
               <div
                 key={n.id}
@@ -115,7 +115,7 @@ export default function Notifications() {
                   'grid h-10 w-10 shrink-0 place-items-center rounded-xl',
                   !n.read ? 'bg-flame-100 text-flame-600' : 'bg-ink-50 text-ink-400'
                 )}>
-                  <Icon className="h-5 w-5" />
+                  <Fa name={iconName} className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
@@ -133,7 +133,7 @@ export default function Notifications() {
         </div>
       ) : (
         <div className="card p-10 text-center text-ink-400">
-          <Bell className="mx-auto h-10 w-10 text-ink-200 mb-3" />
+          <Fa name="bell" className="mx-auto h-10 w-10 text-ink-200 mb-3" />
           <p>No notifications yet.</p>
           <p className="text-sm mt-1">You'll see updates about your trips and parcels here.</p>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Search, Package, CheckCircle2, Circle, MapPin, Phone, Truck, AlertCircle } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { api, ApiError } from '../lib/api'
+import Fa from '../components/Fa';
 
 interface ParcelTrackingInfo {
   id: string
@@ -59,7 +59,7 @@ export default function Track() {
       <section className="bg-gradient-to-b from-ink-900 to-ink-800 py-16 text-white">
         <div className="container-page mx-auto max-w-2xl text-center">
           <span className="grid mx-auto mb-4 h-14 w-14 place-items-center rounded-2xl bg-white/10">
-            <Package className="h-6 w-6" />
+            <Fa name="package" className="h-6 w-6" />
           </span>
           <h1 className="text-3xl font-extrabold sm:text-4xl">Track your parcel</h1>
           <p className="mt-2 text-white/70">
@@ -70,7 +70,7 @@ export default function Track() {
             className="mt-7 flex flex-col gap-3 sm:flex-row"
           >
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-300" />
+              <Fa name="search" className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-300" />
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
@@ -89,7 +89,7 @@ export default function Track() {
           </form>
           {error && (
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-flame-500/20 px-4 py-3 text-sm text-white">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -118,9 +118,9 @@ export default function Track() {
                   <div key={step.label} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       {step.done ? (
-                        <CheckCircle2 className="h-6 w-6 text-flame-600" />
+                        <Fa name="check-circle2" className="h-6 w-6 text-flame-600" />
                       ) : (
-                        <Circle className="h-6 w-6 text-ink-200" />
+                        <Fa name="circle" className="h-6 w-6 text-ink-200" />
                       )}
                       {i < timeline.length - 1 && (
                         <span className={cn('w-px flex-1', step.done ? 'bg-flame-300' : 'bg-ink-100')} />
@@ -141,21 +141,21 @@ export default function Track() {
                 <h3 className="font-bold text-ink-900">Shipment details</h3>
                 <dl className="mt-3 space-y-2.5 text-sm">
                   <div className="flex items-center gap-2.5">
-                    <MapPin className="h-4 w-4 text-ink-300" />
+                    <Fa name="map-pin" className="h-4 w-4 text-ink-300" />
                     <span className="flex-1 text-ink-400">From</span>
                     <span className="font-semibold text-ink-900">
                       {tracking.journey?.sourceStation?.name || 'Kigali'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <MapPin className="h-4 w-4 text-ink-300" />
+                    <Fa name="map-pin" className="h-4 w-4 text-ink-300" />
                     <span className="flex-1 text-ink-400">To</span>
                     <span className="font-semibold text-ink-900">
                       {tracking.journey?.destinationStation?.name || 'Huye'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <Truck className="h-4 w-4 text-ink-300" />
+                    <Fa name="truck" className="h-4 w-4 text-ink-300" />
                     <span className="flex-1 text-ink-400">Receiver</span>
                     <span className="font-semibold text-ink-900">{tracking.receiverName}</span>
                   </div>
@@ -165,14 +165,14 @@ export default function Track() {
                 <h3 className="font-bold text-ink-900">Need help?</h3>
                 <p className="mt-1 text-sm text-ink-500">Contact our support team for any delivery questions.</p>
                 <a href="tel:+250****0000" className="btn-outline mt-3 w-full">
-                  <Phone className="h-4 w-4" /> Call Support
+                  <Fa name="phone" className="h-4 w-4" /> Call Support
                 </a>
               </div>
             </aside>
           </div>
         ) : shown && !tracking ? (
           <div className="mx-auto max-w-md text-center text-ink-400">
-            <Package className="mx-auto h-10 w-10 text-ink-200" />
+            <Fa name="package" className="mx-auto h-10 w-10 text-ink-200" />
             <p className="mt-3 text-sm">
               No parcel found with that code.{' '}
               <button
@@ -185,7 +185,7 @@ export default function Track() {
           </div>
         ) : (
           <div className="mx-auto max-w-md text-center text-ink-400">
-            <Package className="mx-auto h-10 w-10 text-ink-200" />
+            <Fa name="package" className="mx-auto h-10 w-10 text-ink-200" />
             <p className="mt-3 text-sm">
               Enter a tracking code above to view your parcel status. Try{' '}
               <button

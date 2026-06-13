@@ -1,19 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  MapPin,
-  Navigation,
-  Phone,
-  Star,
-  Home,
-  RotateCcw,
-  Bus,
-  Clock,
-  ChevronRight,
-  AlertCircle,
-} from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useRealtimeTrip } from '../lib/useRealtimeTrip'
+import Fa from '../components/Fa';
 
 const MOCK_STOPS = [
   { name: 'Kigali (Nyabugogo)', time: '08:00 AM', state: 'done' as const },
@@ -48,7 +37,7 @@ export default function Journey() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h1 className="flex items-center gap-2 text-xl font-extrabold text-ink-900">
-                <Navigation className="h-5 w-5 text-flame-600" /> Live Journey
+                <Fa name="navigation" className="h-5 w-5 text-flame-600" /> Live Journey
               </h1>
               <p className="text-sm text-ink-500">Real-time tracking & waitlist status</p>
             </div>
@@ -68,7 +57,7 @@ export default function Journey() {
 
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -121,11 +110,11 @@ function LiveTracking({
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
         </span>
         <span className="absolute right-10 top-10 grid h-6 w-6 place-items-center rounded-full bg-white shadow-card">
-          <MapPin className="h-3.5 w-3.5 text-flame-600" />
+          <Fa name="map-pin" className="h-3.5 w-3.5 text-flame-600" />
         </span>
         {position && (
           <span className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white shadow-glow">
-            <Bus className="h-3.5 w-3.5" />
+            <Fa name="bus" className="h-3.5 w-3.5" />
             {position.speed > 0
               ? `${Math.round(position.speed * 3.6)} km/h`
               : 'Stopped'}
@@ -142,7 +131,7 @@ function LiveTracking({
         {currentStopEta ? (
           <div className="flex items-center gap-3 rounded-xl bg-ink-50 p-4">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-emerald-600">
-              <MapPin className="h-5 w-5" />
+              <Fa name="map-pin" className="h-5 w-5" />
             </span>
             <div className="flex-1">
               <div className="font-bold text-ink-900">
@@ -159,7 +148,7 @@ function LiveTracking({
         ) : (
           <div className="flex items-center gap-3 rounded-xl bg-ink-50 p-4">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-ink-100 text-ink-400">
-              <MapPin className="h-5 w-5" />
+              <Fa name="map-pin" className="h-5 w-5" />
             </span>
             <div className="flex-1">
               <div className="font-bold text-ink-900">En route</div>
@@ -197,10 +186,10 @@ function LiveTracking({
 
         <div className="mt-5 flex gap-3">
           <a href="tel:+250788000000" className="btn-outline flex-1">
-            <Phone className="h-4 w-4" /> Call driver
+            <Fa name="phone" className="h-4 w-4" /> Call driver
           </a>
           <button onClick={onArrive} className="btn-primary flex-1">
-            Simulate arrival <ChevronRight className="h-4 w-4" />
+            Simulate arrival <Fa name="chevronright" className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -213,7 +202,7 @@ function Arrived({ onReset }: { onReset: () => void }) {
   return (
     <div className="card p-6 text-center">
       <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-600">
-        <Navigation className="h-7 w-7" />
+        <Fa name="navigation" className="h-7 w-7" />
       </span>
       <h2 className="mt-4 text-2xl font-extrabold text-ink-900">You have arrived!</h2>
       <p className="mt-1 text-sm text-ink-500">We hope you had a pleasant journey from Kigali to Huye.</p>
@@ -223,7 +212,7 @@ function Arrived({ onReset }: { onReset: () => void }) {
         <div className="mt-3 flex justify-center gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} onClick={() => setRating(n)} aria-label={`${n} star`}>
-              <Star className={cn('h-8 w-8 transition', n <= rating ? 'fill-flame-500 text-flame-500' : 'text-ink-200')} />
+              <Fa name="star" className={cn('h-8 w-8 transition', n <= rating ? 'fill-flame-500 text-flame-500' : 'text-ink-200')} />
             </button>
           ))}
         </div>
@@ -232,13 +221,13 @@ function Arrived({ onReset }: { onReset: () => void }) {
 
       <div className="mt-5 flex flex-col gap-3">
         <Link to="/search" className="btn-primary">
-          <RotateCcw className="h-4 w-4" /> Book Return Trip
+          <Fa name="rotateccw" className="h-4 w-4" /> Book Return Trip
         </Link>
         <Link to="/dashboard" className="btn-ghost">
-          <Home className="h-4 w-4" /> Go to Dashboard
+          <Fa name="home" className="h-4 w-4" /> Go to Dashboard
         </Link>
         <button onClick={onReset} className="text-xs font-semibold text-ink-400 hover:text-ink-900">
-          <Clock className="mr-1 inline h-3 w-3" /> Replay live tracking
+          <Fa name="clock" className="mr-1 inline h-3 w-3" /> Replay live tracking
         </button>
       </div>
     </div>

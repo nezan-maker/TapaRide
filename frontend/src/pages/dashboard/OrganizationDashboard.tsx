@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Users, Calendar, QrCode, AlertCircle, CheckCircle, Trash2, ShieldCheck } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
 import QRCode from 'qrcode'
+import Fa from '../../components/Fa';
 
 interface Organization {
   id: string
@@ -254,7 +254,7 @@ export default function OrganizationDashboard() {
               onClick={() => setShowManifestForm(!showManifestForm)}
               className="btn bg-white text-ink-900 hover:bg-white/90 shrink-0"
             >
-              <Plus className="h-4 w-4" /> Create Manifest
+              <Fa name="plus" className="h-4 w-4" /> Create Manifest
             </button>
           )}
         </div>
@@ -262,14 +262,14 @@ export default function OrganizationDashboard() {
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -339,7 +339,7 @@ export default function OrganizationDashboard() {
                   onClick={handleAddPassengerInput}
                   className="btn-outline py-1 px-3 text-xs flex items-center gap-1"
                 >
-                  <Plus className="h-3 w-3" /> Add Passenger
+                  <Fa name="plus" className="h-3 w-3" /> Add Passenger
                 </button>
               </div>
 
@@ -396,7 +396,7 @@ export default function OrganizationDashboard() {
                         className="absolute top-2 right-2 text-ink-300 hover:text-flame-600"
                         aria-label="Remove passenger"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Fa name="trash2" className="h-4 w-4" />
                       </button>
                     )}
                   </div>
@@ -456,10 +456,10 @@ export default function OrganizationDashboard() {
                         To: {b.destination}
                       </div>
                       <div className="text-xs text-ink-500 mt-1 flex items-center gap-2">
-                        <Calendar className="h-3 w-3" />
+                        <Fa name="calendar" className="h-3 w-3" />
                         <span>{new Date(b.departureTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                         <span>·</span>
-                        <Users className="h-3 w-3 text-flame-600" />
+                        <Fa name="users" className="h-3 w-3 text-flame-600" />
                         <span className="font-semibold text-flame-600">{b.passengers?.length || 0} Passengers</span>
                       </div>
                     </div>
@@ -468,7 +468,7 @@ export default function OrganizationDashboard() {
                         onClick={() => setActiveBookingQR(b)}
                         className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
                       >
-                        <QrCode className="h-3.5 w-3.5" /> Manifest QR
+                        <Fa name="qrcode" className="h-3.5 w-3.5" /> Manifest QR
                       </button>
                     </div>
                   </div>
@@ -523,11 +523,11 @@ export default function OrganizationDashboard() {
                 />
               ) : generatingQR ? (
                 <div className="h-44 w-44 bg-ink-200 animate-pulse rounded flex items-center justify-center">
-                  <QrCode className="h-10 w-10 text-ink-400" />
+                  <Fa name="qrcode" className="h-10 w-10 text-ink-400" />
                 </div>
               ) : (
                 <div className="h-44 w-44 bg-ink-100 rounded flex items-center justify-center">
-                  <QrCode className="h-10 w-10 text-ink-300" />
+                  <Fa name="qrcode" className="h-10 w-10 text-ink-300" />
                 </div>
               )}
               <div className="mt-3 text-[10px] font-mono text-center text-ink-400 select-all overflow-hidden text-ellipsis w-full max-w-[280px]">
@@ -547,7 +547,7 @@ export default function OrganizationDashboard() {
               <div className="flex justify-between border-b border-ink-50 pb-1">
                 <span>Manifest HMAC signature</span>
                 <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Verified
+                  <Fa name="shieldcheck" className="h-3.5 w-3.5 shrink-0" /> Verified
                 </span>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Bus, AlertCircle, X } from 'lucide-react'
 import { api, ApiError } from '../lib/api'
 import { cn } from '../lib/utils'
+import Fa from './Fa';
 
 interface VehicleFormProps {
   agencyId: string
@@ -63,16 +63,16 @@ export default function VehicleRegistrationForm({ agencyId, onComplete, onCancel
     <div className="card p-6 bg-ink-50 border-flame-200 animate-fade-up">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-ink-900 text-lg flex items-center gap-2">
-          <Bus className="h-5 w-5 text-flame-600" /> Register New Vehicle
+          <Fa name="bus" className="h-5 w-5 text-flame-600" /> Register New Vehicle
         </h3>
         <button onClick={onCancel} className="text-ink-300 hover:text-flame-600">
-          <X className="h-5 w-5" />
+          <Fa name="x" className="h-5 w-5" />
         </button>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700 mb-4">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}

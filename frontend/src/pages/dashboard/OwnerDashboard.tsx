@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Shield, Check, UserPlus, AlertCircle, CheckCircle, RefreshCw, Bus } from 'lucide-react'
 import { api, ApiError } from '../../lib/api'
 import VehicleRegistrationForm from '../../components/VehicleRegistrationForm'
+import Fa from '../../components/Fa';
 
 interface Agency {
   id: string
@@ -152,20 +152,20 @@ export default function OwnerDashboard() {
           onClick={() => { setShowAddForm(!showAddForm); setRuraVerified(false) }}
           className="btn bg-white text-ink-900 hover:bg-white/90 shrink-0"
         >
-          <Plus className="h-4 w-4" /> Register Agency
+          <Fa name="plus" className="h-4 w-4" /> Register Agency
         </button>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+          <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -206,9 +206,9 @@ export default function OwnerDashboard() {
                       className="btn-outline shrink-0 flex items-center gap-1.5"
                     >
                       {verifyingRura ? (
-                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        <Fa name="refreshcw" className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Shield className="h-4 w-4 text-flame-600" />
+                        <Fa name="shield" className="h-4 w-4 text-flame-600" />
                       )}
                       Verify License
                     </button>
@@ -248,7 +248,7 @@ export default function OwnerDashboard() {
                       <div className="flex items-center gap-2">
                         <span className={`chip ${a.verified ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                           {a.verified ? (
-                            <><Check className="h-3 w-3" /> Verified by RURA</>
+                            <><Fa name="check" className="h-3 w-3" /> Verified by RURA</>
                           ) : (
                             'Pending RURA Verification'
                           )}
@@ -257,7 +257,7 @@ export default function OwnerDashboard() {
                           onClick={() => setSelectedAgency(a)}
                           className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
                         >
-                          <UserPlus className="h-3.5 w-3.5" /> Staff
+                          <Fa name="userplus" className="h-3.5 w-3.5" /> Staff
                         </button>
                       </div>
                     </div>
@@ -337,7 +337,7 @@ export default function OwnerDashboard() {
               onClick={() => setShowVehicleForm(true)}
               className="btn-outline w-full py-3 text-sm flex items-center justify-center gap-2"
             >
-              <Bus className="h-4 w-4" /> Register Vehicle
+              <Fa name="bus" className="h-4 w-4" /> Register Vehicle
             </button>
           )}
 

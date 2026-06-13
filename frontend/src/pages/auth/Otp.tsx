@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
 import AuthLayout, { AuthLink } from './AuthLayout'
 import { api, ApiError } from '../../lib/api'
+import Fa from '../../components/Fa';
 
 export default function Otp() {
   const navigate = useNavigate()
@@ -53,7 +53,7 @@ export default function Otp() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}

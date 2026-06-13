@@ -1,21 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Camera,
-  UploadCloud,
-  ShieldCheck,
-  Wallet,
-  Bus,
-  Package,
-  Clock,
-  CheckCircle2,
-  FileText,
-  Plus,
-  ArrowRight,
-} from 'lucide-react'
 import Logo from '../components/Logo'
 import Stepper from '../components/Stepper'
 import { cn } from '../lib/utils'
+import Fa from '../components/Fa';
 
 const steps = ['Complete Profile', 'Agency Verification', 'RURA Registration']
 
@@ -56,7 +44,7 @@ export default function Onboarding() {
             )}
             <button onClick={next} className="btn-primary">
               {step === steps.length - 1 ? 'Submit Application' : 'Save & Continue'}
-              <ArrowRight className="h-4 w-4" />
+              <Fa name="arrow-right" className="h-4 w-4" />
             </button>
           </div>
 
@@ -82,10 +70,10 @@ function CompleteProfile() {
       <div className="mt-6 flex flex-col items-center">
         <div className="relative">
           <div className="grid h-24 w-24 place-items-center rounded-full bg-ink-50 text-ink-300">
-            <Camera className="h-8 w-8" />
+            <Fa name="camera" className="h-8 w-8" />
           </div>
           <span className="absolute bottom-0 right-0 grid h-8 w-8 place-items-center rounded-full bg-ink-900 text-white">
-            <Camera className="h-4 w-4" />
+            <Fa name="camera" className="h-4 w-4" />
           </span>
         </div>
         <p className="mt-2 text-xs text-ink-400">Upload profile photo</p>
@@ -106,12 +94,12 @@ function CompleteProfile() {
         <div className="text-xs font-bold uppercase tracking-wide text-white/60">Unlock features</div>
         <div className="mt-3 grid grid-cols-3 gap-3 text-center text-xs">
           {[
-            { icon: Wallet, label: 'Wallet' },
-            { icon: Bus, label: 'Booking' },
-            { icon: Package, label: 'Parcels' },
+            { icon: 'wallet', label: 'Wallet' },
+            { icon: 'bus', label: 'Booking' },
+            { icon: 'package', label: 'Parcels' },
           ].map((f) => (
             <div key={f.label} className="rounded-xl bg-white/10 p-3">
-              <f.icon className="mx-auto h-5 w-5" />
+              <Fa name={f.icon} className="mx-auto h-5 w-5" />
               <div className="mt-1.5 font-semibold">{f.label}</div>
             </div>
           ))}
@@ -125,7 +113,7 @@ function AgencyVerification() {
   return (
     <div className="card p-6 sm:p-8">
       <h1 className="flex items-center gap-2 text-xl font-extrabold text-ink-900">
-        <ShieldCheck className="h-5 w-5 text-ink-700" /> Agency Verification
+        <Fa name="shieldcheck" className="h-5 w-5 text-ink-700" /> Agency Verification
       </h1>
       <p className="mt-1 text-sm text-ink-500">
         Please upload a clear scan of your Agency Operating License to enable fleet management.
@@ -133,14 +121,14 @@ function AgencyVerification() {
 
       <button className="mt-6 flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-ink-200 bg-ink-50/40 p-8 text-center transition hover:border-ink-400">
         <span className="grid h-12 w-12 place-items-center rounded-full bg-ink-900 text-white">
-          <UploadCloud className="h-5 w-5" />
+          <Fa name="cloud-upload-alt" className="h-5 w-5" />
         </span>
         <span className="font-semibold text-ink-900">Click to upload document</span>
         <span className="text-xs text-ink-400">PDF, JPG or PNG (max. 10MB)</span>
       </button>
 
       <div className="mt-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-        <Clock className="h-5 w-5 text-amber-500" />
+        <Fa name="clock" className="h-5 w-5 text-amber-500" />
         <div>
           <div className="text-sm font-semibold text-ink-900">Verification Pending</div>
           <div className="text-xs text-ink-400">Usually takes 24 hours</div>
@@ -148,7 +136,7 @@ function AgencyVerification() {
       </div>
 
       <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-700">
-        <ShieldCheck className="h-4 w-4" /> Documents are encrypted and stored securely.
+        <Fa name="shieldcheck" className="h-4 w-4" /> Documents are encrypted and stored securely.
       </div>
     </div>
   )
@@ -189,16 +177,16 @@ function DocRow({ name, meta, uploaded }: { name: string; meta: string; uploaded
       )}
     >
       <span className="grid h-9 w-9 place-items-center rounded-lg bg-flame-50 text-flame-600">
-        <FileText className="h-4 w-4" />
+        <Fa name="file-lines" className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold text-ink-900">{name}</div>
         <div className="text-xs text-ink-400">{meta}</div>
       </div>
       {uploaded ? (
-        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+        <Fa name="check-circle2" className="h-5 w-5 text-emerald-500" />
       ) : (
-        <Plus className="h-5 w-5 text-ink-400" />
+        <Fa name="plus" className="h-5 w-5 text-ink-400" />
       )}
     </div>
   )
