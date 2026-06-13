@@ -1,0 +1,322 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                    String           @id @default(uuid())
+  email                 String           @unique
+  password              String
+  phone                 String           @unique
+  role                  Role
+  isVerified            Boolean          @default(false)
+  agencyIssuedId        String?
+  ruraCode              String?
+  managedAgencyId       String?
+  managedStationId      String?
+  driverAgencyId        String?
+  refreshToken          String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  lastPasswordChangedAt DateTime         @default(now())
+  passwordHistory       String[]
+  phoneVerifiedAt       DateTime?
+  ownedAgencies         Agency[]         @relation("AgencyOwner")
+  idempotencyKeys       IdempotencyKey[]
+  organizations         Organization[]   @relation("OrganizationOwner")
+  parcels               Parcel[]         @relation("ParcelSender")
+  passkeys              Passkey[]
+  tickets               Ticket[]
+  driverAgency          Agency?          @relation("AgencyDrivers", fields: [driverAgencyId], references: [id])
+  managedAgency         Agency?          @relation("AgencyManagers", fields: [managedAgencyId], references: [id])
+  managedStation        Station?         @relation("StationManagers", fields: [managedStationId], references: [id])
+  vehicle               Vehicle?         @relation("AssignedDriver")
+  waitlist              WaitlistEntry[]
+  wallet                Wallet?
+
+  @@index([isVerified, phoneVerifiedAt, role])
+}
+
+model Passkey {
+  id         String   @id
+  userId     String
+  publicKey  Bytes
+  counter    BigInt
+  deviceName String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id               String              @id @default(uuid())
+  userId           String              @unique
+  walletPassword   String?
+  encryptedBalance String?
+  iv               String?
+  authTag          String?
+  salt             String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  version          Int                 @default(0)
+  status           WalletStatus        @default(UNINITIALIZED)
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     WalletTransaction[]
+}
+
+model WalletTransaction {
+  id               String          @id @default(uuid())
+  walletId         String
+  type             TransactionType
+  amount           Int
+  note             String?
+  createdAt        DateTime        @default(now())
+  referenceId      String?
+  idempotencyKeyId String?
+  idempotencyKey   IdempotencyKey? @relation(fields: [idempotencyKeyId], references: [id])
+  wallet           Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([idempotencyKeyId])
+}
+
+model Agency {
+  id        String    @id @default(uuid())
+  name      String
+  ownerId   String
+  verified  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  owner     User      @relation("AgencyOwner", fields: [ownerId], references: [id])
+  stations  Station[]
+  drivers   User[]    @relation("AgencyDrivers")
+  managers  User[]    @relation("AgencyManagers")
+  vehicles  Vehicle[]
+}
+
+model Vehicle {
+  id          String    @id @default(uuid())
+  plateNumber String    @unique
+  model       String
+  capacity    Int
+  amenities   String[]
+  seatLayout  Json?
+  agencyId    String
+  driverId    String?   @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  journeys    Journey[]
+  agency      Agency    @relation(fields: [agencyId], references: [id])
+  driver      User?     @relation("AssignedDriver", fields: [driverId], references: [id])
+}
+
+model Station {
+  id           String        @id @default(uuid())
+  name         String
+  location     String
+  agencyId     String
+  createdAt    DateTime      @default(now())
+  arrivals     Journey[]     @relation("JourneyDestination")
+  departures   Journey[]     @relation("JourneySource")
+  journeyStops JourneyStop[]
+  agency       Agency        @relation(fields: [agencyId], references: [id])
+  managers     User[]        @relation("StationManagers")
+}
+
+model Journey {
+  id                   String            @id @default(uuid())
+  sourceStationId      String
+  destinationStationId String
+  vehicleId            String
+  departureTime        DateTime
+  price                Int
+  createdAt            DateTime          @default(now())
+  bulkBookings         BulkBooking[]
+  destinationStation   Station           @relation("JourneyDestination", fields: [destinationStationId], references: [id])
+  sourceStation        Station           @relation("JourneySource", fields: [sourceStationId], references: [id])
+  vehicle              Vehicle           @relation(fields: [vehicleId], references: [id])
+  stops                JourneyStop[]
+  parcels              Parcel[]
+  tickets              Ticket[]
+  positionLogs         TripPositionLog[]
+  waitlist             WaitlistEntry[]
+}
+
+model TripPositionLog {
+  id        String   @id @default(uuid())
+  journeyId String
+  lat       Float
+  lng       Float
+  timestamp DateTime @default(now())
+  journey   Journey  @relation(fields: [journeyId], references: [id])
+}
+
+model Ticket {
+  id              String       @id @default(uuid())
+  userId          String
+  journeyId       String
+  seatNumber      Int
+  status          TicketStatus @default(PAID)
+  createdAt       DateTime     @default(now())
+  alightingStopId String?
+  boardingStopId  String?
+  journey         Journey      @relation(fields: [journeyId], references: [id])
+  user            User         @relation(fields: [userId], references: [id])
+
+  @@unique([journeyId, seatNumber], map: "Ticket_paid_seat_per_journey_key", where: raw("(status = 'PAID'::\"TicketStatus\")"))
+  @@index([journeyId, seatNumber, status])
+}
+
+model Parcel {
+  id            String       @id @default(uuid())
+  senderId      String
+  receiverName  String
+  receiverPhone String
+  journeyId     String
+  status        ParcelStatus @default(PENDING)
+  trackingCode  String       @unique @default(uuid())
+  weight        Float?
+  fee           Int?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  journey       Journey      @relation(fields: [journeyId], references: [id])
+  sender        User         @relation("ParcelSender", fields: [senderId], references: [id])
+}
+
+model Organization {
+  id        String        @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime      @default(now())
+  bookings  BulkBooking[]
+  owner     User          @relation("OrganizationOwner", fields: [ownerId], references: [id])
+}
+
+model BulkBooking {
+  id             String          @id @default(uuid())
+  organizationId String
+  journeyId      String
+  destination    String
+  departureTime  DateTime
+  manifestHash   String
+  signature      String
+  createdAt      DateTime        @default(now())
+  boardingEvents BoardingEvent[]
+  journey        Journey         @relation(fields: [journeyId], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  passengers     BulkPassenger[]
+}
+
+model BulkPassenger {
+  id             String          @id @default(uuid())
+  bulkBookingId  String
+  name           String
+  nationalId     String
+  seatNumber     Int
+  boardingHash   String          @unique
+  status         BoardingStatus  @default(PENDING)
+  parentPhone    String?
+  parentEmail    String?
+  boardingEvents BoardingEvent[]
+  bulkBooking    BulkBooking     @relation(fields: [bulkBookingId], references: [id])
+}
+
+model BoardingEvent {
+  id            String         @id @default(uuid())
+  passengerId   String?
+  bulkBookingId String
+  type          String
+  location      String?
+  timestamp     DateTime       @default(now())
+  bulkBooking   BulkBooking    @relation(fields: [bulkBookingId], references: [id])
+  passenger     BulkPassenger? @relation(fields: [passengerId], references: [id])
+}
+
+model JourneyStop {
+  id        String    @id @default(uuid())
+  journeyId String
+  stationId String
+  order     Int
+  reachedAt DateTime?
+  journey   Journey   @relation(fields: [journeyId], references: [id])
+  station   Station   @relation(fields: [stationId], references: [id])
+}
+
+model WaitlistEntry {
+  id             String   @id @default(uuid())
+  userId         String
+  journeyId      String
+  boardingStopId String
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+  journey        Journey  @relation(fields: [journeyId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, journeyId, boardingStopId, status])
+}
+
+model IdempotencyKey {
+  id                 String              @id @default(uuid())
+  userId             String
+  route              String
+  key                String
+  requestHash        String
+  state              IdempotencyState    @default(PROCESSING)
+  statusCode         Int?
+  responseBody       Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletTransactions WalletTransaction[]
+
+  @@unique([userId, route, key])
+  @@index([createdAt])
+  @@index([state, createdAt])
+}
+
+enum Role {
+  CLIENT
+  DRIVER
+  MANAGER
+  OWNER
+  ORGANIZATION
+}
+
+enum BoardingStatus {
+  PENDING
+  BOARDED
+  ALIGHTED
+}
+
+enum TicketStatus {
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+enum ParcelStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PAYMENT
+  REFUND
+}
+
+enum IdempotencyState {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum WalletStatus {
+  UNINITIALIZED
+  ACTIVE
+}

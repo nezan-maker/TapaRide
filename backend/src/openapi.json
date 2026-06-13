@@ -1,0 +1,3888 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tapa Transport Platform API",
+    "version": "1.2.0",
+    "description": "REST API for Tapa's transport operations platform. It supports multi-role identity, agency operations, journeys, ticketing, parcels, encrypted wallets, bulk passenger manifests, waitlists, live trip events, and operational observability."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    },
+    {
+      "url": "https://tapa.rw",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Registration, verification, login, refresh, logout, password recovery, and passkeys"
+    },
+    {
+      "name": "Users",
+      "description": "Current user profile and internal user directory"
+    },
+    {
+      "name": "Agencies",
+      "description": "Agency registration, ownership, and staff assignment"
+    },
+    {
+      "name": "Vehicles",
+      "description": "Vehicle inventory and driver assignment"
+    },
+    {
+      "name": "Stations",
+      "description": "Station directory and agency-linked stations"
+    },
+    {
+      "name": "Journeys",
+      "description": "Journey search, seat availability, stop progression, and alighting confirmation"
+    },
+    {
+      "name": "Tickets",
+      "description": "Ticket purchase, cancellation, and passenger history"
+    },
+    {
+      "name": "Parcels",
+      "description": "Parcel creation, tracking, and delivery status updates"
+    },
+    {
+      "name": "Wallet",
+      "description": "Encrypted wallet setup, balance access, and transactions"
+    },
+    {
+      "name": "Bulk Bookings",
+      "description": "Organization manifests, QR boarding, and safe-arrival workflow"
+    },
+    {
+      "name": "Waitlist",
+      "description": "Seat waitlist registration and status checks"
+    },
+    {
+      "name": "Operations",
+      "description": "Health checks, cache insights, metrics, and external verification mocks"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token returned by the auth endpoints"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "PageSize": {
+        "name": "pageSize",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 20
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": "Required for wallet mutations and ticket mutations. Reusing a key with a different payload returns a conflict."
+      }
+    },
+    "schemas": {
+      "Role": {
+        "type": "string",
+        "enum": [
+          "CLIENT",
+          "DRIVER",
+          "MANAGER",
+          "OWNER",
+          "ORGANIZATION"
+        ]
+      },
+      "TicketStatus": {
+        "type": "string",
+        "enum": [
+          "PAID",
+          "CANCELLED"
+        ]
+      },
+      "ParcelStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "IN_TRANSIT",
+          "DELIVERED"
+        ]
+      },
+      "TransactionType": {
+        "type": "string",
+        "enum": [
+          "DEPOSIT",
+          "WITHDRAWAL",
+          "PAYMENT",
+          "REFUND"
+        ]
+      },
+      "BoardingStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "BOARDED",
+          "ALIGHTED"
+        ]
+      },
+      "WaitlistStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "NOTIFIED",
+          "BOOKED",
+          "EXPIRED"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "details": {
+            "description": "Optional structured validation or domain details",
+            "nullable": true
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "required": [
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          }
+        }
+      },
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+250780000000"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "agencyIssuedId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "managedAgencyId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "managedStationId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "driverAgencyId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        }
+      },
+      "TokenPair": {
+        "type": "object",
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TokenPair"
+          },
+          {
+            "type": "object",
+            "required": [
+              "user"
+            ],
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/AuthUser"
+              }
+            }
+          }
+        ]
+      },
+      "Agency": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AgencyDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Agency"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              },
+              "managers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "drivers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "phone": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "vehicles": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              },
+              "stations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Station"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Vehicle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plateNumber": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "agencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VehicleListItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "driver": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              },
+              "agency": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "example": "-1.95,30.06"
+          },
+          "agencyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Journey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceStationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationStationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vehicleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "departureTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JourneyListItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Journey"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "sourceStation": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  }
+                }
+              },
+              "destinationStation": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  }
+                }
+              },
+              "vehicle": {
+                "type": "object",
+                "properties": {
+                  "plateNumber": {
+                    "type": "string"
+                  },
+                  "capacity": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "_count": {
+                "type": "object",
+                "properties": {
+                  "tickets": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "JourneyAvailability": {
+        "type": "object",
+        "properties": {
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalCapacity": {
+            "type": "integer"
+          },
+          "soldSeats": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "availableSeats": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "JourneyStopReachedResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "alightingCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seatNumber": {
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TicketStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TicketListItem": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "journey": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "departureTime": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "price": {
+                    "type": "number"
+                  },
+                  "sourceStation": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "destinationStation": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "TicketPurchaseResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "ticket": {
+            "$ref": "#/components/schemas/Ticket"
+          },
+          "remainingBalance": {
+            "type": "number"
+          }
+        }
+      },
+      "TicketCancellationResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "refundedBalance": {
+            "type": "number"
+          }
+        }
+      },
+      "Parcel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "senderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiverName": {
+            "type": "string"
+          },
+          "receiverPhone": {
+            "type": "string"
+          },
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ParcelStatus"
+          },
+          "trackingCode": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ParcelWithJourney": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Parcel"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "journey": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sourceStation": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "destinationStation": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "WalletTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "walletId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "referenceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WalletMutationResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "newBalance": {
+            "type": "number"
+          }
+        }
+      },
+      "BulkPassengerSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "seatNumber",
+          "boardingHash"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "seatNumber": {
+            "type": "integer"
+          },
+          "boardingHash": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkBookingCreateResponse": {
+        "type": "object",
+        "required": [
+          "bookingId",
+          "masterQR",
+          "passengers"
+        ],
+        "properties": {
+          "bookingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "masterQR": {
+            "type": "string",
+            "format": "uri",
+            "description": "QR code returned as a PNG data URL produced by the QR helper",
+            "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+          },
+          "passengers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkPassengerSummary"
+            }
+          }
+        }
+      },
+      "BulkValidationResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "WaitlistAddResponse": {
+        "type": "object",
+        "required": [
+          "message",
+          "waitlistId",
+          "position"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "waitlistId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "WaitlistStatusResponse": {
+        "type": "object",
+        "required": [
+          "inQueue"
+        ],
+        "properties": {
+          "inQueue": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "CacheMetrics": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "integer"
+          },
+          "misses": {
+            "type": "integer"
+          },
+          "sets": {
+            "type": "integer"
+          },
+          "staleHits": {
+            "type": "integer"
+          },
+          "coalescedLocal": {
+            "type": "integer"
+          },
+          "coalescedWait": {
+            "type": "integer"
+          },
+          "revalidations": {
+            "type": "integer"
+          },
+          "revalidationSkips": {
+            "type": "integer"
+          },
+          "stampedeFallbackLoads": {
+            "type": "integer"
+          },
+          "invalidations": {
+            "type": "integer"
+          },
+          "invalidatedKeys": {
+            "type": "integer"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "phone",
+          "role"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "phone": {
+            "type": "string",
+            "example": "+250780000000"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "agencyIssuedId": {
+            "type": "string",
+            "description": "Required for DRIVER and MANAGER"
+          },
+          "ruraCode": {
+            "type": "string",
+            "description": "Required for OWNER"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "VerifyOtpRequest": {
+        "type": "object",
+        "required": [
+          "phone",
+          "code"
+        ],
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": [
+          "phone"
+        ],
+        "properties": {
+          "phone": {
+            "type": "string"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": [
+          "phone",
+          "code",
+          "newPassword"
+        ],
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          }
+        }
+      },
+      "PasskeyAuthVerifyRequest": {
+        "type": "object",
+        "required": [
+          "userId",
+          "credential"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "credential": {
+            "$ref": "#/components/schemas/AuthenticationResponseJSON"
+          }
+        }
+      },
+      "WebAuthnRpEntity": {
+        "type": "object",
+        "required": [
+          "name",
+          "id"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        }
+      },
+      "WebAuthnUserEntity": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "displayName"
+        ],
+        "properties": {
+          "id": {
+            "description": "Binary user handle encoded by the WebAuthn library",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicKeyCredentialParameter": {
+        "type": "object",
+        "required": [
+          "alg",
+          "type"
+        ],
+        "properties": {
+          "alg": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicKeyCredentialDescriptor": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "transports": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AuthenticatorSelectionCriteria": {
+        "type": "object",
+        "properties": {
+          "residentKey": {
+            "type": "string"
+          },
+          "userVerification": {
+            "type": "string"
+          },
+          "authenticatorAttachment": {
+            "type": "string"
+          },
+          "requireResidentKey": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RegistrationResponseJSON": {
+        "type": "object",
+        "required": [
+          "id",
+          "rawId",
+          "response",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rawId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "example": "public-key"
+          },
+          "authenticatorAttachment": {
+            "type": "string"
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "response": {
+            "type": "object",
+            "required": [
+              "clientDataJSON",
+              "attestationObject"
+            ],
+            "properties": {
+              "clientDataJSON": {
+                "type": "string"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "transports": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "AuthenticationResponseJSON": {
+        "type": "object",
+        "required": [
+          "id",
+          "rawId",
+          "response",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rawId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "example": "public-key"
+          },
+          "authenticatorAttachment": {
+            "type": "string"
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "response": {
+            "type": "object",
+            "required": [
+              "clientDataJSON",
+              "authenticatorData",
+              "signature"
+            ],
+            "properties": {
+              "clientDataJSON": {
+                "type": "string"
+              },
+              "authenticatorData": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string"
+              },
+              "userHandle": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "PasskeyRegistrationOptionsResponse": {
+        "type": "object",
+        "required": [
+          "challenge",
+          "rp",
+          "user",
+          "pubKeyCredParams"
+        ],
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "rp": {
+            "$ref": "#/components/schemas/WebAuthnRpEntity"
+          },
+          "user": {
+            "$ref": "#/components/schemas/WebAuthnUserEntity"
+          },
+          "pubKeyCredParams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicKeyCredentialParameter"
+            }
+          },
+          "timeout": {
+            "type": "integer"
+          },
+          "excludeCredentials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicKeyCredentialDescriptor"
+            }
+          },
+          "authenticatorSelection": {
+            "$ref": "#/components/schemas/AuthenticatorSelectionCriteria"
+          },
+          "attestation": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PasskeyAuthenticationOptionsResponse": {
+        "type": "object",
+        "required": [
+          "challenge",
+          "rpId",
+          "allowCredentials"
+        ],
+        "properties": {
+          "challenge": {
+            "type": "string"
+          },
+          "rpId": {
+            "type": "string"
+          },
+          "timeout": {
+            "type": "integer"
+          },
+          "allowCredentials": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicKeyCredentialDescriptor"
+            }
+          },
+          "userVerification": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PasskeyVerifyResponse": {
+        "type": "object",
+        "required": [
+          "verified"
+        ],
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "const": true
+          }
+        }
+      },
+      "CreateAgencyRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "ruraCode"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ruraCode": {
+            "type": "string"
+          }
+        }
+      },
+      "AssignManagerRequest": {
+        "type": "object",
+        "required": [
+          "managerId",
+          "stationId"
+        ],
+        "properties": {
+          "managerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "AssignDriverRequest": {
+        "type": "object",
+        "required": [
+          "driverId"
+        ],
+        "properties": {
+          "driverId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateVehicleRequest": {
+        "type": "object",
+        "required": [
+          "plateNumber",
+          "model",
+          "capacity",
+          "agencyId"
+        ],
+        "properties": {
+          "plateNumber": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "agencyId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateStationRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "location",
+          "agencyId"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "agencyId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateJourneyRequest": {
+        "type": "object",
+        "required": [
+          "sourceStationId",
+          "destinationStationId",
+          "vehicleId",
+          "departureTime",
+          "price"
+        ],
+        "properties": {
+          "sourceStationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationStationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vehicleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "departureTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      },
+      "MarkStopReachedRequest": {
+        "type": "object",
+        "required": [
+          "stationId"
+        ],
+        "properties": {
+          "stationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ConfirmAlightingRequest": {
+        "type": "object",
+        "required": [
+          "ticketId",
+          "stationId",
+          "seatNumber"
+        ],
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "stationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seatNumber": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "BuyTicketRequest": {
+        "type": "object",
+        "required": [
+          "journeyId",
+          "seatNumber",
+          "walletPassword"
+        ],
+        "properties": {
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seatNumber": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "walletPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelTicketRequest": {
+        "type": "object",
+        "required": [
+          "walletPassword"
+        ],
+        "properties": {
+          "walletPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateParcelRequest": {
+        "type": "object",
+        "required": [
+          "journeyId",
+          "receiverName",
+          "receiverPhone"
+        ],
+        "properties": {
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "receiverName": {
+            "type": "string"
+          },
+          "receiverPhone": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateParcelStatusRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ParcelStatus"
+          }
+        }
+      },
+      "SetupWalletRequest": {
+        "type": "object",
+        "required": [
+          "walletPassword"
+        ],
+        "properties": {
+          "walletPassword": {
+            "type": "string",
+            "minLength": 4
+          }
+        }
+      },
+      "WalletPasswordRequest": {
+        "type": "object",
+        "required": [
+          "walletPassword"
+        ],
+        "properties": {
+          "walletPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletMutationRequest": {
+        "type": "object",
+        "required": [
+          "amount",
+          "walletPassword"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "walletPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateBulkBookingRequest": {
+        "type": "object",
+        "required": [
+          "organizationId",
+          "journeyId",
+          "destination",
+          "departureTime",
+          "passengers"
+        ],
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "departureTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "passengers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "nationalId",
+                "seatNumber"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "nationalId": {
+                  "type": "string"
+                },
+                "seatNumber": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "parentPhone": {
+                  "type": "string"
+                },
+                "parentEmail": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ValidateBoardingRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "MASTER",
+              "PASSENGER"
+            ]
+          },
+          "bookingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "boardingHash": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      },
+      "AddWaitlistRequest": {
+        "type": "object",
+        "required": [
+          "journeyId",
+          "boardingStopId"
+        ],
+        "properties": {
+          "journeyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "boardingStopId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PaginatedUsers": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedAgencies": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Agency"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "email": {
+                              "type": "string",
+                              "format": "email"
+                            }
+                          }
+                        },
+                        "_count": {
+                          "type": "object",
+                          "properties": {
+                            "vehicles": {
+                              "type": "integer"
+                            },
+                            "stations": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedVehicles": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/VehicleListItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedStations": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Station"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedJourneys": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/JourneyListItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedTickets": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TicketListItem"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedParcels": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ParcelWithJourney"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PaginatedWalletTransactions": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PaginationMeta"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WalletTransaction"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Basic health check",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/cache": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Cache health and cache metrics snapshot",
+        "responses": {
+          "200": {
+            "description": "Cache metrics are available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "metrics": {
+                      "$ref": "#/components/schemas/CacheMetrics"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Cache metrics unavailable"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Prometheus-style metrics output",
+        "responses": {
+          "200": {
+            "description": "Metrics stream",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Metrics unavailable",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mock/rura/verify": {
+      "post": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Mock RURA verification endpoint",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ruraCode"
+                ],
+                "properties": {
+                  "ruraCode": {
+                    "type": "string",
+                    "example": "RURA-12345"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "code": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a new account",
+        "description": "Creates a user and an empty wallet record, then triggers email verification and OTP delivery.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email or phone already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify email address",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify phone OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Phone verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Rotate access and refresh tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout current user",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Trigger password reset OTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Always returns a neutral message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset account password with OTP",
+        "description": "Password reset clears active refresh sessions. If a wallet exists, its balance is reinitialized to zero because the old wallet key cannot be recovered safely.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkey/register-options": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create WebAuthn registration challenge",
+        "description": "JWT-protected flow for an already authenticated user. The server stores the generated registration challenge in Redis for 5 minutes before verification.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential creation options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkey/register-verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify WebAuthn registration response",
+        "description": "Consumes the raw `RegistrationResponseJSON` returned by the browser. On success, the passkey public key and counter are persisted to the `Passkey` table and the controller returns `{ \"verified\": true }`.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationResponseJSON"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Passkey registration result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyVerifyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkey/auth-options": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Create WebAuthn authentication challenge",
+        "description": "Public flow that requires a `userId` query parameter. The server loads the user's registered passkeys, generates an authentication challenge, and stores it in Redis for 5 minutes.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential request options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAuthenticationOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/passkey/auth-verify": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Verify WebAuthn authentication response",
+        "description": "Consumes the raw browser credential plus `userId`. On success, the stored passkey counter is advanced and the controller returns `{ \"verified\": true }`.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyAuthVerifyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Passkey login result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyVerifyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get current user profile",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List users",
+        "description": "Accessible to OWNER and MANAGER roles.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedUsers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agencies": {
+      "get": {
+        "tags": [
+          "Agencies"
+        ],
+        "summary": "List agencies",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated agencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedAgencies"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Agencies"
+        ],
+        "summary": "Create a verified agency",
+        "description": "OWNER only. Calls the configured RURA verification service before persisting the agency.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAgencyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Agency created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Agency"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agencies/{id}": {
+      "get": {
+        "tags": [
+          "Agencies"
+        ],
+        "summary": "Get agency detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agency detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgencyDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agencies/{id}/assign-manager": {
+      "post": {
+        "tags": [
+          "Agencies"
+        ],
+        "summary": "Assign manager to agency and station",
+        "description": "OWNER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignManagerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agencies/{id}/assign-driver": {
+      "post": {
+        "tags": [
+          "Agencies"
+        ],
+        "summary": "Assign driver to agency",
+        "description": "OWNER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDriverRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicles": {
+      "get": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "List vehicles",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "agencyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated vehicles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedVehicles"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Create vehicle",
+        "description": "OWNER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVehicleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vehicle created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Vehicle"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicles/{id}/assign-driver": {
+      "post": {
+        "tags": [
+          "Vehicles"
+        ],
+        "summary": "Assign driver to vehicle",
+        "description": "OWNER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDriverRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Driver assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "List stations",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "agencyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated stations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedStations"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Create station",
+        "description": "OWNER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Station created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Station"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stations/{id}": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get station detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Station"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journeys": {
+      "get": {
+        "tags": [
+          "Journeys"
+        ],
+        "summary": "List future journeys",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "destId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated journeys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedJourneys"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Journeys"
+        ],
+        "summary": "Create journey",
+        "description": "MANAGER only.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJourneyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Journey created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Journey"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journeys/{id}/availability": {
+      "get": {
+        "tags": [
+          "Journeys"
+        ],
+        "summary": "Get journey seat availability",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Availability detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journeys/{id}/stops/reached": {
+      "post": {
+        "tags": [
+          "Journeys"
+        ],
+        "summary": "Mark stop as reached",
+        "description": "Available to the trip's assigned driver, the owning agency manager, or an OWNER. Emits real-time passenger alighting information.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkStopReachedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stop progression recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JourneyStopReachedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journeys/{id}/alight": {
+      "post": {
+        "tags": [
+          "Journeys"
+        ],
+        "summary": "Confirm passenger alighting",
+        "description": "Available to the trip's assigned driver or the owning agency manager. Triggers waitlist processing for the freed seat.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmAlightingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alighting confirmed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/my": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "List current user's tickets",
+        "description": "CLIENT only. Requires a fully verified account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated ticket history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTickets"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets": {
+      "post": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Buy ticket",
+        "description": "CLIENT only. Requires a fully verified account, a wallet password, and an `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuyTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ticket purchased",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPurchaseResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Seat taken, temporarily reserved, or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tickets/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Cancel ticket and refund wallet",
+        "description": "CLIENT only. Requires a fully verified account and an `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket cancelled and refunded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketCancellationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parcels/track/{code}": {
+      "get": {
+        "tags": [
+          "Parcels"
+        ],
+        "summary": "Track parcel by public tracking code",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Parcel tracking payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelWithJourney"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parcels/my": {
+      "get": {
+        "tags": [
+          "Parcels"
+        ],
+        "summary": "List current user's parcels",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated parcels",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedParcels"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parcels": {
+      "post": {
+        "tags": [
+          "Parcels"
+        ],
+        "summary": "Create parcel",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateParcelRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Parcel created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParcelWithJourney"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/parcels/{id}/status": {
+      "patch": {
+        "tags": [
+          "Parcels"
+        ],
+        "summary": "Update parcel status",
+        "description": "Allowed for DRIVER, MANAGER, and OWNER.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateParcelStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parcel updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Parcel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/setup": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Initialize wallet encryption password or PIN",
+        "description": "Requires a fully verified account and an `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupWalletRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet initialized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/balance": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Get decrypted wallet balance",
+        "description": "Requires a fully verified account. The server validates the wallet password before decrypting the balance.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Balance returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balance": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/deposit": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Deposit to wallet",
+        "description": "Requires a fully verified account and an `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletMutationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletMutationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/withdraw": {
+      "post": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Withdraw from wallet",
+        "description": "Requires a fully verified account and an `Idempotency-Key` header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletMutationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletMutationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/transactions": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "List wallet transactions",
+        "description": "Requires a fully verified account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated wallet ledger",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedWalletTransactions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wallet/unlock": {
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Unlock wallet (cache derived key in Redis for 15 min)",
+        "description": "Verifies wallet password, derives AES-256 key via PBKDF2, and caches it in Redis for 15 minutes. Subsequent operations can use the cached key instead of re-entering the wallet password.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["walletPassword"],
+                "properties": {
+                  "walletPassword": { "type": "string", "minLength": 1, "description": "Wallet password/PIN" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Wallet unlocked", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MessageResponse" } } } },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "Incorrect wallet password", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/wallet/change-password": {
+      "post": {
+        "tags": ["Wallet"],
+        "summary": "Change wallet password",
+        "description": "Verifies old wallet password, decrypts balance, re-encrypts with new password, and clears the unlock cache.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["oldPassword", "newPassword"],
+                "properties": {
+                  "oldPassword": { "type": "string", "minLength": 1, "description": "Current wallet password/PIN" },
+                  "newPassword": { "type": "string", "minLength": 4, "description": "New wallet password/PIN (min 4 characters)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password changed", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MessageResponse" } } } },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "Incorrect old wallet password", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/bulk-bookings": {
+      "post": {
+        "tags": [
+          "Bulk Bookings"
+        ],
+        "summary": "Create organization bulk booking manifest",
+        "description": "Accessible to ORGANIZATION, MANAGER, and OWNER roles. Generates a master QR, passenger boarding hashes, and HMAC-backed manifest integrity data.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkBookingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bulk booking created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkBookingCreateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk-bookings/validate": {
+      "post": {
+        "tags": [
+          "Bulk Bookings"
+        ],
+        "summary": "Validate master or passenger boarding scan",
+        "description": "Accessible to DRIVER and MANAGER roles.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateBoardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk-bookings/passengers/{id}/alight": {
+      "post": {
+        "tags": [
+          "Bulk Bookings"
+        ],
+        "summary": "Mark bulk passenger as safely arrived",
+        "description": "Accessible to DRIVER and MANAGER roles.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Passenger marked as alighted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/waitlist": {
+      "post": {
+        "tags": [
+          "Waitlist"
+        ],
+        "summary": "Add client to journey waitlist",
+        "description": "CLIENT only. Requires a fully verified account. User joins a stop-specific FIFO queue backed by Redis sorted sets.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddWaitlistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Waitlist entry created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistAddResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/waitlist/status": {
+      "get": {
+        "tags": [
+          "Waitlist"
+        ],
+        "summary": "Get current user's waitlist position",
+        "description": "CLIENT only. Requires a fully verified account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "journeyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stopId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Waitlist status payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

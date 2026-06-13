@@ -1,0 +1,20 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Build output
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor temp files
+*.bak
+*.swp
+*.swo
+
+# Project temp artifacts (mockups, design files, etc.)
+.tmp/
