@@ -4,6 +4,7 @@ import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import PasskeyButton from "../../components/PasskeyButton";
 import Fa from '../../components/Fa';
+import Select from '../../components/Select';
 
 interface UserProfile {
   email: string;
@@ -382,17 +383,16 @@ function SelectRow({
   defaultValue: string;
   options: string[];
 }) {
+  const [value, setValue] = useState(defaultValue);
   return (
     <label className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
       <span className="text-ink-500">{label}</span>
-      <div className="flex items-center gap-2">
-        <select defaultValue={defaultValue} className="border-0 bg-transparent text-right text-sm font-semibold text-ink-900 focus:outline-none">
-          {options.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-        <Fa name="chevron-right" className="h-3 w-3 text-ink-300" />
-      </div>
+      <Select
+        options={options.map((o) => ({ value: o, label: o }))}
+        value={value}
+        onChange={setValue}
+        className="w-36"
+      />
     </label>
   );
 }

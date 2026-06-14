@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { cn } from '../lib/utils'
-import Fa from './Fa';
+import Fa from './Fa'
+import Select from './Select';
 
 interface VehicleFormProps {
   agencyId: string
@@ -120,11 +121,16 @@ export default function VehicleRegistrationForm({ agencyId, onComplete, onCancel
               <input type="number" className="input" min={1} max={10} value={columns} onChange={e => setColumns(Math.max(1, parseInt(e.target.value) || 1))} />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-ink-500">Labels</label>
-              <select className="input" value={labelScheme} onChange={e => setLabelScheme(e.target.value as any)}>
-                <option value="alpha-numeric">A1, B2, ...</option>
-                <option value="numeric">1, 2, 3, ...</option>
-              </select>
+              <label className="text-[11px] font-semibold text-ink-500">Label scheme</label>
+              <Select
+                options={[
+                  { value: 'alpha-numeric', label: 'Alpha-numeric (A1, B2, ...)' },
+                  { value: 'numeric', label: 'Numeric (1, 2, 3, ...)' },
+                ]}
+                value={labelScheme}
+                onChange={(v) => setLabelScheme(v as any)}
+                className="mt-1.5"
+              />
             </div>
           </div>
         </div>
