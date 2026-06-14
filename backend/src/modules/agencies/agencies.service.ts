@@ -16,10 +16,16 @@ import type { CreateAgencyDto, AssignManagerDto, AssignDriverDto } from './agenc
 
 /** Calls the (mock) RURA external API to verify an owner's agency. */
 async function verifyWithRura(ruraCode: string): Promise<boolean> {
+  // In development mode, skip external verification if no RURA endpoint is
+  // configured. The app exposes /mock/rura/verify for manual testing.
+  if (!env.RURA_API_URL) {
+    return ruraCode.startsWith('RURA-');
+  }
+
   try {
     const res = await fetch(`${env.RURA_API_URL}/verify`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': env.RURA_API_KEY },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': env.RURA_API_KEY ?? '' },
       body: JSON.stringify({ ruraCode }),
     });
     if (!res.ok) {

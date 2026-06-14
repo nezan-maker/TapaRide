@@ -7,7 +7,14 @@ const envSchema = z
     DATABASE_URL: z.string().url(),
     PORT: z.coerce.number().default(3000),
     HOST: z.string().default('0.0.0.0'),
-    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    // Render may set NODE_ENV with unexpected whitespace or casing.
+    // Preprocess normalises it so the enum always matches.
+    NODE_ENV: z
+      .preprocess(
+        (val) =>
+          typeof val === 'string' ? val.trim().toLowerCase() : val,
+        z.enum(['development', 'production', 'test']).default('development'),
+      ),
 
     JWT_SECRET: z.string().min(32),
     JWT_EXPIRES_IN: z.string().default('15m'),
@@ -18,7 +25,7 @@ const envSchema = z
     WEBAUTHN_RP_NAME: z.string().default('Tapa Transport Platform'),
     WEBAUTHN_ORIGIN: z.string().url(),
 
-    EMAIL_VERIFICATION_ORIGIN: z.string().url(),
+    EMAIL_VERIFICATION_ORIGIN: z.string().url().optional(),
 
     MAIL_FROM: z.string().email().default('no-reply@tapa.local'),
 
@@ -35,8 +42,9 @@ const envSchema = z
 
     OTP_EXPIRES_MINUTES: z.coerce.number().default(10),
 
-    RURA_API_KEY: z.string(),
-    RURA_API_URL: z.string().url(),
+    // RURA external API — optional in dev, required in production.
+    RURA_API_KEY: z.string().optional(),
+    RURA_API_URL: z.string().url().optional(),
 
     DATABASE_ENCRYPTION_KEY: z.string().length(64),
     HMAC_SECRET: z.string().min(32),
@@ -94,6 +102,30 @@ const envSchema = z
           code: z.ZodIssueCode.custom,
           path: ['METRICS_TOKEN'],
           message: 'METRICS_TOKEN is required in production',
+        });
+      }
+
+      if (!value.EMAIL_VERIFICATION_ORIGIN) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['EMAIL_VERIFICATION_ORIGIN'],
+          message: 'EMAIL_VERIFICATION_ORIGIN is required in production',
+        });
+      }
+
+      if (!value.RURA_API_URL) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['RURA_API_URL'],
+          message: 'RURA_API_URL is required in production',
+        });
+      }
+
+      if (!value.RURA_API_KEY) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['RURA_API_KEY'],
+          message: 'RURA_API_KEY is required in production',
         });
       }
     }
