@@ -47,6 +47,35 @@ export async function deliverEmail(options: {
     return;
   }
 
+  if (env.EMAIL_PROVIDER === 'brevo') {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': env.BREVO_API_KEY,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'TapaRide', email: env.MAIL_FROM },
+        to: [{ email: options.to }],
+        subject: options.subject,
+        htmlContent: options.html,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new ExternalProviderError('Brevo email API request failed', {
+        status: response.status,
+        body: body.slice(0, 500),
+        to: options.to,
+        subject: options.subject,
+      });
+    }
+
+    logger.info({ to: options.to, subject: options.subject }, 'Brevo email sent');
+    return;
+  }
+
   await postWebhook(env.EMAIL_PROVIDER_URL!, env.EMAIL_PROVIDER_TOKEN, {
     from: env.MAIL_FROM,
     to: options.to,

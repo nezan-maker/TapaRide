@@ -21,11 +21,12 @@ const envSchema = z
     EMAIL_VERIFICATION_ORIGIN: z.string().url(),
 
     MAIL_FROM: z.string().email().default('no-reply@tapa.local'),
-    SMTP_HOST: z.string().optional(),
-    SMTP_PORT: z.coerce.number().default(2525),
-    SMTP_USER: z.string().optional(),
-    SMTP_PASS: z.string().optional(),
-    EMAIL_PROVIDER: z.enum(['console', 'webhook']).default('console'),
+
+    // Email — use 'brevo' in production (Brevo REST API, port 443).
+    // Render blocks SMTP ports (25, 465, 587), so Brevo replaces SMTP.
+    // 'console' logs to stdout (dev only). 'webhook' sends to a custom URL.
+    EMAIL_PROVIDER: z.enum(['console', 'brevo', 'webhook']).default('console'),
+    BREVO_API_KEY: z.string().optional(),
     EMAIL_PROVIDER_URL: z.string().url().optional(),
     EMAIL_PROVIDER_TOKEN: z.string().optional(),
     SMS_PROVIDER: z.enum(['console', 'webhook']).default('console'),
@@ -52,6 +53,14 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['EMAIL_PROVIDER_URL'],
         message: 'EMAIL_PROVIDER_URL is required when EMAIL_PROVIDER=webhook',
+      });
+    }
+
+    if (value.EMAIL_PROVIDER === 'brevo' && !value.BREVO_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['BREVO_API_KEY'],
+        message: 'BREVO_API_KEY is required when EMAIL_PROVIDER=brevo',
       });
     }
 
