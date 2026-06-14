@@ -35,9 +35,8 @@ export default function Onboarding() {
     setError(null)
     try {
       // Real backend: POST /api/agencies — name + ruraCode.
-      // The backend calls the (mock) RURA provider to verify the code; if it
-      // starts with "RURA-", it's accepted. See
-      // backend/src/modules/agencies/agencies.service.ts
+      // The backend queries the official RURA Licensing Portal
+      // (https://licensing.rura.rw) to verify the document number.
       const res = await api.post('/api/agencies', {
         name: data.agencyName.trim(),
         ruraCode: data.ruraCode.trim(),
@@ -284,7 +283,8 @@ function RuraRegistration({
 
       <div className="mt-4 rounded-xl bg-ink-900 p-4 text-sm text-white/80">
         The <span className="font-semibold text-white">RURA Transport Code</span> is issued by the Rwanda
-        Utilities Regulatory Authority. It is required for all legal transport operations.
+        Utilities Regulatory Authority on your Transport Operating License. The number will be
+        verified in real time against the official RURA Licensing Portal.
       </div>
 
       <div className="mt-5">
@@ -297,7 +297,7 @@ function RuraRegistration({
           autoFocus
         />
         <p className="mt-1.5 text-xs text-ink-400">
-          In dev mode any code starting with <code className="rounded bg-ink-50 px-1.5 py-0.5">RURA-</code> is accepted.
+          Your document number will be checked against the official RURA Licensing Portal.
         </p>
       </div>
 

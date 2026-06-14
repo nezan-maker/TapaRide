@@ -29,8 +29,6 @@ export default function OwnerDashboard() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [agencyName, setAgencyName] = useState('')
   const [ruraCode, setRuraCode] = useState('')
-  const [verifyingRura, setVerifyingRura] = useState(false)
-  const [ruraVerified, setRuraVerified] = useState(false)
 
   const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null)
   const [assignRole, setAssignRole] = useState<'MANAGER' | 'DRIVER'>('MANAGER')
@@ -60,26 +58,6 @@ export default function OwnerDashboard() {
     }
   }
 
-  const handleVerifyRura = async () => {
-    if (!ruraCode) return
-    setVerifyingRura(true)
-    setError(null)
-    try {
-      const res = await api.post('/mock/rura/verify', { ruraCode })
-      if (res.verified) {
-        setRuraVerified(true)
-        setSuccessMsg('RURA license certificate validated successfully')
-      } else {
-        setRuraVerified(false)
-        setError('Invalid RURA verification code. Must start with "RURA-".')
-      }
-    } catch {
-      setError('RURA system verification service offline')
-    } finally {
-      setVerifyingRura(false)
-    }
-  }
-
   const handleCreateAgency = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -93,7 +71,6 @@ export default function OwnerDashboard() {
       setSuccessMsg(`Agency "${agencyName}" registered and activated`)
       setAgencyName('')
       setRuraCode('')
-      setRuraVerified(false)
       setShowAddForm(false)
       fetchAgencies()
     } catch (err) {
@@ -161,7 +138,7 @@ export default function OwnerDashboard() {
           </p>
         </div>
         <button
-          onClick={() => { setShowAddForm(!showAddForm); setRuraVerified(false) }}
+          onClick={() => setShowAddForm(!showAddForm)}
           className="btn bg-white text-ink-900 hover:bg-white/90 shrink-0"
         >
           <Fa name="plus" className="h-4 w-4" /> Register Agency
@@ -200,31 +177,17 @@ export default function OwnerDashboard() {
                 </div>
                 <div>
                   <label className="label">RURA License Code</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input"
-                      placeholder="e.g. RURA-9821-XP"
-                      value={ruraCode}
-                      onChange={(e) => {
-                        setRuraCode(e.target.value)
-                        setRuraVerified(false)
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleVerifyRura}
-                      disabled={verifyingRura || !ruraCode}
-                      className="btn-outline shrink-0 flex items-center gap-1.5"
-                    >
-                      {verifyingRura ? (
-                        <Fa name="refreshcw" className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Fa name="shield" className="h-4 w-4 text-flame-600" />
-                      )}
-                      Verify License
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="e.g. REG-10293847"
+                    value={ruraCode}
+                    onChange={(e) => setRuraCode(e.target.value)}
+                  />
+                  <p className="mt-1.5 text-xs text-ink-400">
+                    Enter the document number from your RURA-issued Transport Operating License.
+                    The number will be verified against the official RURA Licensing Portal.
+                  </p>
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
@@ -236,7 +199,7 @@ export default function OwnerDashboard() {
                   </button>
                   <button
                     type="submit"
-                    disabled={!ruraVerified}
+                    disabled={!ruraCode || !agencyName}
                     className="btn-primary py-2.5"
                   >
                     Register Agency
@@ -409,9 +372,9 @@ export default function OwnerDashboard() {
                 <span className="font-semibold text-ink-900">{agencies.length}</span>
               </div>
               <div className="flex justify-between py-2 text-xs">
-                <span className="text-ink-500">RURA Verification Server</span>
+                <span className="text-ink-500">RURA Verification</span>
                 <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Online
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Via licensing.rura.rw
                 </span>
               </div>
             </div>
