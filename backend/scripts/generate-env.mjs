@@ -43,12 +43,12 @@ const vars = [
   { key: 'PORT',               kind: 'optional', default: '3000',        desc: 'HTTP listen port' },
   { key: 'HOST',               kind: 'optional', default: '0.0.0.0',     desc: 'HTTP listen host' },
   { key: 'NODE_ENV',           kind: 'input',    default: 'development', desc: 'development | production | test' },
-  { key: 'METRICS_TOKEN',      kind: 'generate', bytes: 24,              desc: 'Bearer token for /metrics and /health/cache' },
+  { key: 'METRICS_TOKEN',      kind: 'generate', bytes: 64,              desc: 'Bearer token for /metrics and /health/cache' },
 
   // ── JWT ────────────────────────────────────────────────────────────────────
-  { key: 'JWT_SECRET',         kind: 'generate', bytes: 32,              desc: 'JWT signing secret (min 32 chars)' },
+  { key: 'JWT_SECRET',         kind: 'generate', bytes: 64,              desc: 'JWT signing secret (min 64 chars)' },
   { key: 'JWT_EXPIRES_IN',     kind: 'optional', default: '15m',         desc: 'Access token TTL' },
-  { key: 'JWT_REFRESH_SECRET', kind: 'generate', bytes: 32,              desc: 'Refresh token signing secret (min 32 chars)' },
+  { key: 'JWT_REFRESH_SECRET', kind: 'generate', bytes: 64,              desc: 'Refresh token signing secret (min 64 chars)' },
   { key: 'JWT_REFRESH_EXPIRES_IN', kind: 'optional', default: '7d',      desc: 'Refresh token TTL' },
 
   // ── WebAuthn / Passkeys ────────────────────────────────────────────────────
@@ -57,9 +57,10 @@ const vars = [
   { key: 'WEBAUTHN_ORIGIN',    kind: 'input',                            desc: 'Allowed origin URL (e.g. https://taparide.onrender.com)' },
   { key: 'EMAIL_VERIFICATION_ORIGIN', kind: 'input',                     desc: 'Base URL for email verification links' },
 
-  // ── Email (console provider used in dev; production needs webhook) ─────────
+  // ── Email (console provider used in dev; brevo recommended in prod) ─────────
   { key: 'EMAIL_PROVIDER',     kind: 'input',    default: 'console',     desc: 'console | brevo | webhook (brevo recommended in production)' },
-  { key: 'BREVO_API_KEY',      kind: 'generate', bytes: 24,              desc: 'Brevo REST API key (required when EMAIL_PROVIDER=brevo)' },
+  // BREVO_API_KEY: not auto-generated — issued by Brevo dashboard, fixed format (xkeysib-...)
+  { key: 'BREVO_API_KEY',      kind: 'input',                            desc: 'Brevo REST API key (from Brevo dashboard, required when EMAIL_PROVIDER=brevo)' },
   { key: 'EMAIL_PROVIDER_URL', kind: 'optional',                        desc: 'Email webhook endpoint URL' },
   { key: 'EMAIL_PROVIDER_TOKEN', kind: 'optional',                      desc: 'Email webhook auth token' },
   { key: 'MAIL_FROM',          kind: 'optional', default: 'no-reply@tapa.local', desc: 'Sender email address' },
@@ -81,8 +82,8 @@ const vars = [
   { key: 'RURA_API_URL',       kind: 'optional', default: 'https://licensing.rura.rw', desc: 'RURA Licensing Portal base URL' },
 
   // ── Encryption & signing ───────────────────────────────────────────────────
-  { key: 'DATABASE_ENCRYPTION_KEY', kind: 'generate', bytes: 32,         desc: 'Wallet encryption key (exactly 64 hex chars)' },
-  { key: 'HMAC_SECRET',        kind: 'generate', bytes: 32,              desc: 'HMAC signing secret for QR auth (min 32 chars)' },
+  { key: 'DATABASE_ENCRYPTION_KEY', kind: 'generate', bytes: 32,         desc: 'Wallet encryption key (AES-256: exactly 32 bytes = 64 hex chars)' },
+  { key: 'HMAC_SECRET',        kind: 'generate', bytes: 64,              desc: 'HMAC signing secret for QR auth (min 64 chars)' },
 
   // ── Redis ──────────────────────────────────────────────────────────────────
   { key: 'REDIS_URL',          kind: 'input',    default: 'redis://localhost:6379', desc: 'Redis connection string' },

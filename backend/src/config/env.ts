@@ -16,9 +16,9 @@ const envSchema = z
         z.enum(['development', 'production', 'test']).default('development'),
       ),
 
-    JWT_SECRET: z.string().min(32),
+    JWT_SECRET: z.string().min(64),
     JWT_EXPIRES_IN: z.string().default('15m'),
-    JWT_REFRESH_SECRET: z.string().min(32),
+    JWT_REFRESH_SECRET: z.string().min(64),
     JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
     WEBAUTHN_RP_ID: z.string().default('localhost'),
@@ -46,13 +46,13 @@ const envSchema = z
     // https://licensing.rura.rw/check-service/validity
     RURA_API_URL: z.string().url().default('https://licensing.rura.rw'),
 
-    DATABASE_ENCRYPTION_KEY: z.string().length(64),
-    HMAC_SECRET: z.string().min(32),
+    DATABASE_ENCRYPTION_KEY: z.string().length(64),  // AES-256-GCM requires exactly 32 bytes (64 hex chars)
+    HMAC_SECRET: z.string().min(64),
 
     REDIS_URL: z.string().url().default('redis://localhost:6379'),
     SOCKET_EVENTS_CHANNEL: z.string().default('socket:events'),
     GPS_AGGREGATION_INTERVAL_MS: z.coerce.number().default(15000),
-    METRICS_TOKEN: z.string().min(16).optional(),
+    METRICS_TOKEN: z.string().min(64).optional(),
     STRIPE_SECRET_KEY: z.string().optional(),
   })
   .superRefine((value, ctx) => {
