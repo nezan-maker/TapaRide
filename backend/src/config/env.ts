@@ -42,9 +42,9 @@ const envSchema = z
 
     OTP_EXPIRES_MINUTES: z.coerce.number().default(10),
 
-    // RURA external API — optional in dev, required in production.
-    RURA_API_KEY: z.string().optional(),
-    RURA_API_URL: z.string().url().optional(),
+    // RURA document number is validated by format pattern in
+    // agencies.service.ts — no external API required.
+    // (Previous RURA_API_URL / RURA_API_KEY vars have been removed.)
 
     DATABASE_ENCRYPTION_KEY: z.string().length(64),
     HMAC_SECRET: z.string().min(32),
@@ -110,22 +110,6 @@ const envSchema = z
           code: z.ZodIssueCode.custom,
           path: ['EMAIL_VERIFICATION_ORIGIN'],
           message: 'EMAIL_VERIFICATION_ORIGIN is required in production',
-        });
-      }
-
-      if (!value.RURA_API_URL) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['RURA_API_URL'],
-          message: 'RURA_API_URL is required in production',
-        });
-      }
-
-      if (!value.RURA_API_KEY) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['RURA_API_KEY'],
-          message: 'RURA_API_KEY is required in production',
         });
       }
     }

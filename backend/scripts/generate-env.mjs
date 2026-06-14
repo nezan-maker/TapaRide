@@ -74,9 +74,10 @@ const vars = [
   // ── OTP ────────────────────────────────────────────────────────────────────
   { key: 'OTP_EXPIRES_MINUTES', kind: 'optional', default: '10',         desc: 'OTP code lifetime in minutes' },
 
-  // ── RURA (external agency verification) ────────────────────────────────────
-  { key: 'RURA_API_KEY',       kind: 'generate', bytes: 24,              desc: 'API key for RURA verification service' },
-  { key: 'RURA_API_URL',       kind: 'input',                            desc: 'RURA verification API base URL' },
+  // ── RURA (document number validation — no external API) ──────────────────
+  // RURA document number is validated by format pattern in agencies.service.ts.
+  // The code is collected during agency registration and stored on the user
+  // record for manual admin verification via the RURA Licensing Portal.
 
   // ── Encryption & signing ───────────────────────────────────────────────────
   { key: 'DATABASE_ENCRYPTION_KEY', kind: 'generate', bytes: 32,         desc: 'Wallet encryption key (exactly 64 hex chars)' },

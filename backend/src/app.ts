@@ -152,15 +152,6 @@ export async function buildApp() {
   app.use("/api/payments", paymentRoutes);
   app.use("/api/notifications", notificationRoutes);
 
-  // ─── Mock RURA endpoint (development only) ────────────────────────────────
-  if (env.NODE_ENV !== "production") {
-    app.post("/mock/rura/verify", (req: Request, res: Response) => {
-      const { ruraCode } = req.body as { ruraCode: string };
-      const valid = typeof ruraCode === "string" && ruraCode.startsWith("RURA-");
-      res.json({ verified: valid, code: ruraCode });
-    });
-  }
-
   // ─── Health check ─────────────────────────────────────────────────────────
   app.get("/health", (_req: Request, res: Response) => {
     res.json({
