@@ -2,49 +2,77 @@ import { db } from '../../lib/db.js';
 import { rememberJson } from '../../lib/cache.js';
 import { cacheKeys } from '../../lib/cache-keys.js';
 import { cachePolicies } from '../../lib/cache-policies.js';
+import { env } from '../../config/env.js';
 import { publishDomainEvent } from '../../lib/domain-events.js';
 import {
   AuthorizationError,
   NotFoundError,
   ValidationError,
+  ExternalProviderError,
 } from '../../lib/errors.js';
 import type { PaginationInput } from '../../lib/pagination.js';
 import { toPagination } from '../../lib/pagination.js';
 import type { CreateAgencyDto, AssignManagerDto, AssignDriverDto } from './agencies.schema.js';
 
 /**
- * Validates a RURA document number by checking its format.
+ * Queries the official RURA Licensing Portal to verify a transport operator's
+ * license document number.
  *
- * RURA (Rwanda Utilities Regulatory Authority) does not provide a public
- * API for real-time license verification. Instead, the accepted pattern is:
+ * The portal at https://licensing.rura.rw offers a public validity check.
+ * We send a GET with the document number and inspect the HTML response.
+ * If the document exists the portal returns license details; otherwise it
+ * returns a "Document number not found" message.
  *
- *   RURA-XXXXXXXXXX  (the standard numeric document reference)
- *
- * During registration the number is validated by pattern only. An admin
- * should manually verify the document via the RURA Licensing Services Portal
- * (https://www.rura.rw) and flip the `verified` flag on the agency record.
+ * This replaces the previous format-only check (RURA- prefix) with a real
+ * verification against the regulator's database.
  */
-const RURA_PATTERN = /^RURA-\w{6,20}$/i;
+async function verifyWithRura(documentNumber: string): Promise<void> {
+  const url = `${env.RURA_API_URL}/check-service/validity-search`;
 
-function validateRuraCode(code: string): void {
-  if (!RURA_PATTERN.test(code.trim())) {
-    throw new ValidationError(
-      'Invalid RURA document number. Expected format: RURA-XXXXXXXXXX ' +
-      '(e.g. RURA-10293847). Your license document number is printed on your ' +
-      'RURA-issued Transport Operating License.',
+  const res = await fetch(
+    `${url}?check_type=document_number&document_number=${encodeURIComponent(documentNumber)}&web=true&vehicle_type=vehicle`,
+    {
+      method: 'GET',
+      headers: { 'user-agent': 'TapaRide/1.0' },
+      // Timeout after 10 seconds — the RURA portal can be slow.
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ExternalProviderError(
+      'RURA Licensing Portal is temporarily unavailable. Please try again later.',
+      { status: res.status },
     );
   }
+
+  const html = await res.text();
+
+  // The RURA portal returns a success page with a results table when the
+  // document is found, or a "not found" alert div when it isn't.
+  if (
+    html.includes('Document number not found') ||
+    html.includes('not found') ||
+    html.includes('not_found')
+  ) {
+    throw new ValidationError(
+      `The document number "${documentNumber}" was not recognised by the RURA ` +
+      'Licensing Portal. Please verify the number on your RURA-issued Transport ' +
+      'Operating License and try again.',
+    );
+  }
+
+  // If the response contains a result table the document is valid — pass.
 }
 
 export async function createAgency(ownerId: string, dto: CreateAgencyDto) {
   const owner = await db.user.findUniqueOrThrow({ where: { id: ownerId } });
   if (owner.role !== 'OWNER') throw new AuthorizationError('Only OWNER users can register agencies');
 
-  // Validate the RURA document number format (no external API call — one
-  // does not exist). An admin will manually verify the document later.
-  validateRuraCode(dto.ruraCode);
+  // Verify the RURA document number against the official Licensing Portal.
+  await verifyWithRura(dto.ruraCode);
 
-  // Store the RURA code on the user record for future reference / manual audit.
+  // Store the RURA code on the user record for future reference / audit.
   await db.user.update({
     where: { id: ownerId },
     data: { ruraCode: dto.ruraCode.trim() },

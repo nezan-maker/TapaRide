@@ -42,9 +42,9 @@ const envSchema = z
 
     OTP_EXPIRES_MINUTES: z.coerce.number().default(10),
 
-    // RURA document number is validated by format pattern in
-    // agencies.service.ts — no external API required.
-    // (Previous RURA_API_URL / RURA_API_KEY vars have been removed.)
+    // RURA license validation — queries the official RURA Licensing Portal.
+    // https://licensing.rura.rw/check-service/validity
+    RURA_API_URL: z.string().url().default('https://licensing.rura.rw'),
 
     DATABASE_ENCRYPTION_KEY: z.string().length(64),
     HMAC_SECRET: z.string().min(32),
