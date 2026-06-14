@@ -82,7 +82,7 @@ const vars = [
   { key: 'RURA_API_URL',       kind: 'optional', default: 'https://licensing.rura.rw', desc: 'RURA Licensing Portal base URL' },
 
   // ── Encryption & signing ───────────────────────────────────────────────────
-  { key: 'DATABASE_ENCRYPTION_KEY', kind: 'generate', bytes: 32,         desc: 'Wallet encryption key (AES-256: exactly 32 bytes = 64 hex chars)' },
+  { key: 'DATABASE_ENCRYPTION_KEY', kind: 'generate', bytes: 32, encoding: 'hex', desc: 'Wallet encryption key (AES-256: exactly 32 bytes = 64 hex chars)' },
   { key: 'HMAC_SECRET',        kind: 'generate', bytes: 64,              desc: 'HMAC signing secret for QR auth (min 64 chars)' },
 
   // ── Redis ──────────────────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ const lines = [
 for (const v of vars) {
   lines.push(`# ${v.desc}`);
   if (v.kind === 'generate') {
-    const value = token(v.bytes);
+    const value = v.encoding === 'hex' ? hex(v.bytes) : token(v.bytes);
     lines.push(`${v.key}=${value}`);
   } else if (v.kind === 'optional') {
     lines.push(`# ${v.key}=${v.default ?? ''}`);
