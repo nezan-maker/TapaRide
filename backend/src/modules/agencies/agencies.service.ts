@@ -1,4 +1,5 @@
 import { db } from '../../lib/db.js';
+import { redis } from '../../lib/redis.js';
 import { rememberJson } from '../../lib/cache.js';
 import { cacheKeys } from '../../lib/cache-keys.js';
 import { cachePolicies } from '../../lib/cache-policies.js';
@@ -6,13 +7,14 @@ import { env } from '../../config/env.js';
 import { publishDomainEvent } from '../../lib/domain-events.js';
 import {
   AuthorizationError,
-  NotFoundError,
   ValidationError,
   ExternalProviderError,
 } from '../../lib/errors.js';
+import { sendMail } from '../../lib/mailer.js';
 import type { PaginationInput } from '../../lib/pagination.js';
 import { toPagination } from '../../lib/pagination.js';
 import type { CreateAgencyDto, AssignManagerDto, AssignDriverDto } from './agencies.schema.js';
+import crypto from 'node:crypto';
 
 /**
  * Queries the official RURA Licensing Portal to verify a transport operator's
@@ -193,9 +195,14 @@ export async function assignManager(agencyId: string, ownerId: string, dto: Assi
   return { message: 'Manager assigned successfully' };
 }
 
-export async function assignDriver(agencyId: string, ownerId: string, dto: AssignDriverDto) {
+export async function assignDriver(agencyId: string, userId: string, dto: AssignDriverDto) {
   const agency = await db.agency.findUniqueOrThrow({ where: { id: agencyId } });
-  if (agency.ownerId !== ownerId) throw new AuthorizationError('Only the agency owner can assign drivers');
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
+  const isOwner = agency.ownerId === userId;
+  const isManager = user.managedAgencyId === agencyId && user.role === 'MANAGER';
+  if (!isOwner && !isManager) {
+    throw new AuthorizationError('Only the agency owner or a manager can assign drivers');
+  }
 
   const driver = await db.user.findUniqueOrThrow({ where: { id: dto.driverId } });
   if (driver.role !== 'DRIVER') throw new ValidationError('Target user must have DRIVER role');
@@ -212,16 +219,49 @@ export async function assignDriver(agencyId: string, ownerId: string, dto: Assig
 }
 
 export async function assignManagerByEmail(agencyId: string, ownerId: string, email: string, stationId: string) {
-  const manager = await db.user.findUnique({ where: { email } });
-  if (!manager) throw new NotFoundError(`User with email ${email} not found`);
-  if (manager.role !== 'MANAGER') throw new ValidationError('User must have MANAGER role');
+  const existing = await db.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.role !== 'MANAGER') throw new ValidationError('User must have MANAGER role');
+    return assignManager(agencyId, ownerId, { managerId: existing.id, stationId });
+  }
 
-  return assignManager(agencyId, ownerId, { managerId: manager.id, stationId });
+  // User doesn't exist — send an invite
+  const token = crypto.randomBytes(16).toString('hex');
+  const inviteKey = `invite:${email.toLowerCase()}`;
+  await redis.set(inviteKey, JSON.stringify({ token, role: 'MANAGER', agencyId, stationId }), 'EX', 172800);
+
+  const inviteLink = `${env.EMAIL_VERIFICATION_ORIGIN || env.WEBAUTHN_ORIGIN}/accept-invite?email=${encodeURIComponent(email)}&token=${token}`;
+  await sendMail({ to: email, subject: 'You\'ve been invited to manage a Tapa agency', html: `
+    <h2>You're invited to join Tapa as a Manager</h2>
+    <p>An agency owner has assigned you to manage their transport operations.</p>
+    <p><a href="${inviteLink}" style="background:#10075C;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;">Accept Invitation</a></p>
+    <p>Or enter this code on the invitation page: <strong>${token}</strong></p>
+    <p>This link expires in 48 hours.</p>
+  `});
+
+  return { message: `Invitation sent to ${email}. They'll receive a link to set up their account.` };
 }
 
-export async function assignDriverByEmail(agencyId: string, ownerId: string, email: string) {
-  const driver = await db.user.findUnique({ where: { email } });
-  if (!driver) throw new NotFoundError(`User with email ${email} not found`);
+export async function assignDriverByEmail(agencyId: string, userId: string, email: string) {
+  const existing = await db.user.findUnique({ where: { email } });
+  if (existing) {
+    if (existing.role !== 'DRIVER') throw new ValidationError('User must have DRIVER role');
+    return assignDriver(agencyId, userId, { driverId: existing.id });
+  }
 
-  return assignDriver(agencyId, ownerId, { driverId: driver.id });
+  // User doesn't exist — send an invite
+  const token = crypto.randomBytes(16).toString('hex');
+  const inviteKey = `invite:${email.toLowerCase()}`;
+  await redis.set(inviteKey, JSON.stringify({ token, role: 'DRIVER', agencyId }), 'EX', 172800);
+
+  const inviteLink = `${env.EMAIL_VERIFICATION_ORIGIN || env.WEBAUTHN_ORIGIN}/accept-invite?email=${encodeURIComponent(email)}&token=${token}`;
+  await sendMail({ to: email, subject: 'You\'ve been invited to drive for a Tapa agency', html: `
+    <h2>You're invited to join Tapa as a Driver</h2>
+    <p>You've been assigned as a driver for a Tapa transport agency.</p>
+    <p><a href="${inviteLink}" style="background:#10075C;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;">Accept Invitation</a></p>
+    <p>Or enter this code on the invitation page: <strong>${token}</strong></p>
+    <p>This link expires in 48 hours.</p>
+  `});
+
+  return { message: `Invitation sent to ${email}. They'll receive a link to set up their account.` };
 }

@@ -12,6 +12,7 @@ import {
   resetPasswordSchema,
   changePasswordSchema,
   oauthSchema,
+  acceptInviteSchema,
 } from './auth.schema.js';
 import * as AuthService from './auth.service.js';
 
@@ -118,6 +119,20 @@ export async function changePassword(req: Request, res: Response, next: NextFunc
     const user = req.user as { id: string };
     const dto = changePasswordSchema.parse(req.body);
     const result = await AuthService.changePassword(user.id, dto);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/accept-invite
+ * Accept an email invitation to join as MANAGER or DRIVER.
+ */
+export async function acceptInvite(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, token, password } = acceptInviteSchema.parse(req.body);
+    const result = await AuthService.acceptInvite(email.toLowerCase().trim(), token.trim(), password);
     res.json(result);
   } catch (error) {
     next(error);

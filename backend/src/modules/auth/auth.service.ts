@@ -536,3 +536,50 @@ export async function loginWithApple(idToken: string) {
   return registerOrLoginOauthUser(email);
 }
 
+// ─── Accept Invite (for manager/driver email invitations) ───────────────────
+
+export interface InvitePayload {
+  token: string;
+  role: string;
+  agencyId: string;
+  stationId?: string;
+}
+
+export async function acceptInvite(email: string, token: string, password: string) {
+  const inviteKey = `invite:${email.toLowerCase()}`;
+  const stored = await redis.get(inviteKey);
+  if (!stored) throw new ValidationError('No pending invitation found. Ask the person who invited you to resend the invite.');
+
+  let invite: InvitePayload;
+  try { invite = JSON.parse(stored); }
+  catch { throw new ValidationError('Invalid invitation.'); }
+
+  if (invite.token !== token) throw new ValidationError('Invalid invitation code.');
+
+  const existing = await db.user.findUnique({ where: { email } });
+  if (existing) throw new ConflictError('An account with this email already exists. Please log in instead.');
+
+  const hashedPassword = await hashPassword(password, BCRYPT_ROUNDS);
+
+  const user = await db.$transaction(async (tx: Prisma.TransactionClient) => {
+    const newUser = await tx.user.create({
+      data: {
+        email,
+        phone: `+2507${Math.floor(10000000 + Math.random() * 90000000)}`,
+        password: hashedPassword,
+        role: invite.role as any,
+        isVerified: true,
+        phoneVerifiedAt: new Date(),
+        passwordHistory: [hashedPassword],
+        ...(invite.role === 'MANAGER' ? { managedAgencyId: invite.agencyId, managedStationId: invite.stationId } : {}),
+        ...(invite.role === 'DRIVER' ? { driverAgencyId: invite.agencyId } : {}),
+      },
+    });
+    await tx.wallet.create({ data: { userId: newUser.id } });
+    return newUser;
+  });
+
+  await redis.del(inviteKey);
+  return createSession(user);
+}
+

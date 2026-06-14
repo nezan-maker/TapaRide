@@ -8,8 +8,9 @@ router.get('/', AgenciesController.listAgencies);
 router.get('/:id', AgenciesController.getAgency);
 router.post('/', authenticate, requireRoles('OWNER'), AgenciesController.createAgency);
 router.post('/:id/assign-manager', authenticate, requireRoles('OWNER'), AgenciesController.assignManager);
-router.post('/:id/assign-driver', authenticate, requireRoles('OWNER'), AgenciesController.assignDriver);
 router.post('/:id/assign-manager-by-email', authenticate, requireRoles('OWNER'), AgenciesController.assignManagerByEmail);
-router.post('/:id/assign-driver-by-email', authenticate, requireRoles('OWNER'), AgenciesController.assignDriverByEmail);
+router.post('/:id/assign-driver', authenticate, requireRoles('OWNER', 'MANAGER'), AgenciesController.assignDriver);
+router.post('/:id/assign-driver-by-email', authenticate, requireRoles('OWNER', 'MANAGER'), AgenciesController.assignDriverByEmail);
+router.post('/assign-driver', authenticate, requireRoles('MANAGER'), AgenciesController.assignDriverFromManager);
 
 export default router;

@@ -388,6 +388,66 @@ export default function ManagerDashboard() {
           <p className="text-sm text-ink-400 text-center py-8">No journeys scheduled yet. Click "Schedule Journey" to begin.</p>
         )}
       </div>
+
+      {/* Assign Driver */}
+      <div className="card p-6">
+        <h2 className="text-lg font-bold text-ink-900 mb-4">Assign a Driver</h2>
+        <p className="text-sm text-ink-500 mb-3">
+          Enter the email of a user to assign them as a driver to this agency. If they
+          don't have an account yet, they'll receive an invitation email.
+        </p>
+        <AssignDriverForm />
+      </div>
     </div>
   )
 }
+
+function AssignDriverForm() {
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+    setBusy(true)
+    setResult(null)
+    try {
+      // The manager's managed agency is available from their auth context.
+      // We call the existing assign-driver-by-email endpoint which the backend
+      // now allows for MANAGER role too.
+      const res = await api.post('/api/agencies/assign-driver', { email })
+      setResult({ kind: 'success', message: res.message || `Invitation sent to ${email}` })
+      setEmail('')
+    } catch (err) {
+      setResult({ kind: 'error', message: err instanceof ApiError ? err.message : 'Failed to assign driver' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex gap-3">
+      <input
+        type="email"
+        className="input flex-1"
+        placeholder="driver@email.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        disabled={busy}
+        required
+      />
+      <button type="submit" disabled={busy || !email} className="btn-primary shrink-0 disabled:opacity-50">
+        {busy ? 'Sending…' : 'Assign Driver'}
+      </button>
+      {result && (
+        <span className={`flex items-center gap-1.5 text-sm ${result.kind === 'success' ? 'text-emerald-600' : 'text-flame-600'}`}>
+          <Fa name={result.kind === 'success' ? 'check' : 'alert-circle'} className="h-4 w-4" />
+          {result.message}
+        </span>
+      )}
+    </form>
+  )
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────

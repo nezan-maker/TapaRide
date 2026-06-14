@@ -26,6 +26,7 @@ import Signup from "./pages/auth/Signup";
 import Otp from "./pages/auth/Otp";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import RegisterPasskey from "./pages/auth/RegisterPasskey";
+import AcceptInvite from "./pages/auth/AcceptInvite";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
@@ -59,6 +60,7 @@ const router = createBrowserRouter([
   { path: "/verify-otp", element: <Otp /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
   { path: "/register-passkey", element: <RegisterPasskey /> },
+  { path: "/accept-invite", element: <AcceptInvite /> },
   {
     path: "/onboarding",
     element: <ProtectedRoute allowedRoles={['OWNER']}><Onboarding /></ProtectedRoute>,

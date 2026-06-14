@@ -44,4 +44,7 @@ router.post('/passkey/register-verify', authenticate, AuthController.passkeyRegi
 router.post('/change-password', authWriteLimiter, authenticate, AuthController.changePassword);
 router.post('/logout', authenticate, AuthController.logout);
 
+// ─── Invite acceptance (no auth — user hasn't signed up yet) ─────────────
+router.post('/accept-invite', authWriteLimiter, AuthController.acceptInvite);
+
 export default router;
