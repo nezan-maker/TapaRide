@@ -11,8 +11,17 @@ interface Agency {
   ownerId: string
 }
 
+interface Vehicle {
+  id: string
+  plateNumber: string
+  model: string
+  capacity: number
+  driverId: string | null
+}
+
 export default function OwnerDashboard() {
   const [agencies, setAgencies] = useState<Agency[]>([])
+  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -37,10 +46,13 @@ export default function OwnerDashboard() {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get('/api/agencies')
-      // The backend returns paginated: { items: [...], page, pageSize, total }
+      const [data, vehicleData] = await Promise.all([
+        api.get('/api/agencies'),
+        api.get('/api/vehicles').catch(() => ({ vehicles: [] })),
+      ])
       const list = data.items || data.agencies || data
       setAgencies(list)
+      setVehicles(vehicleData.vehicles || vehicleData.items || [])
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load agencies')
     } finally {
@@ -344,9 +356,49 @@ export default function OwnerDashboard() {
           {selectedAgency && showVehicleForm && (
             <VehicleRegistrationForm
               agencyId={selectedAgency.id}
-              onComplete={() => { setShowVehicleForm(false); setSuccessMsg('Vehicle registered successfully') }}
+              onComplete={() => { setShowVehicleForm(false); setSuccessMsg('Vehicle registered successfully'); fetchAgencies() }}
               onCancel={() => setShowVehicleForm(false)}
             />
+          )}
+
+          {selectedAgency && vehicles.length > 0 && (
+            <div className="card p-6 space-y-3">
+              <h3 className="font-bold text-ink-900 text-sm flex items-center gap-2">
+                <Fa name="bus" className="h-4 w-4 text-flame-600" /> Fleet ({vehicles.length})
+              </h3>
+              <div className="space-y-2">
+                {vehicles.map((v) => (
+                  <div key={v.id} className="flex items-center justify-between rounded-xl border border-ink-100 p-3">
+                    <div>
+                      <div className="font-semibold text-ink-900 text-sm">{v.plateNumber}</div>
+                      <div className="text-xs text-ink-400">{v.model} · {v.capacity} seats</div>
+                    </div>
+                    {v.driverId ? (
+                      <span className="chip bg-emerald-50 text-emerald-700">Assigned</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          // Assign the current user as driver for this vehicle
+                          // In a real app, the owner would pick from a list of DRIVER-role users
+                          if (!selectedAgency) return
+                          try {
+                            await api.post(`/api/vehicles/${v.id}/assign-driver`, { driverId: v.id })
+                            setSuccessMsg(`Driver assigned to ${v.plateNumber}`)
+                            fetchAgencies()
+                          } catch (err) {
+                            setError(err instanceof ApiError ? err.message : 'Failed to assign driver')
+                          }
+                        }}
+                        className="btn-outline py-1 px-2.5 text-[11px] flex items-center gap-1"
+                      >
+                        <Fa name="user-plus" className="h-3 w-3" /> Assign Driver
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="card p-6 space-y-4">

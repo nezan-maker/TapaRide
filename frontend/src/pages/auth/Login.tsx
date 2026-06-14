@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import PasskeyButton from "../../components/PasskeyButton";
 import { useAuth } from "../../lib/auth";
@@ -7,11 +7,28 @@ import Fa from '../../components/Fa';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, loginOAuth, error, clearError, loading } = useAuth();
   const [show, setShow] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // After a successful login we want to send the user back to the page
+  // they originally tried to visit. <ProtectedRoute> sets
+  //   state = { from: <Location> }
+  // when redirecting an unauthenticated user, and <ProtectedLink> sets
+  //   state = { from: { pathname, search } }
+  // when a gated link is clicked. Honour both shapes; fall back to
+  // /dashboard so existing flows keep working.
+  const fromState = (location.state as { from?: unknown } | null)?.from;
+  const fromPath =
+    fromState && typeof fromState === 'object' && 'pathname' in (fromState as Record<string, unknown>)
+      ? (fromState as { pathname: string; search?: string })
+      : null;
+  const postLoginTarget = fromPath
+    ? fromPath.pathname + (fromPath.search ?? '')
+    : '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +40,7 @@ export default function Login() {
     }
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate(postLoginTarget, { replace: true });
     } catch {
       // error is set in auth context
     }
@@ -35,7 +52,7 @@ export default function Login() {
       // For development, we simulate with a mock token.
       const mockToken = `mock-${provider}-${Date.now()}`;
       await loginOAuth(provider, mockToken);
-      navigate("/dashboard");
+      navigate(postLoginTarget, { replace: true });
     } catch {
       // error handled by auth context
     }
@@ -48,7 +65,7 @@ export default function Login() {
     if (result.refreshToken) {
       localStorage.setItem("refreshToken", result.refreshToken);
     }
-    setTimeout(() => navigate("/dashboard"), 500);
+    setTimeout(() => navigate(postLoginTarget, { replace: true }), 500);
   };
 
   const displayError = localError || error;

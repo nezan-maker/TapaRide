@@ -1,34 +1,122 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { cn } from '../lib/utils'
+import { api, ApiError } from '../lib/api'
 import { useRealtimeTrip } from '../lib/useRealtimeTrip'
 import Fa from '../components/Fa';
 
-const MOCK_STOPS = [
-  { name: 'Kigali (Nyabugogo)', time: '08:00 AM', state: 'done' as const },
-  { name: 'Muhanga', time: '08:50 AM', state: 'current' as const },
-  { name: 'Nyanza', time: '10:10 AM', state: 'upcoming' as const },
-  { name: 'Huye (Main Station)', time: '11:30 AM', state: 'upcoming' as const },
-]
+interface JourneyDetails {
+  journeyId: string;
+  totalCapacity: number;
+  bookedSeats: number[];
+  availableSeats: number[];
+  journey: {
+    id: string;
+    departureTime: string;
+    price: number;
+    sourceStation: { id: string; name: string; location: string };
+    destinationStation: { id: string; name: string; location: string };
+    vehicle: { id: string; plateNumber: string; model: string; capacity: number };
+  };
+}
+
+interface RouteStop {
+  name: string;
+  time: string;
+  state: 'done' | 'current' | 'upcoming';
+}
+
+function deriveStops(details: JourneyDetails | null): RouteStop[] {
+  if (!details) return [];
+  const dep = new Date(details.journey.departureTime);
+  // Build a rough 2-stop timeline: source + destination. The websocket will
+  // mark the destination as 'done' if `lastStop` matches.
+  // (Intermediate stops aren't returned by /availability — keep the UI simple.)
+  return [
+    {
+      name: details.journey.sourceStation.name,
+      time: dep.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      state: 'done',
+    },
+    {
+      name: details.journey.destinationStation.name,
+      time: '—',
+      state: 'upcoming',
+    },
+  ];
+}
 
 export default function Journey() {
+  const [searchParams] = useSearchParams()
+  const tripId = searchParams.get('tripId')
+
+  const [details, setDetails] = useState<JourneyDetails | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [arrived, setArrived] = useState(false)
 
-  // In production, tripId comes from route params or booking context.
-  // For now we use a placeholder — the hook won't connect without a real tripId.
-  const tripId = new URLSearchParams(window.location.search).get('tripId')
-  const { position, lastStop, etaUpdates, connected, error } = useRealtimeTrip(tripId)
+  const { position, lastStop, etaUpdates, connected } = useRealtimeTrip(tripId)
 
-  // Build dynamic stops list from API data when available
-  const stops = MOCK_STOPS.map((s) => {
-    // If a stop was reported as reached via socket, mark it done
-    if (lastStop && s.name.toLowerCase().includes(lastStop.stopId.toLowerCase())) {
+  // Load the real journey details — replaces the previous MOCK_STOPS.
+  useEffect(() => {
+    if (!tripId) {
+      setLoading(false)
+      setError('No trip selected. Open this page from an active ticket to track your journey.')
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    api
+      .get(`/api/journeys/${tripId}/availability`)
+      .then((data) => { if (!cancelled) setDetails(data as JourneyDetails) })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof ApiError ? err.message : 'Failed to load journey')
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [tripId])
+
+  // Mark the destination as 'done' when the server reports that stop reached.
+  const stops = deriveStops(details).map((s) => {
+    if (lastStop && details && s.name === details.journey.destinationStation.name) {
       return { ...s, state: 'done' as const }
     }
     return s
   })
 
   const nextStopEta = etaUpdates[etaUpdates.length - 1]
+
+  if (loading) {
+    return (
+      <div className="bg-mist py-20">
+        <div className="container-page flex justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!details && error) {
+    return (
+      <div className="bg-mist py-20">
+        <div className="container-page mx-auto max-w-md text-center">
+          <Fa name="alert-circle" className="mx-auto h-12 w-12 text-flame-600" />
+          <h1 className="mt-4 text-xl font-bold text-ink-900">Couldn't load journey</h1>
+          <p className="mt-2 text-sm text-ink-500">{error}</p>
+          <Link to="/dashboard/trips" className="btn-primary mt-6 inline-flex">
+            Back to my trips
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (arrived) {
+    return <Arrived onReset={() => setArrived(false)} destination={details?.journey.destinationStation.name} />
+  }
 
   return (
     <div className="bg-mist py-10">
@@ -49,30 +137,20 @@ export default function Journey() {
               )}
               {!connected && tripId && (
                 <span className="chip bg-amber-100 text-amber-700">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" /> Connecting...
+                  <span className="h-2 w-2 rounded-full bg-amber-500" /> Connecting…
                 </span>
               )}
             </div>
           </div>
 
-          {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-              <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {arrived ? (
-            <Arrived onReset={() => setArrived(false)} />
-          ) : (
-            <LiveTracking
-              onArrive={() => setArrived(true)}
-              position={position}
-              nextStopEta={nextStopEta}
-              stops={stops}
-              connected={connected}
-            />
-          )}
+          <LiveTracking
+            onArrive={() => setArrived(true)}
+            position={position}
+            nextStopEta={nextStopEta}
+            stops={stops}
+            connected={connected}
+            vehiclePlate={details?.journey.vehicle.plateNumber}
+          />
         </div>
       </div>
     </div>
@@ -85,19 +163,17 @@ function LiveTracking({
   nextStopEta,
   stops,
   connected,
+  vehiclePlate,
 }: {
   onArrive: () => void
   position: { lat: number; lng: number; speed: number; timestamp: number } | null
   nextStopEta: { stopName: string; etaMinutes: number } | undefined
-  stops: typeof MOCK_STOPS
+  stops: RouteStop[]
   connected: boolean
+  vehiclePlate?: string
 }) {
-  const currentStop = stops.find((s) => s.state === 'current')
-  const currentStopEta = nextStopEta?.stopName
-    ? nextStopEta
-    : currentStop
-      ? { stopName: currentStop.name, etaMinutes: 12 }
-      : null
+  const upcoming = stops.find((s) => s.state === 'upcoming')
+  const currentStopEta = nextStopEta ?? (upcoming ? { stopName: upcoming.name, etaMinutes: -1 } : null)
 
   return (
     <div className="card overflow-hidden">
@@ -122,7 +198,7 @@ function LiveTracking({
         )}
         {!position && connected && (
           <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-ink-400 animate-pulse">
-            Waiting for GPS data...
+            Waiting for GPS data…
           </span>
         )}
       </div>
@@ -135,15 +211,15 @@ function LiveTracking({
             </span>
             <div className="flex-1">
               <div className="font-bold text-ink-900">
-                {connected ? 'Next Stop:' : 'Next Stop:'} {currentStopEta.stopName}
+                Next stop: {currentStopEta.stopName}
               </div>
               <div className="text-xs text-ink-400">
                 {currentStopEta.etaMinutes >= 0
                   ? `Arriving in ${currentStopEta.etaMinutes} minutes`
-                  : 'Calculating ETA...'}
+                  : 'Calculating ETA…'}
               </div>
             </div>
-            <span className="chip bg-white text-ink-500">Live</span>
+            {connected && <span className="chip bg-white text-ink-500">Live</span>}
           </div>
         ) : (
           <div className="flex items-center gap-3 rounded-xl bg-ink-50 p-4">
@@ -152,7 +228,9 @@ function LiveTracking({
             </span>
             <div className="flex-1">
               <div className="font-bold text-ink-900">En route</div>
-              <div className="text-xs text-ink-400">Checking route progress...</div>
+              <div className="text-xs text-ink-400">
+                {vehiclePlate ? `Vehicle ${vehiclePlate}` : 'Checking route progress…'}
+              </div>
             </div>
           </div>
         )}
@@ -185,7 +263,7 @@ function LiveTracking({
         </div>
 
         <div className="mt-5 flex gap-3">
-          <a href="tel:+250788000000" className="btn-outline flex-1">
+          <a href="tel:+250****0000" className="btn-outline flex-1">
             <Fa name="phone" className="h-4 w-4" /> Call driver
           </a>
           <button onClick={onArrive} className="btn-primary flex-1">
@@ -197,7 +275,7 @@ function LiveTracking({
   )
 }
 
-function Arrived({ onReset }: { onReset: () => void }) {
+function Arrived({ onReset, destination }: { onReset: () => void; destination?: string }) {
   const [rating, setRating] = useState(5)
   return (
     <div className="card p-6 text-center">
@@ -205,7 +283,9 @@ function Arrived({ onReset }: { onReset: () => void }) {
         <Fa name="navigation" className="h-7 w-7" />
       </span>
       <h2 className="mt-4 text-2xl font-extrabold text-ink-900">You have arrived!</h2>
-      <p className="mt-1 text-sm text-ink-500">We hope you had a pleasant journey from Kigali to Huye.</p>
+      <p className="mt-1 text-sm text-ink-500">
+        We hope you had a pleasant journey{destination ? ` to ${destination}` : ''}.
+      </p>
 
       <div className="mt-5 rounded-2xl bg-ink-50 p-5">
         <div className="text-xs font-bold uppercase tracking-wide text-ink-400">Rate your experience</div>

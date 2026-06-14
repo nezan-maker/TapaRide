@@ -4,6 +4,7 @@ import { registerCacheInvalidationHandlers } from './lib/cache-invalidation.js';
 import { db } from './lib/db.js';
 import { redis } from './lib/redis.js';
 import { startDomainEventSubscriber } from './lib/domain-events.js';
+import { startNotificationListeners } from './modules/notifications/notifications.service.js';
 import { shutdownCryptoPool } from './lib/crypto-pool.js';
 import { stopRealtimeEventSubscriber } from './lib/socket-bus.js';
 import { logger } from './lib/logger.js';
@@ -19,6 +20,7 @@ async function main() {
     // ─── Infrastructure health checks ──────────────────────────────────────────
     registerCacheInvalidationHandlers();
     await startDomainEventSubscriber();
+    startNotificationListeners();
 
     await db.$connect();
     await db.$queryRaw`SELECT 1`;

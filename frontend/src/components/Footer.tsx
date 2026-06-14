@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import Fa from './Fa';
+import ProtectedLink from './ProtectedLink';
 
 const socials = [
   {
@@ -17,14 +18,21 @@ const socials = [
   },
 ]
 
-const columns = [
+/**
+ * `protected: true` means the link is gated by <ProtectedLink> — logged-out
+ * users are sent to /login first. Public links stay as plain <Link>s so
+ * browsing the marketing footer doesn't bounce anyone away.
+ */
+type FooterLink = { label: string; to: string; protected?: boolean };
+
+const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: 'Services',
     links: [
-      { label: 'Book Bus Tickets', to: '/search' },
-      { label: 'Send a Parcel', to: '/send-parcel' },
-      { label: 'Track Shipment', to: '/track' },
-      { label: 'Corporate Accounts', to: '/support' },
+      { label: 'Book Bus Tickets', to: '/search' },          // public discovery
+      { label: 'Send a Parcel', to: '/send-parcel', protected: true }, // transactional
+      { label: 'Track Shipment', to: '/track' },            // public — track any code
+      { label: 'Corporate Accounts', to: '/support' },      // public — marketing
     ],
   },
   {
@@ -70,9 +78,22 @@ export default function Footer() {
             <ul className="space-y-3">
               {col.links.map((l) => (
                 <li key={l.label}>
-                  <Link to={l.to} className="text-sm text-white/60 transition hover:text-white">
-                    {l.label}
-                  </Link>
+                  {l.protected ? (
+                    <ProtectedLink
+                      to={l.to}
+                      className="inline-flex items-center gap-1.5 text-sm text-white/60 transition hover:text-white"
+                    >
+                      {l.label}
+                      <Fa name="lock" className="h-3 w-3 opacity-70" />
+                    </ProtectedLink>
+                  ) : (
+                    <Link
+                      to={l.to}
+                      className="text-sm text-white/60 transition hover:text-white"
+                    >
+                      {l.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

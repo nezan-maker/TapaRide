@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '../lib/utils'
 import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import Fa from './Fa';
 
 export default function SearchWidget() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user, loading: authLoading } = useAuth()
   const [tab, setTab] = useState<'bus' | 'parcel'>('bus')
   const [stations, setStations] = useState<string[]>([])
   const [from, setFrom] = useState('')
@@ -40,6 +43,23 @@ export default function SearchWidget() {
     e.preventDefault()
     if (!from || !to) return
     navigate(`/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${date}`)
+  }
+
+  // The "Send Parcel" form is the start of a transactional flow. We let
+  // anyone fill the form (good for marketing — "see what it would cost")
+  // but the final submit is gated: if the user isn't logged in we
+  // forward them to /login with the intended destination preserved so
+  // they bounce back here after sign-in.
+  const handleSendParcel = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!from || !to) return
+    const target = `/send-parcel?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    if (authLoading) return  // wait for the auth check to settle
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/send-parcel', search: location.search } } })
+      return
+    }
+    navigate(target)
   }
 
   const availableFrom = stations.filter((s) => s !== to)
@@ -135,13 +155,11 @@ export default function SearchWidget() {
           </button>
         </form>
       ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            navigate(`/send-parcel?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
-          }}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSendParcel} className="space-y-4">
+          <p className="flex items-center gap-1.5 text-xs text-ink-400">
+            <Fa name="lock" className="h-3 w-3" />
+            You'll be asked to sign in before sending.
+          </p>
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <label className="label">From</label>

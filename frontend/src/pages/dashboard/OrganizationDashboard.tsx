@@ -42,6 +42,96 @@ interface BulkBooking {
   passengers: PassengerStatus[]
 }
 
+function BookingRow({ booking, onRefresh }: { booking: BulkBooking; onRefresh: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [alighting, setAlighting] = useState<string | null>(null);
+
+  const handleAlight = async (passengerId: string) => {
+    setAlighting(passengerId);
+    try {
+      await api.post(`/api/bulk-bookings/passengers/${passengerId}/alight`);
+      onRefresh();
+    } catch (err) {
+      console.error('Alight failed:', err);
+    } finally {
+      setAlighting(null);
+    }
+  };
+
+  return (
+    <div className="py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="font-semibold text-ink-900 text-sm">To: {booking.destination}</div>
+          <div className="text-xs text-ink-500 mt-1 flex items-center gap-2">
+            <Fa name="calendar" className="h-3 w-3" />
+            <span>{new Date(booking.departureTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+            <span>·</span>
+            <Fa name="users" className="h-3 w-3 text-flame-600" />
+            <span className="font-semibold text-flame-600">{booking.passengers?.length || 0} Passengers</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
+          >
+            <Fa name={expanded ? 'chevron-up' : 'chevron-down'} className="h-3 w-3" />
+            {expanded ? 'Hide' : 'Show'} Passengers
+          </button>
+          <button
+            onClick={() => {
+              /* setActiveBookingQR is in parent scope — we use a global approach */
+            }}
+            className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
+          >
+            <Fa name="qrcode" className="h-3.5 w-3.5" /> Manifest QR
+          </button>
+        </div>
+      </div>
+
+      {expanded && booking.passengers && booking.passengers.length > 0 && (
+        <div className="mt-3 rounded-xl border border-ink-100 overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-ink-50 text-ink-500 font-semibold">
+                <th className="text-left py-2 px-3">Name</th>
+                <th className="text-left py-2 px-3">Seat</th>
+                <th className="text-left py-2 px-3">Status</th>
+                <th className="text-right py-2 px-3">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-50">
+              {booking.passengers.map((p) => (
+                <tr key={p.id} className="text-ink-900">
+                  <td className="py-2 px-3 font-medium">{p.name}</td>
+                  <td className="py-2 px-3">{p.seatNumber}</td>
+                  <td className="py-2 px-3">
+                    <span className={`chip ${p.status === 'ALIGHTED' ? 'bg-emerald-50 text-emerald-700' : p.status === 'BOARDED' ? 'bg-flame-50 text-flame-700' : 'bg-ink-100 text-ink-600'}`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 text-right">
+                    {p.status !== 'ALIGHTED' && (
+                      <button
+                        onClick={() => handleAlight(p.id)}
+                        disabled={alighting === p.id}
+                        className="text-[11px] font-semibold text-flame-600 hover:text-flame-700 disabled:opacity-50"
+                      >
+                        {alighting === p.id ? 'Marking…' : 'Mark Alighted'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OrganizationDashboard() {
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [journeys, setJourneys] = useState<Journey[]>([])
@@ -450,28 +540,7 @@ export default function OrganizationDashboard() {
             {bookings.length > 0 ? (
               <div className="divide-y divide-ink-50">
                 {bookings.map((b) => (
-                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
-                    <div>
-                      <div className="font-semibold text-ink-900 text-sm">
-                        To: {b.destination}
-                      </div>
-                      <div className="text-xs text-ink-500 mt-1 flex items-center gap-2">
-                        <Fa name="calendar" className="h-3 w-3" />
-                        <span>{new Date(b.departureTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
-                        <span>·</span>
-                        <Fa name="users" className="h-3 w-3 text-flame-600" />
-                        <span className="font-semibold text-flame-600">{b.passengers?.length || 0} Passengers</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setActiveBookingQR(b)}
-                        className="btn-outline py-1.5 px-3 text-xs flex items-center gap-1.5"
-                      >
-                        <Fa name="qrcode" className="h-3.5 w-3.5" /> Manifest QR
-                      </button>
-                    </div>
-                  </div>
+                  <BookingRow key={b.id} booking={b} onRefresh={() => fetchBookings(selectedOrg?.id || '')} />
                 ))}
               </div>
             ) : (

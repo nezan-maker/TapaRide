@@ -1,13 +1,109 @@
 import { Link } from 'react-router-dom'
 import SearchWidget from '../components/SearchWidget'
 import Fa from '../components/Fa';
+import ProtectedLink from '../components/ProtectedLink';
 
-const popularDestinations = [
-  { city: 'Huye', province: 'Southern Province', blurb: 'Explore the National Museum and cultural heritage sites.', image: 'https://images.unsplash.com/photo-1564936281287-5e55f6056e7c?w=400&h=300&fit=crop', trips: 24 },
-  { city: 'Musanze', province: 'Northern Province', blurb: 'Home to the Volcanoes National Park and mountain gorillas.', image: 'https://images.unsplash.com/photo-1586263702205-6e5a5b12b3f6?w=400&h=300&fit=crop', trips: 18 },
-  { city: 'Rubavu', province: 'Western Province', blurb: 'Relax on the shores of Lake Kivu with stunning sunset views.', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop', trips: 15 },
-  { city: 'Rusizi', province: 'Western Province', blurb: 'Gateway to Nyungwe National Park and chimpanzee tracking.', image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop', trips: 12 },
-]
+// Local images of iconic Rwandan landmarks, sourced from Wikimedia Commons
+// under CC BY-SA / CC0. Credits per image:
+//   Karongi:  Napoleon Island, Lake Kivu — Adam Jones, CC BY-SA 2.0
+//             https://commons.wikimedia.org/wiki/File:Scenery_on_Napoleon_Island_-_Lake_Kivu_-_Near_Kibuye_(Karongi)_-_Rwanda_-_01_(8978755533).jpg
+//   Kigali:   Kigali Convention Centre — Igiraneza Divine, CC0 1.0
+//             https://commons.wikimedia.org/wiki/File:Kigali_Convention_Centre.jpg
+//   Muhanga:  Cathedral Basilica of Our Lady, Kabgayi — Ivan Mucyo, CC BY-SA 4.0
+//             (Kabgayi is in Muhanga District; the cathedral is Rwanda's oldest, built 1925.)
+//             https://commons.wikimedia.org/wiki/File:The_Catholic_Cathedral_in_Kabgayi.jpg
+//   Nyagatare:Akagera National Park giraffes — Alex Shema, CC BY-SA 4.0
+//             https://commons.wikimedia.org/wiki/File:Akagera_National_Park_Giraffes.jpg
+//   Huye:     National Museum of Rwanda (Butare) — Amakuru, CC BY-SA 3.0
+//             https://commons.wikimedia.org/wiki/File:RwandaNationalMuseum.jpg
+//   Musanze:  Sabyinyo volcano, Kinigi sector — Maxime Ishmax, CC BY-SA 4.0
+//             https://commons.wikimedia.org/wiki/File:Sabyinyo_volcanoe_view_from_Kinigi_sector,_Musanze_district,_Rwanda.jpg
+//   Rubavu:   Lake Kivu at Gisenyi — Arafat Abdallah, CC BY-SA 4.0
+//             https://commons.wikimedia.org/wiki/File:Lake_Kivu_at_Gisenyi,_Rwanda.jpg
+//   Rusizi:   Nyungwe canopy walkway — Dusabinemaclaire, CC BY-SA 4.0
+//             https://commons.wikimedia.org/wiki/File:Nyungwe_canopywalk-way_View.jpg
+//
+// The Kigali card is the centrepiece ("hub") of the hexagon layout below.
+type Destination = {
+  city: string;
+  province: string;
+  blurb: string;
+  image: string;
+  trips: number;
+  hub?: boolean;
+};
+
+const popularDestinations: Destination[] = [
+  // Centrepiece — Kigali, the capital and main hub.
+  {
+    city: 'Kigali',
+    province: 'Capital · Kigali Province',
+    blurb:
+      'The capital and our main hub. Clean, walkable, and the gateway to every other city on this page.',
+    image: '/destinations/kigali-convention-centre.jpg',
+    trips: 96,
+    hub: true,
+  },
+  // Outer ring — 6 cities, arranged geographically clockwise from the north.
+  {
+    city: 'Musanze',
+    province: 'Northern Province',
+    blurb:
+      'Gateway to Volcanoes National Park — home of the mountain gorillas and the Virunga volcanoes.',
+    image: '/destinations/musanze-sabyinyo-volcano.jpg',
+    trips: 18,
+  },
+  {
+    city: 'Rubavu',
+    province: 'Western Province',
+    blurb: 'Relax on the shores of Lake Kivu with stunning sunset views over the water.',
+    image: '/destinations/rubavu-lake-kivu.jpg',
+    trips: 15,
+  },
+  {
+    city: 'Karongi',
+    province: 'Western Province',
+    blurb:
+      'Forested Napoleon Island rises out of Lake Kivu — a true Congo-Nile Trail highlight.',
+    image: '/destinations/karongi-napoleon-island.jpg',
+    trips: 11,
+  },
+  {
+    city: 'Huye',
+    province: 'Southern Province',
+    blurb:
+      'Explore the National Museum of Rwanda and surrounding cultural heritage sites.',
+    image: '/destinations/huye-national-museum.jpg',
+    trips: 24,
+  },
+  {
+    city: 'Muhanga',
+    province: 'Southern Province',
+    blurb:
+      'Home to the Cathedral Basilica of Our Lady in Kabgayi — Rwanda\'s oldest cathedral and a center of Catholic heritage since 1925.',
+    image: '/destinations/muhanga-kabgayi-cathedral.jpg',
+    trips: 9,
+  },
+  {
+    city: 'Nyagatare',
+    province: 'Eastern Province',
+    blurb:
+      'Gateway to Akagera National Park — savanna wildlife including giraffes, zebras, and lions.',
+    image: '/destinations/nyagatare-akagera-giraffes.jpg',
+    trips: 7,
+  },
+  {
+    city: 'Rusizi',
+    province: 'Western Province',
+    blurb:
+      'Gateway to Nyungwe National Park and its famous rainforest canopy walkway.',
+    image: '/destinations/rusizi-nyungwe-canopy.jpg',
+    trips: 12,
+  },
+];
+
+const hub = popularDestinations.find((d) => d.hub)!;
+const ring = popularDestinations.filter((d) => !d.hub);
 
 const services = [
   {
@@ -17,6 +113,9 @@ const services = [
       'Travel comfortably across Rwanda with our network of premium buses. Real-time availability, secure payments, and digital tickets.',
     cta: 'Find Routes',
     to: '/search',
+    // Public route — anyone can browse and compare trips. The actual booking
+    // step (on /booking) is gated by router-level <ProtectedRoute>.
+    protected: false,
     image:
       'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=900&q=70',
   },
@@ -27,31 +126,47 @@ const services = [
       'Fast, reliable, and trackable parcel delivery between major cities. From small envelopes to large cargo, we handle it with care.',
     cta: 'Get a Quote',
     to: '/send-parcel',
+    // Sending a parcel requires an account (sender/recipient identity, payment).
+    protected: true,
     image:
       'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=900&q=70',
   },
 ]
 
-const steps = [
+type Step = {
+  icon: string;
+  step: string;       // small label, e.g. "Step 01"
+  title: string;
+  blurb: string;
+  learnMore: string;  // CTA link target
+};
+
+const steps: Step[] = [
   {
-    icon: 'search',
-    title: 'Search & Compare',
+    icon: 'magnifying-glass',
+    step: 'Step 01',
+    title: 'Find your route',
     blurb:
-      'Enter your route details to find available buses or calculate parcel delivery rates instantly.',
+      'Search buses by city pair, departure time, or carrier. Compare fares and seat layouts side by side.',
+    learnMore: '/search',
   },
   {
-    icon: 'shieldcheck',
-    title: 'Book Securely',
+    icon: 'lock',
+    step: 'Step 02',
+    title: 'Book and pay securely',
     blurb:
-      'Select your preferred seats and pay securely using Mobile Money or Card in just a few taps.',
+      'Pick your seat, pay with Mobile Money or card, and receive a digital ticket — protected end to end.',
+    learnMore: '/search',
   },
   {
-    icon: 'navigation',
-    title: 'Travel or Track',
+    icon: 'route',
+    step: 'Step 03',
+    title: 'Travel or track',
     blurb:
-      "Board with your digital ticket, or track your parcel's journey in real time until delivery.",
+      'Board with a QR ticket or watch your parcel travel in real time from pickup to drop-off.',
+    learnMore: '/track',
   },
-]
+];
 
 const stats = [
   { value: '120K+', label: 'Trips booked' },
@@ -134,12 +249,27 @@ export default function Landing() {
               <div className="p-6">
                 <h3 className="text-xl font-bold text-ink-900">{s.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">{s.blurb}</p>
-                <Link
-                  to={s.to}
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-flame-600 transition hover:gap-2.5"
-                >
-                  {s.cta} <Fa name="arrow-right" className="h-4 w-4" />
-                </Link>
+                {s.protected ? (
+                  <>
+                    <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-ink-400">
+                      <Fa name="lock" className="h-3 w-3" />
+                      Login required
+                    </p>
+                    <ProtectedLink
+                      to={s.to}
+                      className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-flame-600 transition hover:gap-2.5"
+                    >
+                      {s.cta} <Fa name="arrow-right" className="h-4 w-4" />
+                    </ProtectedLink>
+                  </>
+                ) : (
+                  <Link
+                    to={s.to}
+                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-flame-600 transition hover:gap-2.5"
+                  >
+                    {s.cta} <Fa name="arrow-right" className="h-4 w-4" />
+                  </Link>
+                )}
               </div>
             </div>
           ))}
@@ -167,60 +297,87 @@ export default function Landing() {
             </Link>
           </div>
 
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {popularDestinations.map((d) => (
-              <Link
-                to="/search"
-                key={d.city}
-                className="group relative h-72 overflow-hidden rounded-2xl shadow-card"
-              >
-                <img
-                  src={d.image}
-                  alt={d.city}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-950/20 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                  <span className="chip bg-white/15 text-white backdrop-blur">
-                    {d.province}
-                  </span>
-                  <h3 className="mt-2 text-xl font-bold">{d.city}</h3>
-                  <p className="mt-1 text-sm text-white/75">{d.blurb}</p>
-                </div>
-              </Link>
-            ))}
+          {/* Hexagon-style cluster: 7 cities orbiting Kigali. On `lg` the Kigali
+              card spans the full middle row to read as a clear "hub", with three
+              cities on each side (top, middle-row flanks, bottom). On `md` the
+              layout collapses to a 2-col grid, on `sm` a single column. */}
+          <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 lg:grid-rows-3">
+            {/* Top row — 2 outer cities */}
+            <DestinationCard d={ring[0]} className="lg:col-start-1 lg:row-start-1" />
+            <DestinationCard d={ring[1]} className="lg:col-start-3 lg:row-start-1" />
+
+            {/* Middle row — Kigali hub + 2 outer cities */}
+            <DestinationCard
+              d={hub}
+              variant="hub"
+              className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:h-full"
+            />
+            <DestinationCard d={ring[2]} className="lg:col-start-1 lg:row-start-2" />
+            <DestinationCard d={ring[3]} className="lg:col-start-3 lg:row-start-2" />
+
+            {/* Bottom row — 2 outer cities */}
+            <DestinationCard d={ring[4]} className="lg:col-start-1 lg:row-start-3" />
+            <DestinationCard d={ring[5]} className="lg:col-start-3 lg:row-start-3" />
+            <DestinationCard
+              d={ring[6]}
+              className="md:col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-3"
+            />
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="container-page py-16 lg:py-24">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="eyebrow">How it works</span>
-          <h2 className="mt-2 text-3xl font-extrabold text-ink-900 sm:text-4xl">
-            How TapaRide Works
-          </h2>
-          <p className="mt-3 text-ink-500">
-            Simple, transparent, and designed for your convenience.
-          </p>
-        </div>
+      {/* How it works — Apple-inspired editorial cards. Soft gray band, three
+          white cards with generous whitespace, large outline icons, small
+          "Step 0X" eyebrow, display-size headline, and an inline "Learn more"
+          link. No numbered badges, no connecting line — the design breathes. */}
+      <section className="bg-haze py-20 lg:py-32">
+        <div className="container-page">
+          <div className="max-w-3xl">
+            <span className="eyebrow">How it works</span>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-ink-900 sm:text-5xl lg:text-6xl">
+              Three steps.<br />
+              <span className="text-ink-400">One smooth trip.</span>
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-500">
+              From the first search to the moment you reach your destination —
+              every step is designed to feel effortless.
+            </p>
+          </div>
 
-        <div className="relative mt-14 grid gap-10 md:grid-cols-3">
-          <div className="absolute left-[16%] right-[16%] top-7 hidden h-0.5 bg-ink-100 md:block" />
-          {steps.map((s, i) => (
-            <div key={s.title} className="relative text-center">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-ink-900 text-white shadow-soft">
-                <Fa name={s.icon} className="h-6 w-6" />
-                <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-flame-600 text-xs font-bold text-white">
-                  {i + 1}
-                </span>
-              </div>
-              <h3 className="mt-5 text-lg font-bold text-ink-900">{s.title}</h3>
-              <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-ink-500">
-                {s.blurb}
-              </p>
-            </div>
-          ))}
+          <div className="mt-16 grid gap-6 md:grid-cols-3">
+            {steps.map((s) => (
+              <article
+                key={s.title}
+                className="group relative flex h-full flex-col rounded-3xl border border-ink-100/80 bg-white p-8 shadow-soft transition hover:shadow-card lg:p-10"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-flame-600">
+                    {s.step}
+                  </span>
+                  <Fa
+                    name={s.icon}
+                    className="h-10 w-10 text-ink-900 transition group-hover:text-flame-600"
+                  />
+                </div>
+
+                <h3 className="mt-12 text-2xl font-semibold tracking-tight text-ink-900 lg:text-3xl">
+                  {s.title}
+                </h3>
+                <p className="mt-3 text-base leading-relaxed text-ink-500">
+                  {s.blurb}
+                </p>
+
+                <div className="mt-auto pt-8">
+                  <ProtectedLink
+                    to={s.learnMore}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-flame-600 transition hover:gap-2.5"
+                  >
+                    Learn more <Fa name="arrow-right" className="h-3.5 w-3.5" />
+                  </ProtectedLink>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -283,4 +440,64 @@ function SearchPreview() {
       </div>
     </div>
   )
+}
+
+/**
+ * A single destination card. Renders two variants:
+ *   - "default" — standard height, used for the 7 outer cities.
+ *   - "hub"     — visually heavier (taller, larger headline, "HUB" badge, accent
+ *                 ring), used only for the Kigali card.
+ */
+function DestinationCard({
+  d,
+  variant = 'default',
+  className = '',
+}: {
+  d: Destination;
+  variant?: 'default' | 'hub';
+  className?: string;
+}) {
+  const isHub = variant === 'hub';
+  return (
+    <Link
+      to="/search"
+      key={d.city}
+      className={
+        'group relative overflow-hidden rounded-2xl shadow-card transition hover:shadow-glow ' +
+        (isHub ? 'h-96 lg:h-full' : 'h-72') +
+        ' ' +
+        className
+      }
+    >
+      <img
+        src={d.image}
+        alt={d.city}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-ink-950/20 to-transparent" />
+      {isHub && (
+        <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-flame-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-soft">
+          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+          Main Hub
+        </span>
+      )}
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        <span className="chip bg-white/15 text-white backdrop-blur">
+          {d.province}
+        </span>
+        <h3 className={'mt-2 font-bold ' + (isHub ? 'text-3xl' : 'text-xl')}>
+          {d.city}
+        </h3>
+        <p className={'mt-1 text-white/80 ' + (isHub ? 'text-sm' : 'text-sm')}>
+          {d.blurb}
+        </p>
+        {isHub && (
+          <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-flame-500">
+            <Fa name="arrow-right" className="h-3.5 w-3.5" />
+            Explore {d.trips} weekly trips
+          </span>
+        )}
+      </div>
+    </Link>
+  );
 }

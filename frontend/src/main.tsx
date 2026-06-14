@@ -41,16 +41,16 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Landing /> },
       { path: "/search", element: <SearchResults /> },
-      { path: "/booking", element: <ProtectedRoute><Booking /></ProtectedRoute> },
-      { path: "/booking/processing", element: <PaymentProcessing /> },
-      { path: "/booking/failed", element: <PaymentFailed /> },
-      { path: "/booking/confirmation", element: <Confirmation /> },
-      { path: "/no-buses", element: <NoBuses /> },
-      { path: "/journey", element: <Journey /> },
-      { path: "/waitlist", element: <ProtectedRoute><Waitlist /></ProtectedRoute> },
-      { path: "/send-parcel", element: <ProtectedRoute><SendParcel /></ProtectedRoute> },
-      { path: "/parcel/confirmation", element: <ParcelConfirmation /> },
-      { path: "/track", element: <Track /> },
+      { path: "/booking", element: <ProtectedRoute allowedRoles={['CLIENT']}><Booking /></ProtectedRoute> },
+      { path: "/booking/processing", element: <ProtectedRoute allowedRoles={['CLIENT']}><PaymentProcessing /></ProtectedRoute> },
+      { path: "/booking/failed", element: <ProtectedRoute allowedRoles={['CLIENT']}><PaymentFailed /></ProtectedRoute> },
+      { path: "/booking/confirmation", element: <ProtectedRoute allowedRoles={['CLIENT']}><Confirmation /></ProtectedRoute> },
+      { path: "/no-buses", element: <ProtectedRoute allowedRoles={['CLIENT']}><NoBuses /></ProtectedRoute> },
+      { path: "/journey", element: <ProtectedRoute allowedRoles={['CLIENT', 'DRIVER', 'MANAGER', 'OWNER']}><Journey /></ProtectedRoute> },
+      { path: "/waitlist", element: <ProtectedRoute allowedRoles={['CLIENT']}><Waitlist /></ProtectedRoute> },
+      { path: "/send-parcel", element: <ProtectedRoute allowedRoles={['CLIENT']}><SendParcel /></ProtectedRoute> },
+      { path: "/parcel/confirmation", element: <ProtectedRoute allowedRoles={['CLIENT']}><ParcelConfirmation /></ProtectedRoute> },
+      { path: "/track", element: <ProtectedRoute allowedRoles={['CLIENT', 'DRIVER', 'MANAGER', 'OWNER', 'ORGANIZATION']}><Track /></ProtectedRoute> },
       { path: "/support", element: <Support /> },
     ],
   },
@@ -59,11 +59,14 @@ const router = createBrowserRouter([
   { path: "/verify-otp", element: <Otp /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
   { path: "/register-passkey", element: <RegisterPasskey /> },
-  { path: "/onboarding", element: <Onboarding /> },
+  {
+    path: "/onboarding",
+    element: <ProtectedRoute allowedRoles={['OWNER']}><Onboarding /></ProtectedRoute>,
+  },
   {
     path: "/dashboard",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={['CLIENT', 'DRIVER', 'MANAGER', 'OWNER', 'ORGANIZATION']}>
         <DashboardLayout />
       </ProtectedRoute>
     ),

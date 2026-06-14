@@ -31,6 +31,7 @@ import walletRoutes from "./modules/wallets/wallet.routes.js";
 import bulkBookingRoutes from "./modules/bulk-bookings/bulk-bookings.routes.js";
 import waitlistRoutes from "./modules/waitlist/waitlist.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
+import notificationRoutes from "./modules/notifications/notifications.routes.js";
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -149,6 +150,7 @@ export async function buildApp() {
   app.use("/api/bulk-bookings", bulkBookingRoutes);
   app.use("/api/waitlist", waitlistRoutes);
   app.use("/api/payments", paymentRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
   // ─── Mock RURA endpoint (development only) ────────────────────────────────
   if (env.NODE_ENV !== "production") {

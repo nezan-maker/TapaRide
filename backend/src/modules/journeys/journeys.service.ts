@@ -95,8 +95,8 @@ export async function listJourneys(
         db.journey.findMany({
           where,
           include: {
-            sourceStation: { select: { name: true, location: true } },
-            destinationStation: { select: { name: true, location: true } },
+            sourceStation: { select: { id: true, name: true, location: true } },
+            destinationStation: { select: { id: true, name: true, location: true } },
             vehicle: { select: { plateNumber: true, capacity: true, amenities: true, seatLayout: true, agency: { select: { name: true } } } },
             _count: { select: { tickets: true } },
           },

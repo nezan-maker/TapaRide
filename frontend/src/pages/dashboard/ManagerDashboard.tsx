@@ -102,6 +102,29 @@ export default function ManagerDashboard() {
     }
   }
 
+  /**
+   * Mark a stop as reached on an active journey. The backend endpoint is
+   * `POST /api/journeys/:id/stops/reached` with `{ stationId }`.
+   *
+   * The listJourneys payload only ships station IDs for source and destination,
+   * so the manager UI exposes two compact "Reached source / Reached destination"
+   * buttons per row — enough to drive the live-tracking socket events.
+   */
+  const [marking, setMarking] = useState<string | null>(null);
+  const handleMarkStopReached = async (journeyId: string, stationId: string, label: string) => {
+    setMarking(`${journeyId}:${stationId}`);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      await api.post(`/api/journeys/${journeyId}/stops/reached`, { stationId });
+      setSuccessMsg(`Marked “${label}” as reached. Passengers have been notified.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to record stop');
+    } finally {
+      setMarking(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -278,6 +301,7 @@ export default function ManagerDashboard() {
                   <th className="py-3 px-2">Vehicle</th>
                   <th className="py-3 px-2">Price</th>
                   <th className="py-3 px-2 text-right">Capacity</th>
+                  <th className="py-3 px-2 text-right">Live status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-50">
@@ -314,6 +338,44 @@ export default function ManagerDashboard() {
                               className={`h-full rounded-full ${fillPercentage > 90 ? 'bg-flame-600' : 'bg-emerald-600'}`}
                             />
                           </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-2 text-right">
+                        <div className="inline-flex flex-col items-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleMarkStopReached(
+                                j.id,
+                                j.sourceStation.id,
+                                `${j.sourceStation.name} departure`,
+                              )
+                            }
+                            disabled={marking === `${j.id}:${j.sourceStation.id}`}
+                            className="btn-outline py-1 px-2.5 text-[11px] disabled:opacity-50"
+                          >
+                            <Fa name="play" className="h-3 w-3" />
+                            {marking === `${j.id}:${j.sourceStation.id}`
+                              ? 'Marking…'
+                              : 'Reached source'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleMarkStopReached(
+                                j.id,
+                                j.destinationStation.id,
+                                `${j.destinationStation.name} arrival`,
+                              )
+                            }
+                            disabled={marking === `${j.id}:${j.destinationStation.id}`}
+                            className="btn-primary py-1 px-2.5 text-[11px] disabled:opacity-50"
+                          >
+                            <Fa name="flag-checkered" className="h-3 w-3" />
+                            {marking === `${j.id}:${j.destinationStation.id}`
+                              ? 'Marking…'
+                              : 'Reached destination'}
+                          </button>
                         </div>
                       </td>
                     </tr>
