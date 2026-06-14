@@ -3,8 +3,8 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import Select from "../../components/Select";
 import PasskeyButton from "../../components/PasskeyButton";
-import Fa from "../../components/Fa";
 import { useAuth } from "../../lib/auth";
+import Fa from '../../components/Fa';
 
 type LoginRole = 'CLIENT' | 'DRIVER' | 'MANAGER' | 'OWNER';
 
@@ -12,7 +12,7 @@ const ROLE_META: Record<LoginRole, { title: string; blurb: string; icon: string 
   CLIENT:  { icon: 'ticket',    title: 'Traveler',     blurb: 'Book trips & send parcels' },
   DRIVER:  { icon: 'bus',       title: 'Driver',       blurb: 'Drive routes & manage trips' },
   MANAGER: { icon: 'briefcase', title: 'Manager',      blurb: 'Manage agency operations' },
-  OWNER:   { icon: 'building',  title: 'Agency Owner', blurb: 'Run your transport company' },
+  OWNER:   { icon: 'building',  title: 'Agency owner', blurb: 'Run your transport company' },
 };
 
 const ROLE_OPTIONS = (Object.keys(ROLE_META) as LoginRole[]).map((value) => ({
@@ -27,8 +27,8 @@ export default function Login() {
   const [role, setRole] = useState<LoginRole | ''>('');
   const [showPasskey, setShowPasskey] = useState(false);
   const [show, setShow] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const fromState = (location.state as { from?: unknown } | null)?.from;
@@ -45,7 +45,7 @@ export default function Login() {
     setLocalError(null);
     clearError();
     if (!email || !password) {
-      setLocalError("Please enter both email and password.");
+      setLocalError('Enter both your email and password.');
       return;
     }
     try {
@@ -57,8 +57,8 @@ export default function Login() {
   };
 
   const handlePasskeySuccess = (result: any) => {
-    if (result.accessToken) localStorage.setItem("accessToken", result.accessToken);
-    if (result.refreshToken) localStorage.setItem("refreshToken", result.refreshToken);
+    if (result.accessToken) localStorage.setItem('accessToken', result.accessToken);
+    if (result.refreshToken) localStorage.setItem('refreshToken', result.refreshToken);
     setTimeout(() => navigate(postLoginTarget, { replace: true }), 500);
   };
 
@@ -67,73 +67,101 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title={selectedMeta ? `Welcome, ${selectedMeta.title.toLowerCase()}` : 'Welcome back'}
-      subtitle={selectedMeta ? `Log in to ${selectedMeta.blurb.toLowerCase()}.` : 'How are you using TapaRide today?'}
+      title={selectedMeta ? `Welcome, ${selectedMeta.title}.` : 'Welcome back'}
+      subtitle={
+        selectedMeta
+          ? `Sign in to ${selectedMeta.blurb.toLowerCase()}.`
+          : 'How are you using TapaRide today?'
+      }
       footer={
         role ? (
           <>
-            <button
-              onClick={() => setRole('')}
-              className="text-sm font-semibold text-ink-400 hover:text-ink-600"
-            >
-              ← Change role
-            </button>
-            <span className="mx-2 text-ink-200">·</span>
-            Don't have an account? <AuthLink to="/signup">Sign up</AuthLink>
+            New here?{' '}
+            <AuthLink to="/signup">Create a free account</AuthLink>
           </>
         ) : (
           <>
-            New here? <AuthLink to="/signup">Create an account</AuthLink>
+            New here?{' '}
+            <AuthLink to="/signup">Create account</AuthLink>
           </>
         )
       }
     >
-      {/* Role selection — custom dropdown */}
-      <div className="space-y-4">
-        <Select
-          label="I'm logging in as a…"
-          options={ROLE_OPTIONS}
-          value={role}
-          placeholder="Choose your role"
-          onChange={(v) => setRole(v as LoginRole)}
-          className="mb-1"
-        />
-
-        {/* Inline role descriptions appear as soon as a role is picked */}
-        {selectedMeta && (
-          <div
-            className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-ink-50 p-4 transition animate-fade-up"
-            key={role}
-          >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
-              <Fa name={selectedMeta.icon} className="h-4 w-4" />
+      {/* Invite card — always visible at the top so invited users can accept from login too */}
+      {!role && (
+        <Link
+          to="/accept-invite"
+          className="mb-6 flex items-start gap-3 rounded-2xl border border-flame-200 bg-gradient-to-br from-flame-50 to-white p-4 text-sm shadow-card-sm transition hover:shadow-card hover:border-flame-300"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
+            <Fa name="envelope" className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-semibold text-ink-900">Were you invited?</div>
+            <p className="mt-0.5 text-ink-500">Managers and drivers skip signup and accept an email invitation.</p>
+            <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-flame-600">
+              Accept invitation <Fa name="arrow-right" className="h-3 w-3" />
             </span>
-            <div className="text-sm">
-              <div className="font-semibold text-ink-900">{selectedMeta.title}</div>
-              <p className="text-ink-500">{selectedMeta.blurb}.</p>
+          </div>
+        </Link>
+      )}
+
+      {!role ? (
+        // ── Role selection screen ─────────────────────────────────────────────
+        <div className="space-y-4">
+          <Select
+            label="I'm signing in as a…"
+            options={ROLE_OPTIONS}
+            value={role}
+            placeholder="Pick your role"
+            onChange={(v) => setRole(v as LoginRole)}
+          />
+
+          {selectedMeta && (
+            <div
+              key={role}
+              className="flex items-start gap-3 rounded-2xl border border-ink-100 bg-ink-50/70 p-4 animate-fade-up"
+            >
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
+                <Fa name={selectedMeta.icon} className="h-4 w-4" />
+              </span>
+              <div className="text-sm">
+                <div className="font-semibold text-ink-900">{selectedMeta.title}</div>
+                <p className="text-ink-500">{selectedMeta.blurb}.</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      ) : (
+        // ── Login form for selected role ─────────────────────────────────────
+        <div className="space-y-5">
+          {/* Role pill — clear "you are" indicator */}
+          <button
+            type="button"
+            onClick={() => setRole('')}
+            className="inline-flex items-center gap-2 rounded-full bg-ink-50 pl-1 pr-3 py-1 text-sm font-medium text-ink-700 transition hover:bg-ink-100"
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-ink-900 text-white">
+              <Fa name={selectedMeta!.icon} className="h-3.5 w-3.5" />
+            </span>
+            Signing in as {selectedMeta!.title} · change
+          </button>
 
-        {displayError && (
-          <div className="flex items-center gap-2 rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            <Fa name="alert-circle" className="h-4 w-4 shrink-0" />
-            <span>{displayError}</span>
-          </div>
-        )}
+          {displayError && (
+            <div className="rounded-xl bg-flame-50 px-4 py-3 text-sm text-flame-700 flex items-start gap-2">
+              <Fa name="alertcircle" className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{displayError}</span>
+            </div>
+          )}
 
-        {/* Login form appears once a role is selected */}
-        {selectedMeta && (
-          <form onSubmit={handleSubmit} className="space-y-4 pt-1 animate-fade-up">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Email</label>
               <div className="relative">
-                <Fa
-                  name="mail"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
-                />
+                <Fa name="mail" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
-                  className="input pl-9"
+                  type="email"
+                  className="input pl-10 h-12 text-base"
                   placeholder="you@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -144,23 +172,17 @@ export default function Login() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
-                <label className="label">Password</label>
-                <Link
-                  to="/forgot-password"
-                  className="mb-1.5 text-xs font-semibold text-flame-600"
-                >
-                  Forgot password?
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="label !mb-0">Password</label>
+                <Link to="/forgot-password" className="text-xs font-semibold text-flame-600 hover:text-flame-700">
+                  Forgot?
                 </Link>
               </div>
               <div className="relative">
-                <Fa
-                  name="lock"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400"
-                />
+                <Fa name="lock" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
                   type={show ? 'text' : 'password'}
-                  className="input pl-9 pr-10"
+                  className="input pl-10 pr-12 h-12 text-base"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -169,107 +191,79 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShow((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-900"
-                  aria-label="toggle password"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-ink-400 hover:text-ink-900 hover:bg-ink-50"
+                  aria-label="toggle password visibility"
                 >
                   {show ? <Fa name="eyeoff" className="h-4 w-4" /> : <Fa name="eye" className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
-            <label className="flex items-center gap-2.5 text-sm text-ink-600">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-ink-200 text-ink-900 focus:ring-ink-900"
-              />
-              Keep me signed in
-            </label>
-
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3.5 disabled:opacity-50"
+              className="btn-primary w-full py-4 text-base shadow-card-sm hover:shadow-card disabled:opacity-50 disabled:shadow-none"
             >
-              {loading ? 'Logging in…' : `Log in as ${selectedMeta.title}`}
+              {loading ? 'Signing in…' : `Sign in as ${selectedMeta!.title}`}
             </button>
-
-            <div className="flex items-center gap-3 py-1 text-xs text-ink-300">
-              <span className="h-px flex-1 bg-ink-100" /> or continue with{' '}
-              <span className="h-px flex-1 bg-ink-100" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const mockToken = `mock-google-${Date.now()}`;
-                    await loginOAuth('google', mockToken);
-                    navigate(postLoginTarget, { replace: true });
-                  } catch {}
-                }}
-                disabled={loading}
-                className="btn-outline flex items-center justify-center gap-2 py-3 text-sm font-semibold disabled:opacity-50"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                Google
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const mockToken = `mock-apple-${Date.now()}`;
-                    await loginOAuth('apple', mockToken);
-                    navigate(postLoginTarget, { replace: true });
-                  } catch {}
-                }}
-                disabled={loading}
-                className="btn-outline flex items-center justify-center gap-2 py-3 text-sm font-semibold disabled:opacity-50"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-                </svg>
-                Apple
-              </button>
-            </div>
-
-            {!showPasskey && (
-              <button
-                type="button"
-                onClick={() => setShowPasskey(true)}
-                className="btn-outline w-full py-3"
-              >
-                <Fa name="fingerprint" className="h-4 w-4" /> Use Passkey
-              </button>
-            )}
-            {showPasskey && <PasskeyButton mode="login" onSuccess={handlePasskeySuccess} />}
           </form>
-        )}
 
-        <p className="pt-2 text-center text-xs text-ink-400">
-          Were you invited?{' '}
-          <Link to="/accept-invite" className="font-semibold text-flame-600">
-            Accept invitation
-          </Link>
-        </p>
-      </div>
+          <div className="flex items-center gap-3 text-xs text-ink-400">
+            <span className="h-px flex-1 bg-ink-100" /> or continue with <span className="h-px flex-1 bg-ink-100" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const mockToken = `mock-google-${Date.now()}`;
+                  await loginOAuth('google', mockToken);
+                  navigate(postLoginTarget, { replace: true });
+                } catch {}
+              }}
+              disabled={loading}
+              className="btn-outline flex items-center justify-center gap-2 py-3 text-sm font-semibold disabled:opacity-50"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+              Google
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const mockToken = `mock-apple-${Date.now()}`;
+                  await loginOAuth('apple', mockToken);
+                  navigate(postLoginTarget, { replace: true });
+                } catch {}
+              }}
+              disabled={loading}
+              className="btn-outline flex items-center justify-center gap-2 py-3 text-sm font-semibold disabled:opacity-50"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              Apple
+            </button>
+          </div>
+
+          {!showPasskey && (
+            <button
+              type="button"
+              onClick={() => setShowPasskey(true)}
+              className="btn-outline w-full py-3"
+            >
+              <Fa name="fingerprint" className="h-4 w-4" /> Use Passkey
+            </button>
+          )}
+          {showPasskey && <PasskeyButton mode="login" onSuccess={handlePasskeySuccess} />}
+        </div>
+      )}
     </AuthLayout>
   );
 }
