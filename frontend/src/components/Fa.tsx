@@ -1,16 +1,21 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
+  faArrowDown,
   faArrowLeft,
   faArrowRight,
   faArrowRotateLeft,
+  faArrowUp,
   faArrowsRotate,
   faAppleWhole,
   faBars,
+  faBatteryHalf,
   faBell,
   faBellConcierge,
   faBolt,
   faBox,
+  faBriefcase,
+  faBuilding,
   faBus,
   faCalendar,
   faCamera,
@@ -36,6 +41,7 @@ import {
   faFingerprint,
   faFlagCheckered,
   faHouse,
+  faKey,
   faLeftRight,
   faLifeRing,
   faLocationArrow,
@@ -50,10 +56,12 @@ import {
   faPlay,
   faPlus,
   faQrcode,
+  faRestroom,
   faRightFromBracket,
   faRoute,
   faShield,
   faSliders,
+  faSnowflake,
   faSpinner,
   faStar,
   faTableColumns,
@@ -67,6 +75,8 @@ import {
   faUserPlus,
   faUsers,
   faWallet,
+  faWifi,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
@@ -80,16 +90,21 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core';
  * not import `far` or `fab` to keep the bundle small.
  */
 library.add(
+  faArrowDown,
   faArrowLeft,
   faArrowRight,
   faArrowRotateLeft,
+  faArrowUp,
   faArrowsRotate,
   faAppleWhole,
   faBars,
+  faBatteryHalf,
   faBell,
   faBellConcierge,
   faBolt,
   faBox,
+  faBriefcase,
+  faBuilding,
   faBus,
   faCalendar,
   faCamera,
@@ -115,6 +130,7 @@ library.add(
   faFingerprint,
   faFlagCheckered,
   faHouse,
+  faKey,
   faLeftRight,
   faLifeRing,
   faLocationArrow,
@@ -129,10 +145,12 @@ library.add(
   faPlay,
   faPlus,
   faQrcode,
+  faRestroom,
   faRightFromBracket,
   faRoute,
   faShield,
   faSliders,
+  faSnowflake,
   faSpinner,
   faStar,
   faTableColumns,
@@ -146,6 +164,8 @@ library.add(
   faUserPlus,
   faUsers,
   faWallet,
+  faWifi,
+  faXmark,
 );
 
 /**
@@ -160,6 +180,7 @@ library.add(
  */
 const aliases: Record<string, string> = {
   // Lucide / FA6 style -> FA7 iconName
+  alertcircle: 'circle-exclamation',
   alerttriangle: 'triangle-exclamation',
   'alert-circle': 'circle-exclamation',
   bellring: 'bell-concierge',
@@ -177,6 +198,7 @@ const aliases: Record<string, string> = {
   stickynote: 'note-sticky',
   trash2: 'trash',
   userplus: 'user-plus',
+  x: 'xmark',
   xcircle: 'circle-xmark',
   rotateccw: 'arrow-rotate-left',
   refreshcw: 'arrows-rotate',
@@ -199,6 +221,11 @@ const aliases: Record<string, string> = {
   'layout-dashboard': 'table-columns',
   layoutdashboard: 'table-columns',
   settingsicon: 'sliders',
+  // AmenityIcons
+  wifi: 'wifi',
+  snowflake: 'snowflake',
+  batterycharging: 'battery-3-full',
+  toilet: 'restroom',
 };
 
 const FALLBACK: IconProp = ['fas', 'circle-question'];
