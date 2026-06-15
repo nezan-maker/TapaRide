@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" fill="none">
+  <!-- MARK: the geometric T-vehicle -->
+  <!-- Left pillar -->
+  <path d="M6 16 L6 46 C6 48.2 7.8 50 10 50 L18 50 C20.2 50 22 48.2 22 46 L22 16 Z" fill="#10075C"/>
+  <!-- Right pillar -->
+  <path d="M22 16 L22 46 C22 48.2 23.8 50 26 50 L34 50 C36.2 50 38 48.2 38 46 L38 16 Z" fill="#10075C"/>
+  <!-- Crossbar (top of T) -->
+  <rect x="0" y="8" width="44" height="12" rx="6" fill="#10075C"/>
+
+  <!-- Orange headlight dot -->
+  <circle cx="35" cy="14" r="3.5" fill="#EA580C"/>
+
+  <!-- WORDMARK: Tapa in ink, Ride in orange — no gap between words -->
+  <text x="52" y="39" font-family="system-ui, -apple-system, 'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="26" letter-spacing="-0.03em"><tspan fill="#10075C">Tapa</tspan><tspan fill="#EA580C">Ride</tspan></text>
+</svg>

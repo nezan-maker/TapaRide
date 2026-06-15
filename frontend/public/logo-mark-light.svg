@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <!-- Transparent background — use on dark surfaces -->
+  <!-- The T mark: two pillar bars + crossbar, in white -->
+  <!-- Left pillar -->
+  <path d="M22 28 L22 56 C22 59.3 24.7 62 28 62 L34 62 C37.3 62 40 59.3 40 56 L40 28 Z" fill="white" fill-opacity="0.95"/>
+  <!-- Right pillar -->
+  <path d="M40 28 L40 56 C40 59.3 42.7 62 46 62 L52 62 C55.3 62 58 59.3 58 56 L58 28 Z" fill="white" fill-opacity="0.95"/>
+  <!-- Crossbar (top of T) -->
+  <rect x="16" y="20" width="48" height="12" rx="6" fill="white" fill-opacity="0.95"/>
+
+  <!-- The orange dot: headlight / destination accent -->
+  <circle cx="54" cy="26" r="4" fill="#EA580C"/>
+</svg>

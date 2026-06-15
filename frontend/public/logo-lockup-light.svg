@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 60" fill="none">
+  <defs>
+    <style>
+      .wordmark { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+    </style>
+  </defs>
+
+  <!-- MARK: the geometric T-vehicle -->
+  <!-- Left pillar -->
+  <path d="M6 18 L6 46 C6 49.3 8.7 52 12 52 L18 52 C21.3 52 24 49.3 24 46 L24 18 Z" fill="white" fill-opacity="0.95"/>
+  <!-- Right pillar -->
+  <path d="M24 18 L24 46 C24 49.3 26.7 52 30 52 L36 52 C39.3 52 42 49.3 42 46 L42 18 Z" fill="white" fill-opacity="0.95"/>
+  <!-- Crossbar (top of T) -->
+  <rect x="0" y="10" width="48" height="12" rx="6" fill="white" fill-opacity="0.95"/>
+
+  <!-- Orange dot: headlight / destination accent -->
+  <circle cx="38" cy="16" r="3.5" fill="#EA580C"/>
+
+  <!-- WORDMARK: Tapa in white, Ride in orange -->
+  <text x="60" y="39" class="wordmark" font-size="26" fill="white">Tapa</text>
+  <text x="127" y="39" class="wordmark" font-size="26" fill="#EA580C">Ride</text>
+</svg>

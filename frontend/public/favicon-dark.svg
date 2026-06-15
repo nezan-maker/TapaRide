@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Dark ink background -->
+  <rect width="64" height="64" rx="14" fill="#10075C"/>
+
+  <!-- The T mark: white geometric pill shapes -->
+  <!-- Left pillar -->
+  <path d="M14 17 L14 47 C14 50.2 16.8 53 20 53 L26 53 C29.2 53 32 50.2 32 47 L32 17 Z" fill="white"/>
+  <!-- Right pillar -->
+  <path d="M32 17 L32 47 C32 50.2 34.8 53 38 53 L44 53 C47.2 53 50 50.2 50 47 L50 17 Z" fill="white"/>
+  <!-- Crossbar (top of T) -->
+  <rect x="9" y="13" width="46" height="11" rx="5.5" fill="white"/>
+
+  <!-- The orange dot: destination / headlight -->
+  <circle cx="47" cy="18.5" r="3.5" fill="#EA580C"/>
+</svg>
