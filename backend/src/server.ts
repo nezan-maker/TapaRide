@@ -26,8 +26,12 @@ async function main() {
     await db.$queryRaw`SELECT 1`;
     logger.info('Connected to database');
 
-    await redis.ping();
-    logger.info('Connected to Redis');
+    try {
+      await redis.ping();
+      logger.info('Connected to Redis');
+    } catch (err) {
+      logger.warn({ err }, 'Redis unavailable — continuing without cache/Socket.IO');
+    }
 
     // ─── HTTP server ───────────────────────────────────────────────────────────
     httpServer = app.listen(env.PORT, env.HOST, () => {
@@ -39,9 +43,13 @@ async function main() {
       httpServer.keepAliveTimeout = 65_000; // slightly > nginx default
 
       // ─── WebSocket ─────────────────────────────────────────────────────────────
-      const { initSocket, shutdownSocket } = await import('./lib/socket.js');
-      ioShutdown = shutdownSocket;
-      await initSocket(httpServer);
+      try {
+        const { initSocket, shutdownSocket } = await import('./lib/socket.js');
+        ioShutdown = shutdownSocket;
+        await initSocket(httpServer);
+      } catch (err) {
+        logger.warn({ err }, 'Socket.IO unavailable — continuing without WebSocket support');
+      }
     }
 
     // ─── Graceful shutdown ─────────────────────────────────────────────────────

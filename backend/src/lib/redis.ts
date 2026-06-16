@@ -3,9 +3,12 @@ import { env } from '../config/env.js';
 import { logger } from './logger.js';
 
 export function createRedisConnection() {
-  return new Redis(env.REDIS_URL, {
+  const url = env.REDIS_URL;
+  const isSSL = url.startsWith('rediss://');
+  return new Redis(url, {
     maxRetriesPerRequest: null,
     lazyConnect: true,
+    ...(isSSL ? { tls: {} } : {}),
   });
 }
 
