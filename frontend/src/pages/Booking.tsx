@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import Stepper from '../components/Stepper'
-import { cn, rwf } from '../lib/utils'
-import { api, ApiError } from '../lib/api'
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import Stepper from '../components/Stepper';
+import { cn, rwf } from '../lib/utils';
+import { api, ApiError } from '../lib/api';
 import Fa from '../components/Fa';
+import { Skeleton } from '../components/Skeleton';
 
 interface JourneyAvailability {
   journeyId: string
@@ -224,8 +225,55 @@ export default function Booking() {
 
       <div className="container-page py-8">
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+          <div className="mx-auto max-w-5xl">
+            <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+              {/* Seat map skeleton */}
+              <div className="card p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <Skeleton variant="title" width="1/3" height="1.25rem" />
+                  <div className="flex gap-3">
+                    <Skeleton variant="chip" />
+                    <Skeleton variant="chip" />
+                    <Skeleton variant="chip" />
+                  </div>
+                </div>
+                <div className="mx-auto max-w-sm space-y-3">
+                  <div className="flex justify-center">
+                    <Skeleton variant="chip" className="w-24" />
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <Skeleton key={i} variant="pulse" className="h-9 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-6 text-center">
+                  <Skeleton variant="text" width="sm" className="mx-auto" />
+                </div>
+              </div>
+              {/* Booking summary skeleton */}
+              <div className="card p-6 h-fit sticky top-24">
+                <Skeleton variant="title" width="1/2" height="1.25rem" className="mb-4" />
+                <div className="space-y-3">
+                  <Skeleton variant="text" />
+                  <Skeleton variant="text" width="3/4" />
+                  <Skeleton variant="text" width="1/2" />
+                </div>
+                <hr className="my-4 border-ink-100" />
+                <div className="space-y-2">
+                  <Skeleton variant="text" width="1/2" />
+                  <Skeleton variant="text" width="1/3" />
+                  <Skeleton variant="text" width="1/4" />
+                </div>
+                <hr className="my-4 border-ink-100" />
+                <Skeleton variant="title" width="sm" height="1.75rem" />
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <Skeleton variant="btn" />
+                  <Skeleton variant="btn" />
+                </div>
+                <Skeleton variant="btn" className="mt-4 w-full" />
+              </div>
+            </div>
           </div>
         ) : error ? (
           <div className="mx-auto max-w-md">

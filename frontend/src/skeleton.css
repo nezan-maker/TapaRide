@@ -1,0 +1,67 @@
+/* Skeleton loading animations — Apple-inspired shimmer */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, #f0eff8 25%, #e8e6f4 50%, #f0eff8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.skeleton-pulse {
+  animation: pulse-soft 2s ease-in-out infinite;
+  background-color: #e8e6f4;
+  border-radius: 0.5rem;
+}
+
+.skeleton-text {
+  height: 0.875rem;
+  border-radius: 0.25rem;
+}
+
+.skeleton-title {
+  height: 1.25rem;
+  border-radius: 0.375rem;
+}
+
+.skeleton-avatar {
+  border-radius: 9999px;
+}
+
+.skeleton-card {
+  border-radius: 1rem;
+}
+
+.skeleton-image {
+  border-radius: 0.75rem;
+}
+
+.skeleton-btn {
+  height: 2.75rem;
+  border-radius: 0.75rem;
+}
+
+.skeleton-chip {
+  height: 1.5rem;
+  border-radius: 9999px;
+  width: 5rem;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .skeleton-pulse {
+    animation: none;
+    opacity: 0.6;
+  }
+}

@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { cn, rwf } from '../lib/utils'
-import { api, ApiError } from '../lib/api'
+import { useMemo, useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { cn, rwf } from '../lib/utils';
+import { api, ApiError } from '../lib/api';
 import Fa from '../components/Fa';
+import { Skeleton } from '../components/Skeleton';
 
 interface BusTrip {
   id: string
@@ -96,8 +97,37 @@ export default function SearchResults() {
         )}
 
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+          <div className="space-y-4">
+            {/* Filter chips skeleton */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Skeleton variant="text" width="sm" />
+              <Skeleton variant="chip" />
+              <Skeleton variant="chip" />
+              <Skeleton variant="chip" />
+            </div>
+            {/* Trip card skeletons */}
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="card p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Skeleton variant="title" width="1/4" height="1rem" />
+                      <Skeleton variant="text" width="sm" />
+                      <Skeleton variant="title" width="1/4" height="1rem" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Skeleton variant="text" width="1/3" />
+                      <Skeleton variant="text" width="1/4" />
+                      <Skeleton variant="text" width="1/6" />
+                    </div>
+                  </div>
+                  <div className="text-right space-y-2">
+                    <Skeleton variant="title" width="sm" height="1.25rem" />
+                    <Skeleton variant="btn" width="md" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : visible.length > 0 ? (
           <>

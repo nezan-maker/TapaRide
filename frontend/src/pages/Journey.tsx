@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { cn } from '../lib/utils'
-import { api, ApiError } from '../lib/api'
-import { useRealtimeTrip } from '../lib/useRealtimeTrip'
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { cn } from '../lib/utils';
+import { api, ApiError } from '../lib/api';
+import { useRealtimeTrip } from '../lib/useRealtimeTrip';
 import Fa from '../components/Fa';
+import { Skeleton } from '../components/Skeleton';
 
 interface JourneyDetails {
   journeyId: string;
@@ -92,11 +93,40 @@ export default function Journey() {
   if (loading) {
     return (
       <div className="bg-mist py-20">
-        <div className="container-page flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        <div className="container-page mx-auto max-w-md">
+          <div className="text-center mb-8">
+            <Skeleton variant="title" width="1/2" height="1.5rem" className="mx-auto mb-3" />
+            <Skeleton variant="text" width="1/3" className="mx-auto" />
+          </div>
+          <div className="card p-6 space-y-6">
+            {/* Route stops skeleton */}
+            <div className="space-y-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton variant="avatar" className="h-8 w-8" />
+                  <div className="flex-1">
+                    <Skeleton variant="title" width={i === 0 ? '1/3' : '1/4'} height="0.875rem" />
+                    <Skeleton variant="text" width="1/4" className="mt-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Map placeholder */}
+            <Skeleton variant="image" className="h-48" />
+            {/* ETA / status */}
+            <div className="flex items-center justify-between">
+              <Skeleton variant="text" width="1/4" />
+              <Skeleton variant="chip" />
+            </div>
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <Skeleton variant="btn" className="flex-1" />
+              <Skeleton variant="btn" className="flex-1" />
+            </div>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!details && error) {

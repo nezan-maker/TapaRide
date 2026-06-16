@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import { api, ApiError } from '../../lib/api'
-import VehicleRegistrationForm from '../../components/VehicleRegistrationForm'
+import { useState, useEffect } from 'react';
+import { api, ApiError } from '../../lib/api';
+import VehicleRegistrationForm from '../../components/VehicleRegistrationForm';
 import Fa from '../../components/Fa';
+import { Skeleton, SkeletonCard } from '../../components/Skeleton';
 
 interface Agency {
   id: string
@@ -122,10 +123,23 @@ export default function OwnerDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+      <div className="space-y-6">
+        <SkeletonHeader />
+        <div className="grid gap-4 md:grid-cols-2">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <div className="card p-6 space-y-4">
+          <Skeleton variant="title" width="1/3" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (

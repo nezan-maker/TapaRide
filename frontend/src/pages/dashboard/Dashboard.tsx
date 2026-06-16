@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { cn, rwf } from '../../lib/utils'
-import { useAuth } from '../../lib/auth'
-import { api, ApiError } from '../../lib/api'
-import DriverDashboard from './DriverDashboard'
-import ManagerDashboard from './ManagerDashboard'
-import OwnerDashboard from './OwnerDashboard'
-import OrganizationDashboard from './OrganizationDashboard'
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { cn, rwf } from '../../lib/utils';
+import { useAuth } from '../../lib/auth';
+import { api, ApiError } from '../../lib/api';
+import DriverDashboard from './DriverDashboard';
+import ManagerDashboard from './ManagerDashboard';
+import OwnerDashboard from './OwnerDashboard';
+import OrganizationDashboard from './OrganizationDashboard';
 import Fa from '../../components/Fa';
+import { Skeleton, SkeletonStat, SkeletonListItem } from '../../components/Skeleton';
 
 const statusStyles: Record<string, string> = {
   PAID: 'bg-emerald-100 text-emerald-700',
@@ -50,7 +51,7 @@ export default function Dashboard() {
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
       </div>
-    )
+    );
   }
 
   switch (user.role) {
@@ -133,8 +134,31 @@ function ClientDashboard() {
       )}
 
       {loading ? (
-        <div className="flex h-32 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        <div className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <SkeletonStat />
+            <SkeletonStat />
+            <SkeletonStat />
+          </div>
+          <div className="card">
+            <div className="p-5 space-y-4">
+              <Skeleton variant="title" width="1/4" />
+              <div className="divide-y divide-ink-100">
+                <SkeletonListItem className="py-3" />
+                <SkeletonListItem className="py-3" />
+                <SkeletonListItem className="py-3" />
+              </div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="p-5 space-y-4">
+              <Skeleton variant="title" width="1/3" />
+              <div className="divide-y divide-ink-100">
+                <SkeletonListItem className="py-3" />
+                <SkeletonListItem className="py-3" />
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <>

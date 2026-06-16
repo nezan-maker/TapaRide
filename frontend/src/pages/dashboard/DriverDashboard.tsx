@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { api, ApiError } from '../../lib/api'
+import { useState, useEffect } from 'react';
+import { api, ApiError } from '../../lib/api';
 import Fa from '../../components/Fa';
+import { Skeleton, SkeletonHeader } from '../../components/Skeleton';
 
 interface Station {
   id: string
@@ -139,10 +140,44 @@ export default function DriverDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+      <div className="space-y-6">
+        <SkeletonHeader />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <div className="card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton variant="title" width="1/2" />
+                <Skeleton variant="chip" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+              </div>
+              <Skeleton variant="image" className="h-32" />
+            </div>
+            <div className="card p-6 space-y-3">
+              <Skeleton variant="title" width="1/3" />
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} variant="pulse" className="h-12 rounded-lg" />
+              ))}
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="card p-5">
+              <Skeleton variant="title" width="2/3" />
+              <div className="mt-3 space-y-2">
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+              </div>
+            </div>
+            <Skeleton variant="btn" className="w-full" />
+            <Skeleton variant="btn" className="w-full" />
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   // Find last reached stop for alighting reference

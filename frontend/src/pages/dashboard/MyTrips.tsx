@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { cn, rwf } from '../../lib/utils'
-import { api, ApiError } from '../../lib/api'
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { cn, rwf } from '../../lib/utils';
+import { api, ApiError } from '../../lib/api';
 import Fa from '../../components/Fa';
+import { Skeleton, SkeletonListItem } from '../../components/Skeleton';
 
 interface TripTicket {
   id: string
@@ -89,8 +90,11 @@ export default function MyTrips() {
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        <div className="space-y-4">
+          <SkeletonHeader />
+          <SkeletonListItem />
+          <SkeletonListItem />
+          <SkeletonListItem />
         </div>
       ) : filtered.length > 0 ? (
         <div className="space-y-4">

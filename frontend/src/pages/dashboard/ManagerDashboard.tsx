@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
-import { api, ApiError } from '../../lib/api'
-import { rwf } from '../../lib/utils'
+import { useState, useEffect } from 'react';
+import { api, ApiError } from '../../lib/api';
+import { rwf } from '../../lib/utils';
 import Fa from '../../components/Fa';
+import { Skeleton, SkeletonHeader, SkeletonStat } from '../../components/Skeleton';
 
 interface Station {
   id: string
@@ -127,10 +128,34 @@ export default function ManagerDashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+      <div className="space-y-6">
+        <SkeletonHeader />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <SkeletonStat />
+          <SkeletonStat />
+          <SkeletonStat />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="card p-6 space-y-4">
+            <Skeleton variant="title" width="1/3" />
+            <div className="space-y-3">
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+            </div>
+          </div>
+          <div className="card p-6 space-y-4">
+            <Skeleton variant="title" width="1/2" />
+            <div className="space-y-3">
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+              <Skeleton variant="pulse" className="h-14 rounded-xl" />
+            </div>
+          </div>
+        </div>
+        <Skeleton variant="btn" width="1/4" />
       </div>
-    )
+    );
   }
 
   return (
