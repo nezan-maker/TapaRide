@@ -84,10 +84,19 @@ export async function listJourneys(
       tags: [cacheTags.journeys],
     },
     async () => {
+      // When sourceId or destId are empty strings, treat as missing
+      const effectiveSourceId = sourceId || undefined
+      const effectiveDestId = destId || undefined
+
+      // Require at least one filter to avoid full table scans
+      if (!effectiveSourceId && !effectiveDestId) {
+        return { items: [], page, pageSize, total: 0, totalPages: 0 };
+      }
+
       const { page, pageSize, skip, take } = toPagination(pagination);
       const where = {
-        ...(sourceId ? { sourceStationId: sourceId } : {}),
-        ...(destId ? { destinationStationId: destId } : {}),
+        ...(effectiveSourceId ? { sourceStationId: effectiveSourceId } : {}),
+        ...(effectiveDestId ? { destinationStationId: effectiveDestId } : {}),
         departureTime: { gte: new Date() },
       };
 
@@ -174,6 +183,42 @@ export async function getJourneyAvailability(journeyId: string) {
         soldSeats,
         bulkBookedSeats,
         availableSeats,
+      };
+    },
+  );
+}
+
+export async function getJourneyDetail(journeyId: string) {
+  return rememberJson(
+    cacheKeys.journeyAvailability(journeyId),
+    {
+      ...cachePolicies.journeyAvailability,
+      tags: [cacheTags.journeys, cacheTags.journey(journeyId)],
+    },
+    async () => {
+      const journey = await db.journey.findUniqueOrThrow({
+        where: { id: journeyId },
+        include: {
+          sourceStation: { select: { id: true, name: true, location: true } },
+          destinationStation: { select: { id: true, name: true, location: true } },
+          vehicle: {
+            select: {
+              id: true,
+              plateNumber: true,
+              model: true,
+              capacity: true,
+              amenities: true,
+              seatLayout: true,
+              agency: { select: { id: true, name: true, verified: true } },
+            },
+          },
+          _count: { select: { tickets: true } },
+        },
+      });
+
+      return {
+        ...journey,
+        estimatedArrival: new Date(new Date(journey.departureTime).getTime() + 4 * 60 * 60 * 1000),
       };
     },
   );

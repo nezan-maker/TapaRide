@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { cn, rwf } from '../lib/utils';
 import { api, ApiError } from '../lib/api';
 import Fa from '../components/Fa';
@@ -16,17 +16,18 @@ interface BusTrip {
 }
 
 const departureWindows = [
-  { key: 'morning', label: 'Morning', sub: '6am–12pm', icon: "sun" },
+  { key: 'morning', label: 'Morning', sub: '6am–12pm', icon: 'sun' },
   { key: 'afternoon', label: 'Afternoon', sub: '12pm–6pm', icon: 'sunset' },
-  { key: 'evening', label: 'Evening', sub: '6pm–10pm', icon: "moon" },
+  { key: 'evening', label: 'Evening', sub: '6pm–10pm', icon: 'moon' },
 ]
 
 const ITEMS_PER_PAGE = 5
 
 export default function SearchResults() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const from = searchParams.get('from') || 'Kigali (Nyabugogo)'
-  const to = searchParams.get('to') || 'Huye'
+  const from = searchParams.get('from') || ''
+  const to = searchParams.get('to') || ''
   const date = searchParams.get('date') || new Date().toISOString().split('T')[0]
 
   const [trips, setTrips] = useState<BusTrip[]>([])
@@ -34,16 +35,57 @@ export default function SearchResults() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [timeFilter, setTimeFilter] = useState<string | null>(null)
+  const [stationsList, setStationsList] = useState<string[]>([])
+  const [modifyFrom, setModifyFrom] = useState(from)
+  const [modifyTo, setModifyTo] = useState(to)
+  const [modifyDate, setModifyDate] = useState(date)
+
+  // Sync modify fields when URL params change
+  useEffect(() => {
+    setModifyFrom(from)
+    setModifyTo(to)
+    setModifyDate(date)
+  }, [from, to, date])
+
+  // Fetch stations for the modify-search dropdown
+  useEffect(() => {
+    fetchStations()
+  }, [])
+
+  const fetchStations = async () => {
+    try {
+      const data = await api.get('/api/stations')
+      const list = data.stations || data.items || data
+      const names = Array.isArray(list) ? list.map((s: any) => s.name || s).filter(Boolean) : []
+      setStationsList(names.length > 0 ? names : ['Kigali (Nyabugogo)', 'Huye', 'Musanze', 'Rubavu (Gisenyi)', 'Rusizi', 'Nyagatare', 'Muhanga', 'Karongi'])
+    } catch {
+      setStationsList(['Kigali (Nyabugogo)', 'Huye', 'Musanze', 'Rubavu (Gisenyi)', 'Rusizi', 'Nyagatare', 'Muhanga', 'Karongi'])
+    }
+  }
 
   useEffect(() => {
-    fetchTrips()
+    if (from && to) fetchTrips()
+    else { setLoading(false); setTrips([]) }
   }, [from, to, date])
 
   const fetchTrips = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get(`/api/journeys?sourceId=&destId=`)
+      const stationsRes = await api.get('/api/stations')
+      const stations: Array<{ id: string; name: string }> = stationsRes.stations || stationsRes.items || []
+      const findStation = (name: string) =>
+        stations.find((s) => s.name?.toLowerCase().includes(name.toLowerCase().split('(')[0].trim().toLowerCase()))
+      const fromStation = findStation(from)
+      const toStation = findStation(to)
+
+      if (!fromStation || !toStation) {
+        setError('Please select valid stations from the list')
+        setTrips([])
+        return
+      }
+
+      const data = await api.get(`/api/journeys?sourceId=${fromStation.id}&destId=${toStation.id}`)
       const list = data.items || data.journeys || data
       setTrips(Array.isArray(list) ? list : [])
     } catch (err) {
@@ -69,24 +111,93 @@ export default function SearchResults() {
   const visible = filtered.slice(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE)
 
   return (
-    <div className="bg-mist py-8 sm:py-12">
-      <div className="container-page">
-        {/* Breadcrumb */}
-        <div className="mb-4 flex items-center gap-2 text-sm text-ink-400">
-          <Link to="/" className="hover:text-flame-600">Home</Link>
-          <span>/</span>
-          <span className="text-ink-600">{from} → {to}</span>
+    <div className="bg-mist min-h-screen">
+      {/* Persistent modify-search bar */}
+      <div className="border-b border-ink-50 bg-white py-4">
+        <div className="container-page">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              navigate(`/search?from=${encodeURIComponent(modifyFrom)}&to=${encodeURIComponent(modifyTo)}&date=${modifyDate}`)
+            }}
+            className="flex flex-wrap items-end gap-3"
+          >
+            <div className="flex-1 min-w-[160px]">
+              <label className="label">From</label>
+              <input
+                className="input"
+                list="stations-list"
+                placeholder="Departure city"
+                value={modifyFrom}
+                onChange={(e) => setModifyFrom(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              className="mb-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-ink-100 text-ink-400 hover:bg-ink-50 transition-colors"
+              onClick={() => { setModifyFrom(modifyTo); setModifyTo(modifyFrom) }}
+              aria-label="Swap cities"
+            >
+              <Fa name="arrowleftright" className="h-4 w-4" />
+            </button>
+            <div className="flex-1 min-w-[160px]">
+              <label className="label">To</label>
+              <input
+                className="input"
+                list="stations-list-to"
+                placeholder="Destination city"
+                value={modifyTo}
+                onChange={(e) => setModifyTo(e.target.value)}
+              />
+            </div>
+            <div className="w-[180px]">
+              <label className="label">Travel date</label>
+              <input
+                type="date"
+                className="input"
+                value={modifyDate}
+                onChange={(e) => setModifyDate(e.target.value)}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!modifyFrom || !modifyTo}
+              className="btn-primary px-6 py-2.5 h-10 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Fa name="search" className="h-3.5 w-3.5" />
+              {modifyFrom && modifyTo ? 'Search' : 'Select cities'}
+            </button>
+          </form>
+          <datalist id="stations-list">
+            {stationsList.map((c) => <option key={c} value={c} />)}
+          </datalist>
+          <datalist id="stations-list-to">
+            {stationsList.filter((s) => s !== modifyFrom).map((c) => <option key={c} value={c} />)}
+          </datalist>
         </div>
+      </div>
 
+      <div className="container-page py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">
-            {from} → {to}
-          </h1>
-          <p className="mt-1 text-ink-500">
-            <Fa name="calendar" className="mr-1 inline h-4 w-4" />
-            {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            {loading ? ' · Loading...' : ` · ${filtered.length} trip${filtered.length !== 1 ? 's' : ''} found`}
-          </p>
+          {from && to ? (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
+                {from.split('(')[0].trim()} <span className="text-ink-300 mx-1">—</span> {to.split('(')[0].trim()}
+              </h1>
+              <p className="mt-1.5 text-sm text-ink-400">
+                <Fa name="calendar" className="mr-1 inline h-3.5 w-3.5" />
+                {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {loading ? ' · Searching...' : ` · ${filtered.length} ${filtered.length === 1 ? 'trip' : 'trips'} available`}
+              </p>
+            </>
+          ) : (
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">Find your trip</h1>
+              <p className="mt-4 text-sm text-ink-500 max-w-md">
+                Select your departure and destination above to search for available bus routes across Rwanda.
+              </p>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -97,156 +208,117 @@ export default function SearchResults() {
         )}
 
         {loading ? (
-          <div className="space-y-4">
-            {/* Filter chips skeleton */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Skeleton variant="text" width="sm" />
-              <Skeleton variant="chip" />
-              <Skeleton variant="chip" />
-              <Skeleton variant="chip" />
-            </div>
-            {/* Trip card skeletons */}
+          <div className="space-y-3">
             {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="card p-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
+              <div key={i} className="card p-6">
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Skeleton variant="title" width="1/4" height="1rem" />
-                      <Skeleton variant="text" width="sm" />
-                      <Skeleton variant="title" width="1/4" height="1rem" />
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Skeleton variant="text" width="1/3" />
-                      <Skeleton variant="text" width="1/4" />
-                      <Skeleton variant="text" width="1/6" />
-                    </div>
+                    <Skeleton variant="title" width="1/4" height="1rem" />
+                    <Skeleton variant="text" width="1/3" />
                   </div>
-                  <div className="text-right space-y-2">
-                    <Skeleton variant="title" width="sm" height="1.25rem" />
-                    <Skeleton variant="btn" width="md" />
-                  </div>
+                  <Skeleton variant="btn" width="md" />
                 </div>
               </div>
             ))}
           </div>
-        ) : visible.length > 0 ? (
+        ) : filtered.length > 0 ? (
           <>
-            {/* Filters */}
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-500">
-                <Fa name="slidershorizontal" className="h-4 w-4" /> Filter by
-              </span>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
               {departureWindows.map((w) => (
                 <button
                   key={w.key}
-                  onClick={() => {
-                    setTimeFilter(timeFilter === w.key ? null : w.key)
-                    setPage(0)
-                  }}
+                  onClick={() => { setTimeFilter(timeFilter === w.key ? null : w.key); setPage(0) }}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition',
+                    'flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition',
                     timeFilter === w.key
                       ? 'bg-ink-900 text-white'
-                      : 'bg-white text-ink-500 hover:bg-ink-50',
+                      : 'bg-white text-ink-500 hover:bg-ink-50 border border-ink-100',
                   )}
                 >
-                  <Fa name={w.icon} className={cn('h-4 w-4', timeFilter === w.key ? '' : 'text-ink-300')} />
+                  <Fa name={w.icon} className="h-3 w-3" />
                   {w.label}
-                  <span className="text-xs opacity-60">{w.sub}</span>
+                  <span className="opacity-60">{w.sub}</span>
                 </button>
               ))}
             </div>
 
-            {/* Trip Cards */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {visible.map((trip) => {
                 const bookedCount = trip._count?.tickets || 0
                 const capacity = trip.vehicle?.capacity || 30
+                const available = capacity - bookedCount
                 const fill = Math.round((bookedCount / capacity) * 100)
                 const depTime = new Date(trip.departureTime)
-                const arrTime = new Date(depTime.getTime() + 4 * 60 * 60 * 1000) // Approx 4h
+                const arrTime = new Date(depTime.getTime() + 4 * 60 * 60 * 1000)
 
                 return (
-                  <div key={trip.id} className="card overflow-hidden transition hover:shadow-md">
-                    <div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:flex-nowrap">
-                      <div className="flex min-w-0 flex-1 items-center gap-4">
-                        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink-900 text-white">
-                          <Fa name="bus" className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-ink-900">
-                              {depTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <Fa name="arrow-right" className="h-3 w-3 text-ink-300" />
-                            <span className="font-bold text-ink-900">
-                              {arrTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                  <button
+                    key={trip.id}
+                    onClick={() => navigate(`/trip/${trip.id}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${date}`)}
+                    className="card w-full overflow-hidden text-left hover:shadow-md transition-shadow duration-200"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+                      <div className="flex min-w-0 flex-1 items-center gap-5">
+                        <div className="text-center w-14">
+                          <div className="text-lg font-bold text-ink-900 leading-none">
+                            {depTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
-                          <div className="font-bold text-ink-900 text-sm mt-1">
-                            {trip.sourceStation.name} → {trip.destinationStation.name}
+                          <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-ink-300">
+                            {trip.sourceStation.name.split('(')[0].trim()}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-ink-400 mt-0.5">
-                            <span>{trip.vehicle?.agency?.name || 'Transport Co.'}</span>
-                            <span>·</span>
-                            <span>Plate: {trip.vehicle?.plateNumber}</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-0.5 min-w-[40px]">
+                          <div className="text-[10px] text-ink-300 font-medium">
+                            {Math.round((arrTime.getTime() - depTime.getTime()) / 3600000)}h
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="h-px w-2 bg-ink-200" />
+                            <span className="h-1.5 w-1.5 rounded-full border-2 border-ink-200" />
+                            <span className="h-px w-2 bg-ink-200" />
+                          </div>
+                          <div className="text-[10px] font-medium text-ink-300">{trip.destinationStation.name.split('(')[0].trim()}</div>
+                        </div>
+                        <div className="text-center w-14">
+                          <div className="text-xl font-bold text-ink-900 leading-none">
+                            {arrTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-ink-300">
+                            {trip.destinationStation.name.split('(')[0].trim()}
+                          </div>
+                        </div>
+                        <div className="hidden sm:block min-w-0">
+                          <div className="text-sm font-semibold text-ink-900">{trip.vehicle?.agency?.name || 'Transport Co.'}</div>
+                          <div className="mt-0.5 text-xs text-ink-400">
+                            {trip.vehicle?.plateNumber} · {capacity} seats
+                            {fill > 70 && <span className="ml-1.5 text-flame-500 font-medium">{available} left</span>}
                           </div>
                         </div>
                       </div>
-
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-3">
                         <div className="text-right">
-                          <div className="text-lg font-extrabold text-ink-900">{rwf(trip.price)}</div>
-                          <div className="text-xs text-ink-400">
-                            <span className={cn(fill > 80 ? 'text-flame-600 font-semibold' : 'text-ink-400')}>
-                              {capacity - bookedCount} left
-                            </span>
-                          </div>
+                          <div className="text-xl font-bold text-ink-900">{rwf(trip.price)}</div>
+                          <div className="text-[10px] text-ink-300 font-medium">per seat</div>
                         </div>
-                        <Link
-                          to={`/booking?journeyId=${trip.id}`}
-                          className="btn-flame shrink-0 px-5 py-2.5 text-sm"
-                        >
-                          Book
-                        </Link>
+                        <div className="btn-flame px-4 py-2.5 text-sm">
+                          View Details <Fa name="arrowright" className="ml-1 inline h-3 w-3" />
+                        </div>
                       </div>
                     </div>
-                    <div className="border-t border-ink-50 px-5 py-2">
-                      <div className="flex items-center gap-3 text-xs text-ink-400">
-                        <span className="font-medium text-ink-600">{trip.vehicle?.agency?.name || 'Transport Co.'}</span>
-                        <span className="h-3 w-px bg-ink-100" />
-                        <span>{trip.vehicle?.plateNumber}</span>
-                        <span className="h-3 w-px bg-ink-100" />
-                        <span>{capacity} seats</span>
-                        <span className="h-3 w-px bg-ink-100" />
-                        <span className="flex items-center gap-1">
-                          Fill:
-                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-100">
-                            <div
-                              className={cn('h-full rounded-full', fill > 80 ? 'bg-flame-500' : 'bg-emerald-500')}
-                              style={{ width: `${Math.min(fill, 100)}%` }}
-                            />
-                          </div>
-                          {fill}%
-                        </span>
+                    {fill > 0 && (
+                      <div className="h-1 bg-ink-50">
+                        <div
+                          className={cn('h-full transition-all duration-500', fill > 80 ? 'bg-flame-500' : fill > 50 ? 'bg-amber-500' : 'bg-emerald-500')}
+                          style={{ width: `${Math.min(fill, 100)}%` }}
+                        />
                       </div>
-                      {trip.vehicle?.amenities && trip.vehicle.amenities.length > 0 && (
-                        <div className="mt-1.5 flex items-center gap-3 text-xs text-ink-400">
-                          {trip.vehicle.amenities.map((a: string) => {
-                            const icon = a.toLowerCase() === 'wifi' ? '📶' : a.toLowerCase() === 'ac' ? '❄️' : a.toLowerCase() === 'charging' ? '🔌' : a.toLowerCase() === 'restroom' ? '🚻' : '✓'
-                            return <span key={a}>{icon} {a}</span>
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    )}
+                  </button>
                 )
               })}
             </div>
 
-            {/* Pagination */}
             {pageCount > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
+              <div className="mt-10 flex items-center justify-center gap-2">
                 <button
                   onClick={() => setPage(Math.max(0, page - 1))}
                   disabled={page === 0}
@@ -260,7 +332,7 @@ export default function SearchResults() {
                     onClick={() => setPage(i)}
                     className={cn(
                       'grid h-9 w-9 place-items-center rounded-xl text-sm font-semibold transition',
-                      i === page ? 'bg-ink-900 text-white' : 'text-ink-500 hover:bg-ink-50',
+                      i === page ? 'bg-ink-900 text-white' : 'text-ink-400 hover:bg-ink-50',
                     )}
                   >
                     {i + 1}
@@ -276,18 +348,19 @@ export default function SearchResults() {
               </div>
             )}
           </>
-        ) : (
-          <div className="card p-10 text-center">
-            <Fa name="bus" className="mx-auto h-12 w-12 text-ink-200" />
-            <h2 className="mt-4 text-xl font-bold text-ink-900">No trips found</h2>
-            <p className="mt-2 text-ink-500">
-              No available journeys from {from} to {to} on {new Date(date).toLocaleDateString()}.
+        ) : from && to ? (
+          <div className="card p-12 text-center">
+            <Fa name="bus" className="mx-auto h-12 w-12 text-ink-100" />
+            <h2 className="mt-4 text-xl font-bold text-ink-900">No trips available</h2>
+            <p className="mt-2 text-sm text-ink-500">
+              No journeys from {from} to {to} on {new Date(date).toLocaleDateString()}.<br />
+              Try a different date or route.
             </p>
             <Link to="/" className="btn-primary mt-6 inline-flex">
-              <Fa name="pencil" className="h-4 w-4" /> Modify Search
+              Try a different search
             </Link>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

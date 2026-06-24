@@ -15,6 +15,7 @@ export default function SearchWidget() {
   const [to, setTo] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [loading, setLoading] = useState(true)
+  const canSubmit = from.length > 0 && to.length > 0 && from !== to
 
   useEffect(() => {
     fetchStations()
@@ -150,8 +151,13 @@ export default function SearchWidget() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full py-3.5">
-            <Fa name="search" className="h-4 w-4" /> Search Buses
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="btn-primary w-full py-3.5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Fa name="search" className="h-4 w-4" />
+            {canSubmit ? 'Search Buses' : 'Select from and to continue'}
           </button>
         </form>
       ) : (

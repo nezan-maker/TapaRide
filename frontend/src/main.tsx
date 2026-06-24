@@ -7,6 +7,7 @@ import { AuthProvider, ProtectedRoute } from "./lib/auth";
 import SiteLayout from "./components/SiteLayout";
 import Landing from "./pages/Landing";
 import SearchResults from "./pages/SearchResults";
+import TripDetail from "./pages/TripDetail";
 import Booking from "./pages/Booking";
 import SendParcel from "./pages/SendParcel";
 import Track from "./pages/Track";
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Landing /> },
       { path: "/search", element: <SearchResults /> },
+      { path: "/trip/:tripId", element: <TripDetail /> },
       { path: "/booking", element: <ProtectedRoute allowedRoles={['CLIENT']}><Booking /></ProtectedRoute> },
       { path: "/booking/processing", element: <ProtectedRoute allowedRoles={['CLIENT']}><PaymentProcessing /></ProtectedRoute> },
       { path: "/booking/failed", element: <ProtectedRoute allowedRoles={['CLIENT']}><PaymentFailed /></ProtectedRoute> },

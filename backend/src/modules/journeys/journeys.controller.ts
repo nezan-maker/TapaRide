@@ -34,6 +34,16 @@ export async function getAvailability(req: Request, res: Response, next: NextFun
     next(error);
   }
 }
+
+export async function getJourney(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const result = await JourneysService.getJourneyDetail(id as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}
 export async function markStopAsReached(req: Request, res: Response, next: NextFunction) {
   try {
     const user = req.user as { id: string };

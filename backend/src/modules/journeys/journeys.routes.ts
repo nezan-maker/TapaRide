@@ -5,6 +5,7 @@ import * as JourneysController from './journeys.controller.js';
 const router = Router();
 
 router.get('/', JourneysController.listJourneys);
+router.get('/:id', JourneysController.getJourney);
 router.get('/:id/availability', JourneysController.getAvailability);
 router.post('/', authenticate, requireRoles('MANAGER'), JourneysController.createJourney);
 
