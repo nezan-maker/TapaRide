@@ -1,24 +1,12 @@
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import { PrismaNeon } from '@prisma/adapter-neon';
 
 import { logger } from './logger.js';
 
 const connectionString = `${process.env['DATABASE_URL']}`;
 
-const maxPoolSize = process.env['DATABASE_POOL_SIZE']
-  ? parseInt(process.env['DATABASE_POOL_SIZE'], 10)
-  : 20;
-
-// Connection pool configuration
-const pool = new pg.Pool({
-  connectionString,
-  max: maxPoolSize,
-  idleTimeoutMillis: Number(process.env['DATABASE_POOL_IDLE_MS'] ?? 30000),
-  connectionTimeoutMillis: Number(process.env['DATABASE_POOL_TIMEOUT_MS'] ?? 5000),
-});
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaNeon({ connectionString });
 
 // Singleton pattern — reuse the same connection across the app.
 // In development, attach to `global` to prevent multiple instances
