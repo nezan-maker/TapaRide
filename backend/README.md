@@ -66,17 +66,17 @@ Tapa follows a **Modular Monolith** architecture — a single Express.js process
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                        Express.js                             │
-│  ┌──────┐ ┌──────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐│
-│  │ Auth │ │Users │ │Agencies│ │Vehicles│ │Stations│ │Journ.││
-│  └──────┘ └──────┘ └────────┘ └────────┘ └────────┘ └──────┘│
-│  ┌──────┐ ┌──────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐│
-│  │Tickets│ │Parc. │ │Wallets │ │ Bulk   │ │Waitlist│ │Track.││
-│  └──────┘ └──────┘ └────────┘ └────────┘ └────────┘ └──────┘│
+│                        Express.js                            │
+│  ┌──────┐ ┌──────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐ │
+│  │ Auth │ │Users │ │Agencies│ │Vehicles│ │Stations│ │Journ.│ │
+│  └──────┘ └──────┘ └────────┘ └────────┘ └────────┘ └──────┘ │
+│  ┌──────-┐ ┌──────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌──────┐│
+│  │Tickets│ │Parc. │ │Wallets │ │ Bulk   │ │Waitlist│ │Track │|
+│  └──────-┘ └──────┘ └────────┘ └────────┘ └────────┘ └──────┘|
 ├────────────────── Shared Infrastructure ─────────────────────┤
 │  RBAC │ Cache │ Crypto │ Domain Events │ Locks │ Idempotency │
 ├───────────────────── Data Layer ─────────────────────────────┤
-│         PostgreSQL (Prisma ORM)         Redis (Cache/Queue)   │
+│         PostgreSQL (Prisma ORM)         Redis (Cache/Queue)  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
