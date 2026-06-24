@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { cn, rwf } from '../../lib/utils';
 import { api, ApiError } from '../../lib/api';
 import Fa from '../../components/Fa';
-import { Skeleton, SkeletonListItem, SkeletonHeader } from '../../components/Skeleton';
+import { SkeletonListItem, SkeletonHeader } from '../../components/Skeleton';
 
 interface TripTicket {
   id: string
