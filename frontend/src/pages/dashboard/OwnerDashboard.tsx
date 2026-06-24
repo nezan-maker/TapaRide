@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api, ApiError } from '../../lib/api';
 import VehicleRegistrationForm from '../../components/VehicleRegistrationForm';
 import Fa from '../../components/Fa';
-import { Skeleton, SkeletonCard } from '../../components/Skeleton';
+import { Skeleton, SkeletonCard, SkeletonHeader } from '../../components/Skeleton';
 
 interface Agency {
   id: string

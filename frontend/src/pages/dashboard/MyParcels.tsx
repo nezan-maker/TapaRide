@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { cn, rwf } from '../../lib/utils';
 import { api, ApiError } from '../../lib/api';
 import Fa from '../../components/Fa';
-import { Skeleton, SkeletonListItem } from '../../components/Skeleton';
+import { Skeleton, SkeletonListItem, SkeletonHeader } from '../../components/Skeleton';
 
 interface Parcel {
   id: string
