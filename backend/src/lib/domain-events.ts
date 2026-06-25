@@ -48,6 +48,28 @@ type DomainEventMap = {
   "wallet.transactions-changed": {
     userId: string;
   };
+  "wallet.transaction.committed": {
+    transactionId: string;
+    walletId: string;
+    type: string;
+    referenceId?: string | null;
+    amount: number;
+  };
+  "wallet.transaction.released": {
+    transactionId: string;
+    walletId: string;
+    type: string;
+    referenceId?: string | null;
+    amount: number;
+  };
+  "wallet.transaction.reversed": {
+    transactionId: string;
+    compensatingTransactionId: string;
+    walletId: string;
+    type: string;
+    referenceId?: string | null;
+    amount: number;
+  };
   "parcel.created": {
     parcelId: string;
     senderId: string;

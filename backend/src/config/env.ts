@@ -54,6 +54,16 @@ const envSchema = z
     GPS_AGGREGATION_INTERVAL_MS: z.coerce.number().default(15000),
     METRICS_TOKEN: z.string().min(64).optional(),
     STRIPE_SECRET_KEY: z.string().optional(),
+
+    // Cloudinary — used for storing agency logos (and any other user-uploaded
+    // media). Render's filesystem is ephemeral, so we never persist uploads
+    // to disk; we transform (strip EXIF, rasterize SVG, cap dimensions) and
+    // ship the result to Cloudinary, then store only the resulting URL.
+    // Free tier: 25 GB storage, 25 GB bandwidth/month.
+    CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+    CLOUDINARY_API_KEY: z.string().min(1).optional(),
+    CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+    CLOUDINARY_FOLDER: z.string().default('tapa/agencies'),
   })
   .superRefine((value, ctx) => {
     if (value.EMAIL_PROVIDER === 'webhook' && !value.EMAIL_PROVIDER_URL) {

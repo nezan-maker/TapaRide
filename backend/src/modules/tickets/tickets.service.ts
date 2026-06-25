@@ -154,7 +154,9 @@ export async function buyTicket(userId: string, dto: BuyTicketDto) {
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: 'PAYMENT',
+        type: 'TICKET_PURCHASE',
+        direction: 'DEBIT',
+        status: 'COMMITTED',
         amount: journey.price,
         note: `Ticket purchase — Journey ${dto.journeyId} Seat ${dto.seatNumber}`,
       },
@@ -268,7 +270,9 @@ export async function cancelTicket(ticketId: string, userId: string, walletPassw
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: 'REFUND',
+        type: 'TICKET_REFUND',
+        direction: 'CREDIT',
+        status: 'COMMITTED',
         amount: ticket.journey.price,
         note: `Refund for ticket ${ticketId}`,
       },

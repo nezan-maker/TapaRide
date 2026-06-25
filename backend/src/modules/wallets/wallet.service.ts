@@ -185,9 +185,11 @@ export async function deposit(userId: string, dto: DepositDto) {
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: "DEPOSIT",
+        type: 'TOPUP',
+        direction: 'CREDIT',
+        status: 'COMMITTED',
         amount: dto.amount,
-        note: "Bank deposit",
+        note: 'Bank deposit',
       },
     });
 
@@ -256,9 +258,11 @@ export async function withdraw(userId: string, dto: WithdrawDto) {
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: "WITHDRAWAL",
+        type: 'WITHDRAWAL',
+        direction: 'DEBIT',
+        status: 'COMMITTED',
         amount: dto.amount,
-        note: "Withdrawal to bank",
+        note: 'Withdrawal to bank',
       },
     });
 

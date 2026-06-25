@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { api, ApiError } from '../../lib/api';
 import VehicleRegistrationForm from '../../components/VehicleRegistrationForm';
 import Fa from '../../components/Fa';
+import LogoUpload, { type UploadedLogo } from '../../components/LogoUpload';
 import { Skeleton, SkeletonCard, SkeletonHeader } from '../../components/Skeleton';
 
 interface Agency {
-  id: string
-  name: string
-  verified: boolean
-  createdAt: string
-  ownerId: string
+  id: string;
+  name: string;
+  verified: boolean;
+  createdAt: string;
+  ownerId: string;
+  logoUrl?: string | null;
+  ruraCode?: string | null;
 }
 
 interface Vehicle {
@@ -27,9 +30,12 @@ export default function OwnerDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [agencyName, setAgencyName] = useState('')
-  const [ruraCode, setRuraCode] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [agencyName, setAgencyName] = useState('');
+  const [ruraCode, setRuraCode] = useState('');
+  const [logo, setLogo] = useState<UploadedLogo | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null)
   const [assignRole, setAssignRole] = useState<'MANAGER' | 'DRIVER'>('MANAGER')
@@ -37,47 +43,69 @@ export default function OwnerDashboard() {
   const [assigning, setAssigning] = useState(false)
   const [showVehicleForm, setShowVehicleForm] = useState(false)
 
-  useEffect(() => {
-    fetchAgencies()
-  }, [])
-
-  const fetchAgencies = async () => {
-    setLoading(true)
-    setError(null)
+  const fetchAgencies = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [data, vehicleData] = await Promise.all([
         api.get('/api/agencies'),
         api.get('/api/vehicles').catch(() => ({ vehicles: [] })),
-      ])
-      const list = data.items || data.agencies || data
-      setAgencies(list)
-      setVehicles(vehicleData.vehicles || vehicleData.items || [])
+      ]);
+      const list = data.items || data.agencies || data;
+      setAgencies(list);
+      setVehicles(vehicleData.vehicles || vehicleData.items || []);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load agencies')
+      setError(err instanceof ApiError ? err.message : 'Failed to load agencies');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    // Initial mount fetch — running once is the whole point of `[]` deps.
+    // The exhaustive-deps rule would force us to loop over `fetchAgencies`,
+    // but `fetchAgencies` is stable via useCallback([]) above, so this is
+    // a deliberate minimal mount sync.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAgencies();
+  }, [fetchAgencies]);
+
+  const resetCreateForm = () => {
+    setShowAddForm(false);
+    setAgencyName('');
+    setRuraCode('');
+    setLogo(null);
+    setLogoError(null);
+    setCreating(false);
+  };
 
   const handleCreateAgency = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccessMsg(null)
+    e.preventDefault();
+    setError(null);
+    setSuccessMsg(null);
     if (!agencyName || !ruraCode) {
-      setError('Please provide agency name and RURA code')
-      return
+      setError('Please provide agency name and RURA code');
+      return;
     }
+    if (logoError) {
+      setError(logoError);
+      return;
+    }
+    setCreating(true);
     try {
-      await api.post('/api/agencies', { name: agencyName, ruraCode })
-      setSuccessMsg(`Agency "${agencyName}" registered and activated`)
-      setAgencyName('')
-      setRuraCode('')
-      setShowAddForm(false)
-      fetchAgencies()
+      const form = new FormData();
+      form.append('name', agencyName.trim());
+      form.append('ruraCode', ruraCode.trim());
+      if (logo?.file) form.append('logo', logo.file, logo.file.name);
+      await api.upload('/api/agencies', form);
+      setSuccessMsg(`Agency "${agencyName}" registered and activated`);
+      resetCreateForm();
+      fetchAgencies();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to register agency')
+      setError(err instanceof ApiError ? err.message : 'Failed to register agency');
+      setCreating(false);
     }
-  }
+  };
 
   const handleAssignStaff = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -176,47 +204,96 @@ export default function OwnerDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {showAddForm && (
-            <div className="card p-6 bg-ink-50 animate-fade-up">
-              <h2 className="text-lg font-bold text-ink-900 mb-4">Register New Agency</h2>
-              <form onSubmit={handleCreateAgency} className="space-y-4">
+            <div className="card p-6 sm:p-8 bg-gradient-to-br from-white via-white to-mist border-ink-100 shadow-card animate-fade-up">
+              <div className="flex items-start justify-between gap-3 mb-5">
                 <div>
-                  <label className="label">Agency Name</label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="e.g. Kigali Express Bus"
-                    value={agencyName}
-                    onChange={(e) => setAgencyName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="label">RURA License Code</label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="e.g. REG-10293847"
-                    value={ruraCode}
-                    onChange={(e) => setRuraCode(e.target.value)}
-                  />
-                  <p className="mt-1.5 text-xs text-ink-400">
-                    Enter the document number from your RURA-issued Transport Operating License.
-                    The number will be verified against the official RURA Licensing Portal.
+                  <p className="eyebrow text-flame-600">New Agency</p>
+                  <h2 className="mt-1 text-xl font-extrabold text-ink-900">Register your company</h2>
+                  <p className="mt-1 text-sm text-ink-500">
+                    Add your logo and your RURA-issued license. We'll verify against the regulator before activation.
                   </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetCreateForm();
+                  }}
+                  className="grid h-9 w-9 place-items-center rounded-xl text-ink-400 hover:bg-ink-50 hover:text-ink-900"
+                  aria-label="Close form"
+                >
+                  <Fa name="xmark" className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateAgency} className="space-y-5">
+                <LogoUpload
+                  value={logo}
+                  onChange={(next) => {
+                    setLogo(next);
+                    setLogoError(null);
+                  }}
+                  onError={(msg) => setLogoError(msg || null)}
+                />
+
+                <div>
+                  <label className="label">Agency name</label>
+                  <div className="relative">
+                    <Fa name="building" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                    <input
+                      type="text"
+                      className="input pl-10 h-12 text-base"
+                      placeholder="e.g. Kigali Express Bus"
+                      value={agencyName}
+                      onChange={(e) => setAgencyName(e.target.value)}
+                      disabled={creating}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label">RURA license code</label>
+                  <div className="relative">
+                    <Fa name="shield" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                    <input
+                      type="text"
+                      className="input pl-10 h-12 text-base"
+                      placeholder="e.g. REG-10293847"
+                      value={ruraCode}
+                      onChange={(e) => setRuraCode(e.target.value)}
+                      disabled={creating}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-ink-400">
+                    Enter the document number from your RURA-issued Transport Operating License. We'll verify it
+                    against <a href="https://licensing.rura.rw" target="_blank" rel="noreferrer" className="font-semibold text-flame-600 hover:underline">licensing.rura.rw</a> before activation.
+                  </p>
+                </div>
+
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="btn-outline py-2.5"
+                    onClick={resetCreateForm}
+                    className="btn-outline py-3"
+                    disabled={creating}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={!ruraCode || !agencyName}
-                    className="btn-primary py-2.5"
+                    disabled={creating || !ruraCode || !agencyName || !!logoError}
+                    className="btn-primary py-3 px-6 flex items-center gap-2"
                   >
-                    Register Agency
+                    {creating ? (
+                      <>
+                        <Fa name="spinner" className="h-4 w-4 animate-spin" />
+                        Verifying RURA…
+                      </>
+                    ) : (
+                      <>
+                        Register Agency
+                        <Fa name="arrowright" className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -230,9 +307,24 @@ export default function OwnerDashboard() {
                 {agencies.map((a) => (
                   <div key={a.id} className="p-4 rounded-xl border border-ink-100 hover:border-ink-200 transition">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-ink-900">{a.name}</h3>
-                        <p className="text-xs text-ink-400">ID: {a.id}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        {a.logoUrl ? (
+                          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-mist shadow-[inset_0_0_0_1px_rgba(16,7,92,0.06)] overflow-hidden">
+                            <img
+                              src={a.logoUrl}
+                              alt={`${a.name} logo`}
+                              className="h-9 w-9 object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-ink-50 text-ink-700 font-bold">
+                            {a.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-ink-900 truncate">{a.name}</h3>
+                          <p className="text-xs text-ink-400 truncate">RURA · {a.ruraCode ?? '—'}</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`chip ${a.verified ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>

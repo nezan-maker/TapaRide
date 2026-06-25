@@ -90,7 +90,7 @@ export async function listJourneys(
 
       // Require at least one filter to avoid full table scans
       if (!effectiveSourceId && !effectiveDestId) {
-        return { items: [], page, pageSize, total: 0, totalPages: 0 };
+        return { items: [], page: 1, pageSize: 0, total: 0, totalPages: 0 };
       }
 
       const { page, pageSize, skip, take } = toPagination(pagination);

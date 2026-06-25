@@ -52,40 +52,74 @@ model Passkey {
 }
 
 model Wallet {
-  id               String              @id @default(uuid())
-  userId           String              @unique
-  walletPassword   String?
-  encryptedBalance String?
-  iv               String?
-  authTag          String?
-  salt             String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  version          Int                 @default(0)
-  status           WalletStatus        @default(UNINITIALIZED)
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions     WalletTransaction[]
+  id                   String              @id @default(uuid())
+  userId               String              @unique
+  walletPassword       String?
+  // Available (un-holdable) balance — encrypted at rest with AES-256-GCM.
+  encryptedBalance     String?
+  // Reserved for in-flight transactions (a parcel send, etc.). Same
+  // encryption shape as encryptedBalance. NEVER mutated without a
+  // matching WalletTransaction row in the journal.
+  encryptedHeldBalance String?
+  iv                   String?
+  heldBalanceIv        String?
+  authTag              String?
+  heldBalanceAuthTag   String?
+  salt                 String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  // Optimistic-concurrency counter. Every balance/held flip increments.
+  version              Int                 @default(0)
+  status               WalletStatus        @default(UNINITIALIZED)
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions         WalletTransaction[]
 }
 
 model WalletTransaction {
-  id               String          @id @default(uuid())
+  id               String               @id @default(uuid())
   walletId         String
   type             TransactionType
-  amount           Int
+  // Holds vs commits vs releases. Every balance mutation in the ledger
+  // begins as PENDING (a hold), then either COMMITs (money moved) or
+  // RELEASEs (hold voided). REVERSED is for refund/cancel flows.
+  status           TransactionStatus    @default(PENDING)
+  // CREDIT adds to balance, DEBIT removes. Redundant with sign of amount but
+  // queryable without arithmetic. Required.
+  direction        TransactionDirection
+  amount           Int // Whole RWF. Sign defined by `direction`.
+  // Why this row exists. Free-text shown in dashboard history.
   note             String?
-  createdAt        DateTime        @default(now())
+  createdAt        DateTime             @default(now())
+  // When status flipped PENDING→COMMITTED.
+  committedAt      DateTime?
+  // When status flipped PENDING→RELEASED.
+  releasedAt       DateTime?
+  // When a COMMIT got reversed (refund, dispute resolution).
+  reversedAt       DateTime?
+  // External id — Stripe payment intent, parcel id, ticket id. Indexed.
   referenceId      String?
+  // Set when the row was committed by a Stripe webhook. UNIQUE → same
+  // Stripe event delivered twice cannot double-credit.
+  stripeEventId    String?            @unique
   idempotencyKeyId String?
-  idempotencyKey   IdempotencyKey? @relation(fields: [idempotencyKeyId], references: [id])
-  wallet           Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  idempotencyKey   IdempotencyKey?    @relation(fields: [idempotencyKeyId], references: [id])
+  // Free-form audit detail (e.g. Stripe event payload snapshot, sender
+  // IP, journal reconciliation details).
+  metadata         Json?
+  wallet           Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([idempotencyKeyId])
+  @@index([walletId, status])
+  @@index([referenceId])
+  @@index([walletId, createdAt])
 }
 
 model Agency {
   id        String    @id @default(uuid())
   name      String
   ownerId   String
+  ruraCode  String?
+  logoUrl   String?
   verified  Boolean   @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -94,6 +128,9 @@ model Agency {
   drivers   User[]    @relation("AgencyDrivers")
   managers  User[]    @relation("AgencyManagers")
   vehicles  Vehicle[]
+
+  @@unique([ruraCode])
+  @@index([ownerId])
 }
 
 model Vehicle {
@@ -170,20 +207,48 @@ model Ticket {
 }
 
 model Parcel {
-  id            String       @id @default(uuid())
-  senderId      String
-  receiverName  String
-  receiverPhone String
-  journeyId     String
-  status        ParcelStatus @default(PENDING)
-  trackingCode  String       @unique @default(uuid())
-  weight        Float?
-  fee           Int?
-  notes         String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  journey       Journey      @relation(fields: [journeyId], references: [id])
-  sender        User         @relation("ParcelSender", fields: [senderId], references: [id])
+  id                 String       @id @default(uuid())
+  senderId           String
+  receiverName       String
+  receiverPhone      String
+  journeyId          String
+  status             ParcelStatus @default(PENDING)
+  // Server-side tracking code — UUID. Used by staff dashboards / DB joins.
+  trackingCode       String       @unique @default(uuid())
+  // User-typable 12-char claim key shown to sender + SMS'd to receiver.
+  // Generated ONLY after payment commits. Plaintext at rest (the key is
+  // already shared over SMS, so encrypting only the column is theatre —
+  // what matters is replay-resistance: `@@unique` ensures the key is
+  // un-gameable as an index).
+  claimKey           String?      @unique
+  weight             Float?
+  fee                Int?
+  pricingStrategy    String? // 'LEGACY_WEIGHT_2000' or 'JOURNEY_X_BAND' — for tuning
+  basePrice          Int?
+  weightBand         String?
+  weightMultiplier   Float?
+  notes              String?
+  // Stripe Payment Intent for the parcel fee (topup-style — sender's
+  // wallet is the funding rail; Stripe only sees sender-side charges).
+  paymentIntentId    String?      @unique
+  paidAt             DateTime?
+  claimedAt          DateTime?
+  // If the receiver is a Tapa user, this is their User.id. If receiver
+  // verifies by claim key only (no account), this stays null and we record
+  // hashed phone in claimedByPhoneHash.
+  claimedById        String?
+  claimedByPhoneHash String?
+  // 14-day TTL after paidAt. After EXPIRED the hold is RELEASEd.
+  expiresAt          DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  journey            Journey      @relation(fields: [journeyId], references: [id])
+  sender             User         @relation("ParcelSender", fields: [senderId], references: [id])
+
+  @@index([status])
+  @@index([senderId, status])
+  @@index([receiverPhone])
+  @@index([expiresAt])
 }
 
 model Organization {
@@ -298,16 +363,72 @@ enum TicketStatus {
 }
 
 enum ParcelStatus {
+  // Sender-side lifecycle, in order:
+  //   PENDING           = parcel registered, fee not yet captured.
+  //                      Legacy default kept so prior clients and seeded
+  //                      rows still type-check. New code prefers
+  //                      AWAITING_PAYMENT to make the lifecycle explicit.
+  //   AWAITING_PAYMENT  = sender has the parcel queued, fee NOT yet
+  //                      committed in the wallet journal. Sender may
+  //                      CANCEL — that releases the wallet hold.
+  //   CONFIRMED         = sender's wallet hold committed; claimKey
+  //                      minted and SMS-sent to receiver.
+  //   IN_TRANSIT / DELIVERED = driven by staff (driver/marker) via PATCH /:id/status.
+  //   CLAIMED           = receiver confirmed pickup.
+  //   CANCELLED         = sender cancelled before pickup; wallet hold RELEASEd.
+  //   EXPIRED           = 14d elapsed with no claim; wallet hold RELEASEd.
   PENDING
+  AWAITING_PAYMENT
+  CONFIRMED
   IN_TRANSIT
   DELIVERED
+  CLAIMED
+  CANCELLED
+  EXPIRED
 }
 
 enum TransactionType {
+  // Legacy values — kept for backwards compatibility with the existing
+  // wallet service. New code should use the *_PARCEL_* / *_TICKET_*
+  // variants below for granular audit history.
   DEPOSIT
   WITHDRAWAL
   PAYMENT
   REFUND
+  // Granular values introduced for the parcel receive-flow and to give
+  // tickets their proper journal entry. Idempotent and pure: they map to
+  // (direction, status) pairs in WalletTransaction.
+  TOPUP // CREDIT/COMMITTED — Stripe-funded wallet credit
+  TICKET_PURCHASE // DEBIT/PENDING   → DEBIT/COMMITTED on success
+  TICKET_REFUND // CREDIT/REVERSED (against a prior purchase)
+  PARCEL_SEND // DEBIT/PENDING   → DEBIT/COMMITTED on payment
+  PARCEL_SEND_REFUND // CREDIT/REVERSED
+  ADJUSTMENT // Manual operator reconciliation row
+}
+
+/**
+ * State machine for a single WalletTransaction row.
+ * PENDING   = hold placed; not yet COMMITTED (e.g. awaiting Stripe webhook).
+ * COMMITTED = money permanently moved between balance and heldBalance.
+ * RELEASED  = a hold was voided without commit (e.g. Stripe charge failed).
+ * REVERSED  = a prior COMMIT was undone (refund, dispute).
+ * Terminal states: COMMITTED, RELEASED, REVERSED.
+ */
+enum TransactionStatus {
+  PENDING
+  COMMITTED
+  RELEASED
+  REVERSED
+}
+
+/**
+ * CREDIT adds to balance. DEBIT removes from balance (typically accompanied
+ * by an increment of heldBalance while PENDING, then a decrement of
+ * heldBalance on commit / release).
+ */
+enum TransactionDirection {
+  CREDIT
+  DEBIT
 }
 
 enum IdempotencyState {

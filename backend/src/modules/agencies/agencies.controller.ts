@@ -1,15 +1,50 @@
+// src/modules/agencies/agencies.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../../lib/errors.js';
 import { db } from '../../lib/db.js';
 import { paginationSchema } from '../../lib/pagination.js';
-import { createAgencySchema, assignManagerSchema, assignDriverSchema, assignManagerByEmailSchema, assignDriverByEmailSchema } from './agencies.schema.js';
+import {
+  createAgencySchema,
+  assignManagerSchema,
+  assignDriverSchema,
+  assignManagerByEmailSchema,
+  assignDriverByEmailSchema,
+} from './agencies.schema.js';
 import * as AgenciesService from './agencies.service.js';
 
+/**
+ * POST /api/agencies
+ * Multipart form:
+ *   - name:       string (required)
+ *   - ruraCode:   string (required)
+ *   - logo:       PNG/JPEG/SVG file (optional). Pipeline sanitizes and
+ *                 uploads to Cloudinary; only the URL is persisted.
+ */
 export async function createAgency(req: Request, res: Response, next: NextFunction) {
   try {
     const user = req.user as { id: string };
-    const dto = createAgencySchema.parse(req.body);
-    const result = await AgenciesService.createAgency(user.id, dto);
+
+    // Multipart payload: parse text fields directly. multer puts non-files
+    // on req.body. We re-validate through Zod so callers using JSON or
+    // multipart both get the same error format.
+    const dto = createAgencySchema.parse({
+      name: req.body?.name,
+      ruraCode: req.body?.ruraCode,
+    });
+
+    const result = await AgenciesService.createAgency({
+      ownerId: user.id,
+      dto,
+      logo: req.file
+        ? {
+            buffer: req.file.buffer,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            originalname: req.file.originalname,
+          }
+        : null,
+    });
+
     res.status(201).json(result);
   } catch (error) {
     next(error);

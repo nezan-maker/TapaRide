@@ -91,9 +91,10 @@ export async function registerUser(dto: RegisterDto) {
       "Agency-issued ID is required for DRIVER and MANAGER roles",
     );
   }
-  if (dto.role === "OWNER" && !dto.ruraCode) {
-    throw new ValidationError("RURA code is required for OWNER registration");
-  }
+  // NOTE: OWNER no longer requires ruraCode at signup — that belongs to the
+  // first agency they create from the dashboard. ruraCode is agency-scoped,
+  // not user-scoped, so an OWNER can run multiple agencies each with its
+  // own RURA license.
 
   // Check uniqueness
   const existing = await db.user.findFirst({
@@ -118,7 +119,8 @@ export async function registerUser(dto: RegisterDto) {
         phone: dto.phone,
         role: dto.role,
         agencyIssuedId: dto.agencyIssuedId,
-        ruraCode: dto.ruraCode,
+        // ruraCode is intentionally NOT stored on the User anymore —
+        // it lives on Agency (one OWNER can have many agencies).
         isVerified: false,
         phoneVerifiedAt: null,
         passwordHistory: [hashedPassword],

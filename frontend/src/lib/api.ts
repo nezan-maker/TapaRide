@@ -139,11 +139,18 @@ async function attemptTokenRefresh(): Promise<string> {
 
 export const api = {
   get: (path: string, options?: RequestInit) => request(path, { ...options, method: 'GET' }),
-  post: (path: string, body?: any, options?: RequestInit) => 
+  post: (path: string, body?: any, options?: RequestInit) =>
     request(path, { ...options, method: 'POST', body: body ? JSON.stringify(body) : undefined }),
-  put: (path: string, body?: any, options?: RequestInit) => 
+  put: (path: string, body?: any, options?: RequestInit) =>
     request(path, { ...options, method: 'PUT', body: body ? JSON.stringify(body) : undefined }),
-  patch: (path: string, body?: any, options?: RequestInit) => 
+  patch: (path: string, body?: any, options?: RequestInit) =>
     request(path, { ...options, method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: (path: string, options?: RequestInit) => request(path, { ...options, method: 'DELETE' }),
+  /**
+   * Multipart upload. Pass a FormData object. The browser sets the boundary
+   * header automatically when Content-Type is omitted/blank — we deliberately
+   * do NOT set application/json for FormData.
+   */
+  upload: (path: string, formData: FormData, options?: RequestInit) =>
+    request(path, { ...options, method: 'POST', body: formData }),
 };
