@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { cn } from '../lib/utils';
-import { api, ApiError } from '../lib/api';
-import { useRealtimeTrip } from '../lib/useRealtimeTrip';
-import Fa from '../components/Fa';
-import { Skeleton } from '../components/Skeleton';
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { cn } from "../lib/utils";
+import { api, ApiError } from "../lib/api";
+import { useRealtimeTrip } from "../lib/useRealtimeTrip";
+import Fa from "../components/Fa";
+import { Skeleton } from "../components/Skeleton";
+import TripMap from "../components/TripMap";
 
 interface JourneyDetails {
   journeyId: string;
@@ -180,6 +181,8 @@ export default function Journey() {
             stops={stops}
             connected={connected}
             vehiclePlate={details?.journey.vehicle.plateNumber}
+            sourceStation={details?.journey.sourceStation}
+            destinationStation={details?.journey.destinationStation}
           />
         </div>
       </div>
@@ -194,6 +197,8 @@ function LiveTracking({
   stops,
   connected,
   vehiclePlate,
+  sourceStation,
+  destinationStation,
 }: {
   onArrive: () => void
   position: { lat: number; lng: number; speed: number; timestamp: number } | null
@@ -201,37 +206,22 @@ function LiveTracking({
   stops: RouteStop[]
   connected: boolean
   vehiclePlate?: string
+  sourceStation?: { name: string; location: string }
+  destinationStation?: { name: string; location: string }
 }) {
-  const upcoming = stops.find((s) => s.state === 'upcoming')
-  const currentStopEta = nextStopEta ?? (upcoming ? { stopName: upcoming.name, etaMinutes: -1 } : null)
+  const upcoming = stops.find((s) => s.state === "upcoming");
+  const currentStopEta = nextStopEta ?? (upcoming ? { stopName: upcoming.name, etaMinutes: -1 } : null);
 
   return (
     <div className="card overflow-hidden">
-      {/* Map */}
-      <div className="relative h-56 bg-[radial-gradient(circle_at_30%_30%,#E7E5F7,#F5F4FF)]">
-        <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none">
-          <path d="M40 200 C 120 120, 200 160, 320 60" stroke="#10075C" strokeWidth="3" strokeDasharray="2 8" strokeLinecap="round" fill="none" />
-        </svg>
-        <span className="absolute left-8 bottom-12 grid h-6 w-6 -translate-x-1/2 translate-y-1/2 place-items-center rounded-full bg-white shadow-card">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-        </span>
-        <span className="absolute right-10 top-10 grid h-6 w-6 place-items-center rounded-full bg-white shadow-card">
-          <Fa name="map-pin" className="h-3.5 w-3.5 text-flame-600" />
-        </span>
-        {position && (
-          <span className="absolute left-1/2 top-1/3 flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-full bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white shadow-glow">
-            <Fa name="bus" className="h-3.5 w-3.5" />
-            {position.speed > 0
-              ? `${Math.round(position.speed * 3.6)} km/h`
-              : 'Stopped'}
-          </span>
-        )}
-        {!position && connected && (
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-ink-400 animate-pulse">
-            Waiting for GPS data…
-          </span>
-        )}
-      </div>
+      {/* MapLibre GL Map */}
+      <TripMap
+        position={position}
+        vehiclePlate={vehiclePlate}
+        sourceStation={sourceStation}
+        destinationStation={destinationStation}
+        connected={connected}
+      />
 
       <div className="p-5">
         {currentStopEta ? (
@@ -246,7 +236,7 @@ function LiveTracking({
               <div className="text-xs text-ink-400">
                 {currentStopEta.etaMinutes >= 0
                   ? `Arriving in ${currentStopEta.etaMinutes} minutes`
-                  : 'Calculating ETA…'}
+                  : "Calculating ETA…"}
               </div>
             </div>
             {connected && <span className="chip bg-white text-ink-500">Live</span>}
@@ -259,7 +249,7 @@ function LiveTracking({
             <div className="flex-1">
               <div className="font-bold text-ink-900">En route</div>
               <div className="text-xs text-ink-400">
-                {vehiclePlate ? `Vehicle ${vehiclePlate}` : 'Checking route progress…'}
+                {vehiclePlate ? `Vehicle ${vehiclePlate}` : "Checking route progress…"}
               </div>
             </div>
           </div>
@@ -273,18 +263,18 @@ function LiveTracking({
               <li key={s.name} className="mb-4 ml-5 last:mb-0">
                 <span
                   className={cn(
-                    'absolute -left-[7px] grid h-3.5 w-3.5 place-items-center rounded-full ring-4 ring-mist',
-                    s.state === 'done' && 'bg-emerald-500',
-                    s.state === 'current' && 'bg-flame-600',
-                    s.state === 'upcoming' && 'bg-ink-200',
+                    "absolute -left-[7px] grid h-3.5 w-3.5 place-items-center rounded-full ring-4 ring-mist",
+                    s.state === "done" && "bg-emerald-500",
+                    s.state === "current" && "bg-flame-600",
+                    s.state === "upcoming" && "bg-ink-200"
                   )}
                 />
                 <div className="flex items-center justify-between">
-                  <span className={cn('text-sm', s.state === 'upcoming' ? 'text-ink-400' : 'font-semibold text-ink-900')}>
+                  <span className={cn("text-sm", s.state === "upcoming" ? "text-ink-400" : "font-semibold text-ink-900")}>
                     {s.name}
                   </span>
                   <span className="text-xs text-ink-400">
-                    {s.state === 'done' ? '✓' : s.time}
+                    {s.state === "done" ? "✓" : s.time}
                   </span>
                 </div>
               </li>
@@ -302,7 +292,7 @@ function LiveTracking({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Arrived({ onReset, destination }: { onReset: () => void; destination?: string }) {

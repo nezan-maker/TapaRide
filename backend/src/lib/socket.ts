@@ -178,12 +178,110 @@ export async function initSocket(server: HttpServer) {
     });
 
     // Join a personal room for private notifications (waitlist, wallet, etc.)
-    socket.on("join:user", () => {
-      socket.join(`user:${user.id}`);
-    });
+        socket.on("join:user", () => {
+          socket.join(`user:${user.id}`);
+        });
 
-    // Handle GPS updates from passengers in a vehicle
-    socket.on("gps:update", async (data: { tripId: string; lat: number; lng: number; accuracy: number }) => {
+        // ─── Driver GPS room ────────────────────────────────────────────────────────
+        // Driver joins via vehicle plate; server resolves journeyId and joins
+        // both driver:trip:<journeyId> (driver GPS input) and trip:<journeyId> (broadcast).
+        socket.on("join:driver:trip", async ({ vehiclePlate }: { vehiclePlate: string }) => {
+          try {
+            const withinRateLimit = await enforceSocketRateLimit(
+              user.id,
+              "join_driver_trip",
+              JOIN_TRIP_MAX_EVENTS,
+              JOIN_TRIP_WINDOW_SECONDS,
+            );
+            if (!withinRateLimit) {
+              socket.emit("error:rate-limit", { event: "join:driver:trip" });
+              return;
+            }
+
+            // Verify user is the assigned driver for a vehicle with this plate
+            const vehicle = await db.vehicle.findUnique({
+              where: { plateNumber: vehiclePlate },
+              include: { journeys: { where: { departureTime: { gte: new Date() } }, select: { id: true } } },
+            });
+            if (!vehicle || vehicle.driverId !== user.id) {
+              await recordSocketMetric("join_driver_trip_unauthorized");
+              logger.warn({ vehiclePlate, userId: user.id }, "Unauthorized driver trip join");
+              return;
+            }
+
+            // Get active journey for this vehicle (assuming one active at a time)
+            const activeJourney = vehicle.journeys[0];
+            if (!activeJourney) {
+              await recordSocketMetric("join_driver_trip_no_journey");
+              return;
+            }
+
+            const journeyId = activeJourney.id;
+
+            // Join driver GPS input room + sync to passenger broadcast room
+            socket.join(`driver:trip:${journeyId}`);
+            socket.join(`trip:${journeyId}`);
+            await recordSocketMetric("join_driver_trip_authorized");
+            logger.info({ journeyId, vehiclePlate, userId: user.id }, "Driver joined trip rooms");
+          } catch (err) {
+            await recordSocketMetric("join_driver_trip_errors");
+            logger.error({ err, userId: user.id }, "Driver trip join error");
+          }
+        });
+
+        // ─── GPS updates from DRIVER (bypasses passenger accuracy threshold) ────────
+        socket.on("driver:gps:update", async (data: { vehiclePlate: string; lat: number; lng: number; accuracy: number; speed?: number }) => {
+          const withinRateLimit = await enforceSocketRateLimit(
+            user.id,
+            "driver_gps_update",
+            GPS_MAX_EVENTS,
+            GPS_WINDOW_SECONDS,
+          );
+          if (!withinRateLimit) {
+            socket.emit("error:rate-limit", { event: "driver:gps:update" });
+            return;
+          }
+
+          // Verify driver owns this vehicle
+          const vehicle = await db.vehicle.findUnique({
+            where: { plateNumber: data.vehiclePlate },
+            select: { driverId: true, journeys: { where: { departureTime: { gte: new Date() } }, select: { id: true } } },
+          });
+          if (!vehicle || vehicle.driverId !== user.id) return;
+
+          const journeyId = vehicle.journeys[0]?.id;
+          if (!journeyId) return;
+          if (!socket.rooms.has(`driver:trip:${journeyId}`)) return;
+
+          if (
+            !Number.isFinite(data.lat) ||
+            !Number.isFinite(data.lng) ||
+            !Number.isFinite(data.accuracy) ||
+            data.lat < -90 || data.lat > 90 ||
+            data.lng < -180 || data.lng > 180
+          ) {
+            await recordSocketMetric("driver_gps_update_invalid_payloads");
+            return;
+          }
+          // Driver GPS: no 50m accuracy ceiling, optional speed field
+          const bufferKey = `gps:buffer:trip:${journeyId}`;
+          const ping = JSON.stringify({
+            lat: data.lat,
+            lng: data.lng,
+            timestamp: Date.now(),
+            source: "driver",
+            speed: data.speed ?? null,
+          });
+
+          await redis.lpush(bufferKey, ping);
+          await redis.ltrim(bufferKey, 0, 50);
+          await redis.expire(bufferKey, 60);
+          await redis.sadd("gps:active_trips", journeyId);
+          await recordSocketMetric("driver_gps_updates_accepted");
+        });
+
+        // ─── Passenger GPS updates (existing) ──────────────────────────────────────
+        socket.on("gps:update", async (data: { tripId: string; lat: number; lng: number; accuracy: number }) => {
       const withinRateLimit = await enforceSocketRateLimit(
         user.id,
         "gps_update",

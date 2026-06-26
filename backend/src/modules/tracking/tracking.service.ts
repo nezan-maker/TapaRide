@@ -41,22 +41,38 @@ export async function aggregateTripGPS() {
 
     const pings = pingsRaw.map(p => JSON.parse(p));
     
-    // 1. Median Aggregation (Outlier Rejection)
-    const lats = pings.map(p => p.lat).sort((a, b) => a - b);
-    const lngs = pings.map(p => p.lng).sort((a, b) => a - b);
-    
+    // Separate driver and passenger pings
+    const driverPings = pings.filter(p => p.source === "driver");
+    const passengerPings = pings.filter(p => p.source !== "driver");
+
+    // Prefer driver GPS if available (higher accuracy, no 50m ceiling)
+    const useDriverGPS = driverPings.length > 0;
+    const primaryPings = useDriverGPS ? driverPings : passengerPings;
+
+    // 1. Median Aggregation (Outlier Rejection) on primary source
+    const lats = primaryPings.map((p) => p.lat).sort((a, b) => a - b);
+    const lngs = primaryPings.map((p) => p.lng).sort((a, b) => a - b);
+
     const medianLat = lats[Math.floor(lats.length / 2)];
     const medianLng = lngs[Math.floor(lngs.length / 2)];
 
     // 2. Compute Speed & ETA
-    const prevPosRaw = await redis.get(`trip:${journeyId}:last_position`);
+    // Prefer driver-reported speed if available
     let estimatedSpeed = 0; // m/s
-    
-    if (prevPosRaw) {
-      const prevPos = JSON.parse(prevPosRaw);
-      const dist = calculateDistance(prevPos.lat, prevPos.lng, medianLat, medianLng);
-      const timeDiff = (Date.now() - prevPos.timestamp) / 1000;
-      if (timeDiff > 0) estimatedSpeed = dist / timeDiff;
+    const driverSpeedPings = driverPings.filter(p => typeof p.speed === "number" && p.speed > 0);
+    if (driverSpeedPings.length > 0) {
+      // Use median of driver-reported speeds
+      const speeds = driverSpeedPings.map(p => p.speed!).sort((a, b) => a - b);
+      estimatedSpeed = speeds[Math.floor(speeds.length / 2)];
+    } else {
+      // Fallback: calculate from position change
+      const prevPosRaw = await redis.get(`trip:${journeyId}:last_position`);
+      if (prevPosRaw) {
+        const prevPos = JSON.parse(prevPosRaw);
+        const dist = calculateDistance(prevPos.lat, prevPos.lng, medianLat, medianLng);
+        const timeDiff = (Date.now() - prevPos.timestamp) / 1000;
+        if (timeDiff > 0) estimatedSpeed = dist / timeDiff;
+      }
     }
 
     // 3. Broadcast Aggregated Position
@@ -68,6 +84,7 @@ export async function aggregateTripGPS() {
         lng: medianLng,
         speed: estimatedSpeed,
         timestamp: Date.now(),
+        source: useDriverGPS ? "driver" : "passenger",
       },
     });
 

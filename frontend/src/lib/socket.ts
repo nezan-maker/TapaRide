@@ -137,11 +137,31 @@ export function leaveTrip(tripId: string): void {
   }
 }
 
+// ─── Driver GPS Room ──────────────────────────────────────────────────────────
+
+export function joinDriverTrip(vehiclePlate: string): void {
+  if (socket?.connected) {
+    socket.emit("join:driver:trip", { vehiclePlate });
+  }
+}
+
+export function leaveDriverTrip(vehiclePlate: string): void {
+  if (socket?.connected) {
+    socket.emit("leave:driver:trip", { vehiclePlate });
+  }
+}
+
 // ─── GPS Updates ──────────────────────────────────────────────────────────────
 
 export function sendGpsUpdate(tripId: string, lat: number, lng: number, accuracy: number): void {
   if (socket?.connected) {
     socket.emit("gps:update", { tripId, lat, lng, accuracy });
+  }
+}
+
+export function sendDriverGpsUpdate(vehiclePlate: string, lat: number, lng: number, accuracy: number, speed?: number): void {
+  if (socket?.connected) {
+    socket.emit("driver:gps:update", { vehiclePlate, lat, lng, accuracy, speed });
   }
 }
 
