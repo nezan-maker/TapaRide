@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { api, ApiError } from '../../lib/api'
 import QRCode from 'qrcode'
 import Fa from '../../components/Fa';
+import Select from '../../components/Select';
 
 interface Organization {
   id: string
@@ -392,19 +393,11 @@ export default function OrganizationDashboard() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="label">Select Journey / Bus Route</label>
-                <select
-                  className="input"
+                <Select
+                  options={[{ value: '', label: 'Select Journey Route' }, ...journeys.map(j => ({ value: j.id, label: `${j.sourceStation.name} → ${j.destinationStation.name} · ${new Date(j.departureTime).toLocaleDateString()}` }))]}
                   value={journeyId}
-                  onChange={(e) => setJourneyId(e.target.value)}
-                  required
-                >
-                  <option value="">Select Journey Route</option>
-                  {journeys.map(j => (
-                    <option key={j.id} value={j.id}>
-                      {j.sourceStation.name} → {j.destinationStation.name} · {new Date(j.departureTime).toLocaleDateString()}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setJourneyId(v)}
+                />
               </div>
 
               <div>
@@ -521,19 +514,16 @@ export default function OrganizationDashboard() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-ink-900">Manifests & Group Bookings</h2>
               {organizations.length > 1 && (
-                <select
-                  className="input py-1.5 px-3 max-w-[200px]"
+                <Select
+                  options={organizations.map(o => ({ value: o.id, label: o.name }))}
                   value={selectedOrg?.id || ''}
-                  onChange={(e) => {
-                    const org = organizations.find(o => o.id === e.target.value) || null
+                  onChange={(v) => {
+                    const org = organizations.find(o => o.id === v) || null
                     setSelectedOrg(org)
                     if (org) fetchBookings(org.id)
                   }}
-                >
-                  {organizations.map(o => (
-                    <option key={o.id} value={o.id}>{o.name}</option>
-                  ))}
-                </select>
+                  className="max-w-[200px]"
+                />
               )}
             </div>
 

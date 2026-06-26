@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { api, ApiError } from '../../lib/api';
 import { rwf } from '../../lib/utils';
 import Fa from '../../components/Fa';
+import Select from '../../components/Select';
 import { Skeleton, SkeletonHeader, SkeletonStat } from '../../components/Skeleton';
+import AiDashboardPanel from '../../components/AiDashboardPanel';
 
 interface Station {
   id: string
@@ -185,10 +187,13 @@ export default function ManagerDashboard() {
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
+          <Fa name="check-circle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
+
+      {/* AI Assistant */}
+      <AiDashboardPanel />
 
       {/* Schedule Journey Form */}
       {showAddForm && (
@@ -196,45 +201,30 @@ export default function ManagerDashboard() {
           <h2 className="text-lg font-bold text-ink-900 mb-4">Schedule a New Journey</h2>
           <form onSubmit={handleCreateJourney} className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="label">Source Station</label>
-              <select
-                className="input"
+              <Select
+                label="Source Station"
+                options={[{ value: '', label: 'Select Station' }, ...stations.map(s => ({ value: s.id, label: `${s.name} (${s.location})` }))]}
                 value={sourceStationId}
-                onChange={(e) => setSourceStationId(e.target.value)}
-              >
-                <option value="">Select Station</option>
-                {stations.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.location})</option>
-                ))}
-              </select>
+                onChange={(v) => setSourceStationId(v)}
+              />
             </div>
 
             <div>
-              <label className="label">Destination Station</label>
-              <select
-                className="input"
+              <Select
+                label="Destination Station"
+                options={[{ value: '', label: 'Select Station' }, ...stations.map(s => ({ value: s.id, label: `${s.name} (${s.location})` }))]}
                 value={destinationStationId}
-                onChange={(e) => setDestinationStationId(e.target.value)}
-              >
-                <option value="">Select Station</option>
-                {stations.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.location})</option>
-                ))}
-              </select>
+                onChange={(v) => setDestinationStationId(v)}
+              />
             </div>
 
             <div>
-              <label className="label">Assign Vehicle</label>
-              <select
-                className="input"
+              <Select
+                label="Assign Vehicle"
+                options={[{ value: '', label: 'Select Vehicle' }, ...vehicles.map(v => ({ value: v.id, label: `${v.plateNumber} — ${v.model} (Cap: ${v.capacity})` }))]}
                 value={vehicleId}
-                onChange={(e) => setVehicleId(e.target.value)}
-              >
-                <option value="">Select Vehicle</option>
-                {vehicles.map(v => (
-                  <option key={v.id} value={v.id}>{v.plateNumber} — {v.model} (Cap: {v.capacity})</option>
-                ))}
-              </select>
+                onChange={(v) => setVehicleId(v)}
+              />
             </div>
 
             <div>
