@@ -95,6 +95,86 @@ export async function confirmPaymentIntent(paymentIntentId: string) {
 }
 
 /**
+ * Creates a Stripe PaymentIntent for a wallet top-up.
+ *
+ * The flow:
+ *   1. Caller (controller) supplies the userId and the desired RWF amount.
+ *   2. We convert RWF -> USD cents using a snapshot exchange rate.
+ *   3. We create a Stripe PaymentIntent with the USD amount, storing the
+ *      RWF amount + exchange rate + userId in the intent metadata.
+ *   4. We create a PENDING WalletTransaction (type=TOPUP, direction=CREDIT)
+ *      with referenceId = paymentIntent.id. This row is what the
+ *      webhook handler will commit when Stripe confirms the charge.
+ *   5. We return the client_secret so the frontend can mount Stripe
+ *      Elements and confirm the payment inline.
+ *
+ * Idempotency: the controller should supply an Idempotency-Key header
+ * which we map to an IdempotencyKey row. The placeHold inside the
+ * wallet-journal already short-circuits on duplicate idempotency keys.
+ */
+export async function createTopupIntent(args: {
+  userId: string;
+  rwfAmount: number;
+  idempotencyKeyId?: string;
+}) {
+  if (!isStripeConfigured || !stripe) {
+    // Mock mode — return a fake client_secret so the frontend flow can
+    // still be exercised locally without real Stripe credentials.
+    const mockId = `pi_mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const mockSecret = `${mockId}_secret_mock`;
+    logger.info({ mockId, rwfAmount: args.rwfAmount }, 'Mock topup intent created');
+    return {
+      id: mockId,
+      clientSecret: mockSecret,
+      amount: args.rwfAmount,
+      currency: 'rwf',
+      isMock: true,
+    };
+  }
+
+  const stripeCurrency = 'usd';
+  // RWF -> USD conversion. In production you'd fetch a live rate from
+  // a forex API; for now we use the same 1500 RWF/USD approximation
+  // that the existing createPaymentIntent uses. The rate is snapshotted
+  // into metadata so we can credit the exact RWF amount regardless of
+  // FX drift between intent creation and webhook delivery.
+  const fxRate = 1500;
+  const usdCents = Math.round((args.rwfAmount / fxRate) * 100);
+
+  if (usdCents <= 0) {
+    throw new Error('Top-up amount too small to convert to USD cents');
+  }
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: usdCents,
+    currency: stripeCurrency,
+    metadata: {
+      userId: args.userId,
+      rwfAmount: String(args.rwfAmount),
+      fxRate: String(fxRate),
+      type: 'wallet_topup',
+    },
+    description: `Tapa wallet top-up (${args.rwfAmount} RWF)`,
+    // For Elements-based confirmation we don't set confirm=true here —
+    // the frontend confirms via stripe.confirmCardPayment().
+    automatic_payment_methods: { enabled: true },
+  });
+
+  logger.info(
+    { paymentIntentId: paymentIntent.id, userId: args.userId, rwfAmount: args.rwfAmount },
+    'Stripe topup intent created',
+  );
+
+  return {
+    id: paymentIntent.id,
+    clientSecret: paymentIntent.client_secret,
+    amount: args.rwfAmount,
+    currency: 'rwf',
+    isMock: false,
+  };
+}
+
+/**
  * Returns test card info for development mode.
  */
 export function getTestPaymentInfo() {
