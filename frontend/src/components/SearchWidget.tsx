@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import Fa from './Fa';
+import Select from './Select';
 
 export default function SearchWidget() {
   const navigate = useNavigate()
@@ -95,21 +96,13 @@ export default function SearchWidget() {
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="label">From</label>
-              <div className="relative">
-                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <select
-                  className="input pl-9 appearance-none"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">Select city</option>
-                  {availableFrom.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="From"
+                options={[{ value: '', label: 'Select city' }, ...availableFrom.map((c) => ({ value: c, label: c }))]}
+                value={from}
+                onChange={(v) => setFrom(v)}
+                disabled={loading}
+              />
             </div>
             <button
               type="button"
@@ -120,21 +113,13 @@ export default function SearchWidget() {
               <Fa name="arrowleftright" className="h-4 w-4" />
             </button>
             <div className="flex-1">
-              <label className="label">To</label>
-              <div className="relative">
-                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <select
-                  className="input pl-9 appearance-none"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">Select city</option>
-                  {availableTo.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="To"
+                options={[{ value: '', label: 'Select city' }, ...availableTo.map((c) => ({ value: c, label: c }))]}
+                value={to}
+                onChange={(v) => setTo(v)}
+                disabled={loading}
+              />
             </div>
           </div>
 
@@ -144,10 +129,11 @@ export default function SearchWidget() {
               <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 type="date"
-                className="input pl-9"
+                className="input pl-9 pr-9"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
+              <Fa name="calendar" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-200" />
             </div>
           </div>
 
@@ -168,21 +154,13 @@ export default function SearchWidget() {
           </p>
           <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="label">From</label>
-              <div className="relative">
-                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <select
-                  className="input pl-9 appearance-none"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">Select city</option>
-                  {availableFrom.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="From"
+                options={[{ value: '', label: 'Select city' }, ...availableFrom.map((c) => ({ value: c, label: c }))]}
+                value={from}
+                onChange={(v) => setFrom(v)}
+                disabled={loading}
+              />
             </div>
             <button
               type="button"
@@ -193,21 +171,13 @@ export default function SearchWidget() {
               <Fa name="arrowleftright" className="h-4 w-4" />
             </button>
             <div className="flex-1">
-              <label className="label">To</label>
-              <div className="relative">
-                <Fa name="map-pin" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <select
-                  className="input pl-9 appearance-none"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">Select city</option>
-                  {availableTo.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="To"
+                options={[{ value: '', label: 'Select city' }, ...availableTo.map((c) => ({ value: c, label: c }))]}
+                value={to}
+                onChange={(v) => setTo(v)}
+                disabled={loading}
+              />
             </div>
           </div>
 

@@ -191,7 +191,11 @@ function CompleteProfile() {
       <div className="mt-6 grid gap-4">
         <div>
           <label className="label">Date of birth</label>
-          <input type="date" className="input" />
+          <div className="relative">
+            <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+            <input type="date" className="input pl-9 pr-9" />
+            <Fa name="calendar" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-200" />
+          </div>
         </div>
         <div>
           <label className="label">National ID / Passport number</label>
