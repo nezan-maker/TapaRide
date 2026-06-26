@@ -7,33 +7,42 @@ import { cleanupIdempotencyKeys } from '../lib/idempotency.js';
 let gpsIntervalHandle: NodeJS.Timeout | undefined;
 let cleanupIntervalHandle: NodeJS.Timeout | undefined;
 
+async function runGpsAggregation() {
+  try {
+    await aggregateTripGPSWithLock();
+  } catch (error) {
+    logger.error({ err: error }, 'GPS aggregation job failed');
+  }
+}
+
+async function runCleanup() {
+  try {
+    const deletedCount = await cleanupIdempotencyKeys();
+    if (deletedCount > 0) {
+      logger.info({ deletedCount }, 'Purged expired idempotency keys');
+    }
+  } catch (error) {
+    logger.error({ err: error }, 'Idempotency key cleanup failed');
+  }
+}
+
 async function main() {
   await db.$connect();
   await db.$queryRaw`SELECT 1`;
   logger.info('GPS worker connected to database');
 
-  gpsIntervalHandle = setInterval(() => {
-    void aggregateTripGPSWithLock().catch((error) => {
-      logger.error({ err: error }, 'GPS aggregation job failed');
-    });
-  }, env.GPS_AGGREGATION_INTERVAL_MS);
+  // Initial run
+  await runGpsAggregation();
+
+  // GPS aggregation interval
+  gpsIntervalHandle = setInterval(runGpsAggregation, env.GPS_AGGREGATION_INTERVAL_MS);
 
   // Run idempotency key cleanup immediately on start and then every 1 hour
-  const runCleanup = () => {
-    cleanupIdempotencyKeys().then((deletedCount) => {
-      if (deletedCount > 0) {
-        logger.info({ deletedCount }, 'Purged expired idempotency keys');
-      }
-    }).catch((error) => {
-      logger.error({ err: error }, 'Idempotency key cleanup failed');
-    });
-  };
-
-  runCleanup();
+  await runCleanup();
   cleanupIntervalHandle = setInterval(runCleanup, 60 * 60 * 1000); // 1 hour
 
-  const shutdown = async () => {
-    logger.info('Shutting down GPS worker');
+  const shutdown = async (signal?: string) => {
+    logger.info({ signal }, 'Shutting down GPS worker');
     if (gpsIntervalHandle) {
       clearInterval(gpsIntervalHandle);
     }
@@ -44,8 +53,18 @@ async function main() {
     process.exit(0);
   };
 
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
+  // Prevent unhandled errors from crashing the worker
+  process.on('unhandledRejection', (reason) => {
+    logger.error({ err: reason }, 'GPS worker unhandled rejection');
+  });
+
+  process.on('uncaughtException', (err) => {
+    logger.error({ err }, 'GPS worker uncaught exception');
+    process.exit(1);
+  });
 }
 
 main().catch(async (error) => {

@@ -60,9 +60,42 @@ export async function initSocket(server: HttpServer) {
     },
   });
 
+  // Create Redis pub/sub clients with error handling
   const pubClient = createRedisConnection();
   const subClient = pubClient.duplicate();
-  await Promise.all([pubClient.connect(), subClient.connect()]);
+
+  // Add error handlers for pub/sub clients to prevent crashes
+  pubClient.on('error', (err) => {
+    logger.error({ err }, 'Socket.io pubClient error');
+  });
+  subClient.on('error', (err) => {
+    logger.error({ err }, 'Socket.io subClient error');
+  });
+
+  pubClient.on('close', () => {
+    logger.warn('Socket.io pubClient connection closed');
+  });
+  subClient.on('close', () => {
+    logger.warn('Socket.io subClient connection closed');
+  });
+
+  // Connect with retry logic
+  try {
+    await Promise.all([
+      pubClient.connect().catch((err) => {
+        logger.error({ err }, 'Failed to connect pubClient');
+        throw err;
+      }),
+      subClient.connect().catch((err) => {
+        logger.error({ err }, 'Failed to connect subClient');
+        throw err;
+      }),
+    ]);
+  } catch (err) {
+    logger.error({ err }, 'Failed to connect Redis pub/sub clients');
+    throw err;
+  }
+
   io.adapter(createAdapter(pubClient, subClient));
 
   io.use(async (socket, next) => {
