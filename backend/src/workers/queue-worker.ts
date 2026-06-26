@@ -2,13 +2,22 @@ import { db } from '../lib/db.js';
 import { logger } from '../lib/logger.js';
 import { startNotificationWorker } from '../lib/notifications/worker.js';
 import { startWaitlistWorker } from '../modules/waitlist/waitlist.worker.js';
+import { startParcelExpiryWorker } from '../modules/parcels/parcel-expiry.worker.js';
+import { scheduleParcelExpiryScan } from '../modules/parcels/parcel-expiry.queue.js';
 
 async function main() {
   await db.$connect();
   await db.$queryRaw`SELECT 1`;
   logger.info('Queue worker connected to database');
 
-  const workers = [startNotificationWorker(), startWaitlistWorker()];
+  const workers = [
+    startNotificationWorker(),
+    startWaitlistWorker(),
+    startParcelExpiryWorker(),
+  ];
+
+  // Schedule recurring jobs (idempotent)
+  await scheduleParcelExpiryScan();
 
   const shutdown = async () => {
     logger.info('Shutting down queue worker');

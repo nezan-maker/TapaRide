@@ -32,6 +32,7 @@ import bulkBookingRoutes from "./modules/bulk-bookings/bulk-bookings.routes.js";
 import waitlistRoutes from "./modules/waitlist/waitlist.routes.js";
 import paymentRoutes from "./modules/payments/payments.routes.js";
 import notificationRoutes from "./modules/notifications/notifications.routes.js";
+import aiRoutes from "./modules/ai/ai.routes.js";
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -121,6 +122,23 @@ export async function buildApp() {
     }),
   );
   app.use(httpLogger);
+
+  // ─── Stripe webhook (raw body) ──────────────────────────────────────────
+  // Stripe webhook signature verification needs the raw request body.
+  // express.json() consumes the body into a JS object, which breaks the
+  // HMAC check. So we mount the raw parser + webhook handler BEFORE
+  // the global express.json() on this specific path only.
+  //
+  // In production with STRIPE_WEBHOOK_SECRET set, the handler verifies
+  // every event. In dev without it, the route returns 401 so callers
+  // learn fast that the secret is missing rather than silently accepting
+  // forged events.
+  app.use(
+    '/api/payments/webhook',
+    express.raw({ type: 'application/json' }),
+    (await import('./modules/payments/payments.webhook.js')).default,
+  );
+
   app.use(express.json({ limit: '1mb' }));
 
   const limiter = rateLimit({
@@ -151,6 +169,7 @@ export async function buildApp() {
   app.use("/api/waitlist", waitlistRoutes);
   app.use("/api/payments", paymentRoutes);
   app.use("/api/notifications", notificationRoutes);
+  app.use("/api/ai", aiRoutes);
 
   // ─── Health check ─────────────────────────────────────────────────────────
   app.get("/health", (_req: Request, res: Response) => {
