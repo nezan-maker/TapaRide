@@ -420,6 +420,10 @@ export async function verifyPasskeyAuthentication(
 
 // ─── OAuth Google & Apple ─────────────────────────────────────────────────────
 
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client();
+
 async function verifyGoogleToken(idToken: string) {
   if (idToken.startsWith("mock-") || env.NODE_ENV === "test") {
     return {
@@ -429,13 +433,16 @@ async function verifyGoogleToken(idToken: string) {
   }
 
   try {
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-    if (!response.ok) {
-      throw new Error("Failed to verify Google token");
-    }
-    const payload = (await response.json()) as { email: string; name?: string };
-    if (!payload.email) {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: env.GOOGLE_CLIENT_ID, // optional: if not set, audience is not verified
+    });
+    const payload = ticket.getPayload();
+    if (!payload?.email) {
       throw new Error("Invalid Google token payload");
+    }
+    if (!payload.email_verified) {
+      throw new Error("Google email not verified");
     }
     return {
       email: payload.email,

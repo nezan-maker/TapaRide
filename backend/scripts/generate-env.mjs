@@ -95,6 +95,9 @@ const vars = [
   // ── Stripe (payments) ──────────────────────────────────────────────────────
   { key: 'STRIPE_SECRET_KEY',  kind: 'optional',                        desc: 'Stripe secret key (omit to use mock payments)' },
 
+  // ── Google OAuth ───────────────────────────────────────────────────────────
+  { key: 'GOOGLE_CLIENT_ID', kind: 'optional', default: '', desc: 'Google OAuth client ID for Sign-In (required for production)' },
+
   // ── NVIDIA NIM (Tapa Assist) ─────────────────────────────────────────────
   { key: 'NVIDIA_NIM_API_KEY', kind: 'optional',                        desc: 'NVIDIA NIM API key for support chat' },
   { key: 'NVIDIA_NIM_BASE_URL', kind: 'optional', default: 'https://integrate.api.nvidia.com/v1', desc: 'OpenAI-compatible NIM base URL' },

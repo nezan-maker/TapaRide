@@ -73,6 +73,9 @@ const envSchema = z
     CLOUDINARY_API_SECRET: z.string().min(1).optional(),
     CLOUDINARY_FOLDER: z.string().default("tapa/agencies"),
 
+    // Google OAuth — required for production Google Sign-In.
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+
     // NVIDIA NIM — OpenAI-compatible LLM for Tapa Assist support chat.
     NVIDIA_NIM_API_KEY: z.string().min(1).optional(),
     NVIDIA_NIM_BASE_URL: z
