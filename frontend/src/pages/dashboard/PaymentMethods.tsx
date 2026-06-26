@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { cn, rwf } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
 import Fa from '../../components/Fa';
+import StripeTopupForm from '../../components/StripeTopupForm';
 
 interface WalletStatus {
   id?: string
@@ -22,6 +23,7 @@ type DialogKind = null | 'unlock' | 'setup' | 'deposit' | 'withdraw' | 'change-p
 
 const TX_LABELS: Record<string, { label: string; sign: 'in' | 'out' }> = {
   DEPOSIT:     { label: 'Top-up',     sign: 'in' },
+  TOPUP:       { label: 'Top-up',     sign: 'in' },
   REFUND:      { label: 'Refund',     sign: 'in' },
   WITHDRAWAL:  { label: 'Cashout',    sign: 'out' },
   PAYMENT:     { label: 'Payment',    sign: 'out' },
@@ -54,6 +56,7 @@ export default function PaymentMethods() {
   const [walletPassword, setWalletPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [amount, setAmount] = useState('')
+  const [topupAmount, setTopupAmount] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
 
   const isUninitialized = wallet?.status === 'UNINITIALIZED'
@@ -105,6 +108,7 @@ export default function PaymentMethods() {
     setWalletPassword('')
     setNewPassword('')
     setAmount('')
+    setTopupAmount(null)
     setError(null)
   }
 
@@ -149,16 +153,13 @@ export default function PaymentMethods() {
       setError('Enter a positive whole number.')
       return
     }
-    setBusy(true); setError(null)
-    try {
-      await api.post('/api/wallet/deposit', { amount: n, walletPassword: walletPassword || undefined })
-      closeDialog()
-      await fetchWalletData()
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Deposit failed')
-    } finally {
-      setBusy(false)
-    }
+    setTopupAmount(n)
+    setError(null)
+  }
+
+  const handleTopupSuccess = async () => {
+    closeDialog()
+    await fetchWalletData()
   }
 
   const handleWithdraw = async (e: React.FormEvent) => {
@@ -460,7 +461,7 @@ export default function PaymentMethods() {
                 />
               )}
 
-              {dialog === 'deposit' && (
+              {dialog === 'deposit' && !topupAmount && (
                 <Field
                   label="Amount (RWF)"
                   type="number"
@@ -469,6 +470,14 @@ export default function PaymentMethods() {
                   placeholder="e.g. 5000"
                   min={1}
                   autoFocus
+                />
+              )}
+
+              {dialog === 'deposit' && topupAmount != null && (
+                <StripeTopupForm
+                  amount={topupAmount}
+                  onSuccess={handleTopupSuccess}
+                  onCancel={() => setTopupAmount(null)}
                 />
               )}
 
@@ -518,27 +527,31 @@ export default function PaymentMethods() {
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeDialog}
-                disabled={busy}
-                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ink-500 transition hover:bg-ink-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={busy}
-                className="rounded-xl bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-800 disabled:opacity-50"
-              >
-                {busy
-                  ? 'Working…'
-                  : dialog === 'setup' ? 'Create wallet'
-                  : dialog === 'unlock' ? 'Unlock'
-                  : dialog === 'deposit' ? 'Add money'
-                  : dialog === 'withdraw' ? 'Cash out'
-                  : 'Update password'}
-              </button>
+              {!(dialog === 'deposit' && topupAmount != null) && (
+                <>
+                  <button
+                    type="button"
+                    onClick={closeDialog}
+                    disabled={busy}
+                    className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ink-500 transition hover:bg-ink-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="rounded-xl bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-ink-800 disabled:opacity-50"
+                  >
+                    {busy
+                      ? 'Working…'
+                      : dialog === 'setup' ? 'Create wallet'
+                      : dialog === 'unlock' ? 'Unlock'
+                      : dialog === 'deposit' ? 'Continue'
+                      : dialog === 'withdraw' ? 'Cash out'
+                      : 'Update password'}
+                  </button>
+                </>
+              )}
             </div>
           </form>
         </div>

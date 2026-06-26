@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { api, ApiError } from '../../lib/api';
 import Fa from '../../components/Fa';
 import { Skeleton, SkeletonHeader } from '../../components/Skeleton';
+import AiDashboardPanel from '../../components/AiDashboardPanel';
 
 interface Station {
   id: string
@@ -209,6 +210,9 @@ export default function DriverDashboard() {
           <span>{successMsg}</span>
         </div>
       )}
+
+      {/* AI Assistant */}
+      <AiDashboardPanel />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

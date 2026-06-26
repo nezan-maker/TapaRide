@@ -11,6 +11,19 @@ export default function DashboardLayout() {
   const location = useLocation()
   const { user, logout } = useAuth()
 
+  // Calculate real profile completion percentage
+  const profileProgress = (() => {
+    if (!user) return 0;
+    const checks = [
+      !!user.isVerified,
+      !!user.phoneVerifiedAt,
+      !!user.email,
+      !!user.phone,
+    ];
+    const completed = checks.filter(Boolean).length;
+    return Math.round((completed / checks.length) * 100);
+  })();
+
   const nav: Array<{ to: string; label: string; icon: string; end?: boolean }> = [
     { to: '/dashboard', label: 'Dashboard', icon: 'layoutdashboard', end: true },
   ]
@@ -74,12 +87,16 @@ export default function DashboardLayout() {
             open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           )}
         >
+          {/* Profile completion — calculated from real user data */}
           <div className="mb-4 rounded-2xl bg-gradient-to-br from-ink-900 to-ink-800 p-4 text-white">
             <div className="text-sm font-semibold">Complete your profile</div>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-              <div className="h-full w-3/4 rounded-full bg-flame-500" />
+              <div
+                className="h-full rounded-full bg-flame-500 transition-all duration-500"
+                style={{ width: `${profileProgress}%` }}
+              />
             </div>
-            <div className="mt-1.5 text-xs text-white/60">75% complete</div>
+            <div className="mt-1.5 text-xs text-white/60">{profileProgress}% complete</div>
           </div>
 
           <nav className="space-y-1">

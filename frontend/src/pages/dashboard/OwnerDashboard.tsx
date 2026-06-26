@@ -4,6 +4,7 @@ import VehicleRegistrationForm from '../../components/VehicleRegistrationForm';
 import Fa from '../../components/Fa';
 import LogoUpload, { type UploadedLogo } from '../../components/LogoUpload';
 import { Skeleton, SkeletonCard, SkeletonHeader } from '../../components/Skeleton';
+import AiDashboardPanel from '../../components/AiDashboardPanel';
 
 interface Agency {
   id: string;
@@ -196,10 +197,13 @@ export default function OwnerDashboard() {
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <Fa name="checkcircle" className="h-4 w-4 shrink-0" />
+          <Fa name="check-circle" className="h-4 w-4 shrink-0" />
           <span>{successMsg}</span>
         </div>
       )}
+
+      {/* AI Assistant */}
+      <AiDashboardPanel />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
