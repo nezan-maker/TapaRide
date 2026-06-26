@@ -73,10 +73,12 @@ type DomainEventMap = {
   "parcel.created": {
     parcelId: string;
     senderId: string;
+    fee?: number;
   };
   "parcel.updated": {
     trackingCode: string;
     senderId: string;
+    status?: string;
   };
 };
 

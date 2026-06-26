@@ -62,6 +62,22 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+ * Attach user when a valid Bearer token is present; continue anonymously otherwise.
+ * Invalid tokens are rejected (prevents confused auth state).
+ */
+export async function optionalAuthenticate(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    return next();
+  }
+  return authenticate(req, res, next);
+}
+
 export async function requireVerifiedAccount(
   req: Request,
   _res: Response,
