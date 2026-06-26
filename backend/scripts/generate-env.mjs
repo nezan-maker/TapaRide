@@ -94,6 +94,15 @@ const vars = [
 
   // ── Stripe (payments) ──────────────────────────────────────────────────────
   { key: 'STRIPE_SECRET_KEY',  kind: 'optional',                        desc: 'Stripe secret key (omit to use mock payments)' },
+
+  // ── NVIDIA NIM (Tapa Assist) ─────────────────────────────────────────────
+  { key: 'NVIDIA_NIM_API_KEY', kind: 'optional',                        desc: 'NVIDIA NIM API key for support chat' },
+  { key: 'NVIDIA_NIM_BASE_URL', kind: 'optional', default: 'https://integrate.api.nvidia.com/v1', desc: 'OpenAI-compatible NIM base URL' },
+  { key: 'NVIDIA_NIM_MODEL', kind: 'optional', default: 'meta/llama-3.1-8b-instruct', desc: 'NIM model id' },
+  { key: 'AI_MAX_OUTPUT_TOKENS', kind: 'optional', default: '1024', desc: 'Max tokens per support reply' },
+
+  // ── Exa (Web Search for Tapa Assist) ────────────────────────────────────
+  { key: 'EXA_API_KEY', kind: 'optional',                        desc: 'Exa API key for AI web search (get at exa.ai)' }];
 ];
 
 // ─── Generate output ────────────────────────────────────────────────────────
