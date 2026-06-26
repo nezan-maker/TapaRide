@@ -1,6 +1,7 @@
 import { env } from '../../config/env.js';
 import { ExternalProviderError } from '../errors.js';
 import { logger } from '../logger.js';
+import Twilio from 'twilio';
 
 type WebhookPayload = Record<string, unknown>;
 
@@ -36,6 +37,10 @@ async function postWebhook(
     });
   }
 }
+
+const twilioClient = env.TWILIO_ACCOUNT_SID
+  ? Twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN)
+  : null;
 
 export async function deliverEmail(options: {
   to: string;
@@ -90,6 +95,21 @@ export async function deliverSms(options: {
 }) {
   if (env.SMS_PROVIDER === 'console') {
     logger.info({ phone: options.phone }, 'Console SMS delivery');
+    return;
+  }
+
+  if (env.SMS_PROVIDER === 'twilio') {
+    if (!twilioClient || !env.TWILIO_FROM_NUMBER) {
+      throw new ExternalProviderError('Twilio not configured', {
+        reason: 'TWILIO_FROM_NUMBER or client missing',
+      });
+    }
+    const result = await twilioClient.messages.create({
+      to: options.phone,
+      from: env.TWILIO_FROM_NUMBER,
+      body: options.message,
+    });
+    logger.info({ phone: options.phone, sid: result.sid }, 'Twilio SMS sent');
     return;
   }
 
