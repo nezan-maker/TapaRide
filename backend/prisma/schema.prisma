@@ -441,3 +441,28 @@ enum WalletStatus {
   UNINITIALIZED
   ACTIVE
 }
+
+// ── AI conversational memory (Phase 2) ─────────────────────────────────────
+
+model AiConversation {
+  id         String      @id @default(uuid())
+  userId     String?
+  anonymous  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  messages   AiMessage[]
+
+  @@index([userId])
+}
+
+model AiMessage {
+  id             String         @id @default(uuid())
+  conversationId String
+  role           String         // 'user' | 'assistant'
+  content        String         @db.Text
+  toolCalls      Json?          // { tool: string, input: unknown, output: unknown }[]
+  createdAt      DateTime       @default(now())
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
