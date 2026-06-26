@@ -17,25 +17,39 @@
 //      same `stripeEventId` cannot double-commit (UNIQUE constraint +
 //      application-level existence check before mutation).
 //   5. The held balance column is encrypted at rest with the same
-//      AES-256-GCM primitives the existing balance uses. Salt is
-//      discarded for heldBalance operations: it is never decrypted by
-//      the user — only by server internals — so the per-write salt has
-//      no semantic value and is not persisted.
+//      AES-256-GCM primitives the existing balance uses — same PIN-derived
+//      key, separate IV. Salt is reused from the wallet row (per-wallet).
+//
+// Encryption model (matches existing wallet.service.ts):
+//   - The user's PIN is hashed with bcrypt (stored in walletPassword).
+//   - On unlock, a 256-bit AES key is derived via PBKDF2(pin, salt, 310k).
+//   - That derived key is what encryptWalletBalance / decryptWalletBalance
+//     use as `passwordOrKey` — NOT the env-held DATABASE_ENCRYPTION_KEY.
+//   - The env key is used for data-at-rest encryption of secrets; the
+//     wallet balance is encrypted with the PIN-derived key so that even
+//     a DB dump doesn't reveal balances without the user's PIN.
+//   - Our reseal helper therefore needs the PIN (or the cached derived
+//     key from Redis) — exactly like deposit() / withdraw() do.
+
 import { randomUUID } from 'node:crypto';
 import { db } from './db.js';
 import { runSerializable } from './db.js';
 import {
   encryptWalletBalance,
   decryptWalletBalance,
+  deriveKeyPBKDF2,
+  comparePassword,
 } from './crypto-pool.js';
 import { Prisma } from '@prisma/client';
 import {
   ValidationError,
   ConflictError,
   NotFoundError,
+  AuthenticationError,
 } from './errors.js';
 import { publishDomainEvent } from './domain-events.js';
 import { logger } from './logger.js';
+import { redis } from './redis.js';
 
 type Direction = 'CREDIT' | 'DEBIT';
 type TransactionType =
@@ -50,144 +64,184 @@ type TransactionType =
 const PAWT = 'wallet';
 
 /**
- * Acquire Postgres advisory lock + select for the wallet row. Returns the
- * row with all encryption fields populated. Throws NotFoundError if no
- * wallet exists. Throws ValidationError if the wallet isn't ACTIVE.
+ * Resolve the AES-256 key used to encrypt/decrypt wallet balances.
+ *
+ * Strategy (matches existing wallet.service.ts deposit/withdraw):
+ *   1. If `walletPassword` (the user's PIN) is supplied, verify it
+ *      against the stored bcrypt hash and derive the key via PBKDF2.
+ *   2. Else, look up the Redis-cached derived key from a prior unlock
+ *      (TTL 15 min). If neither is available, the wallet is locked and
+ *      we throw AuthenticationError.
+ *
+ * Returns the derived key as a Buffer (suitable for crypto-pool).
  */
-async function lockWallet(
+async function resolveWalletKey(
   tx: Prisma.TransactionClient,
   walletId: string,
-): Promise<{
-  id: string;
-  userId: string;
-  encryptedBalance: string | null;
-  iv: string | null;
-  authTag: string | null;
-  salt: string | null;
-  encryptedHeldBalance: string | null;
-  heldBalanceIv: string | null;
-  heldBalanceAuthTag: string | null;
-  version: number;
-}> {
-  // Hash walletId cross-process deterministically for pg_advisory_xact_lock
+  walletPassword?: string,
+): Promise<{ key: Buffer; wallet: Prisma.WalletGetPayload<{}> }> {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${PAWT}:${walletId}`}))`;
   const w = await tx.wallet.findUnique({ where: { id: walletId } });
   if (!w) throw new NotFoundError('Wallet not found');
   if (w.status !== 'ACTIVE') {
     throw new ValidationError(`Wallet is not active (status=${w.status})`);
   }
-  return w;
+  if (!w.walletPassword || !w.salt) {
+    throw new ValidationError('Wallet has no PIN set');
+  }
+
+  let key: Buffer;
+  if (walletPassword) {
+    const valid = await comparePassword(walletPassword, w.walletPassword);
+    if (!valid) throw new AuthenticationError('Incorrect wallet PIN');
+    const keyBase64 = await deriveKeyPBKDF2(walletPassword, w.salt);
+    key = Buffer.from(keyBase64, 'base64');
+  } else {
+    const cachedKey = await redis.get(`wallet:unlock-key:${w.userId}`);
+    if (!cachedKey) {
+      throw new AuthenticationError(
+        'Wallet is locked. Unlock the wallet or supply the PIN.',
+      );
+    }
+    key = Buffer.from(cachedKey, 'base64');
+  }
+
+  return { key, wallet: w };
 }
 
 /**
  * Read-only helper for the available balance, in whole RWF.
+ * Requires the PIN or an active unlock session.
  */
-export async function getAvailableBalanceRwf(walletId: string): Promise<number> {
+export async function getAvailableBalanceRwf(
+  walletId: string,
+  walletPassword?: string,
+): Promise<number> {
   const w = await db.wallet.findUnique({ where: { id: walletId } });
   if (!w) throw new NotFoundError('Wallet not found');
   if (!w.encryptedBalance || !w.iv || !w.authTag || !w.salt) return 0;
+  const salt = w.salt; // non-null after the guard above
+
+  let key: Buffer;
+  if (walletPassword) {
+    if (!w.walletPassword) throw new ValidationError('Wallet has no PIN');
+    const valid = await comparePassword(walletPassword, w.walletPassword);
+    if (!valid) throw new AuthenticationError('Incorrect wallet PIN');
+    key = Buffer.from(await deriveKeyPBKDF2(walletPassword, salt), 'base64');
+  } else {
+    const cached = await redis.get(`wallet:unlock-key:${w.userId}`);
+    if (!cached) throw new AuthenticationError('Wallet is locked');
+    key = Buffer.from(cached, 'base64');
+  }
+
   return decryptWalletBalance(
     w.encryptedBalance,
     w.iv,
     w.authTag,
-    w.salt,
-    // Use the wallet's salt + DATABASE_ENCRYPTION_KEY as the symmetric
-    // encryption key derivation input. The PIN is for *user-facing*
-    // unlock only; the actual symmetric key is the env-held master key.
-    process.env['DATABASE_ENCRYPTION_KEY']!,
+    salt,
+    key,
   );
 }
 
 /**
- * Read-only helper for the held balance column. Used by tests + the
- * dashboard. Held balance never needs to be revealed to the end user.
+ * Read-only helper for the held balance column. Requires PIN or unlock.
+ * Held balance is server-internal; never shown to the end user.
  */
-export async function getHeldBalanceRwf(walletId: string): Promise<number> {
+export async function getHeldBalanceRwf(
+  walletId: string,
+  walletPassword?: string,
+): Promise<number> {
   const w = await db.wallet.findUnique({ where: { id: walletId } });
   if (!w) throw new NotFoundError('Wallet not found');
   if (!w.encryptedHeldBalance || !w.heldBalanceIv || !w.heldBalanceAuthTag) {
     return 0;
   }
-  // HeldBalance ciphertext: decryption is informational only. We use the
-  // existing crypto-pool primitives, with a synthetic-salt that mirrors
-  // what was written on the place-hold path.
+  const salt = w.salt ?? '';
+  let key: Buffer;
+  if (walletPassword) {
+    if (!w.walletPassword) throw new ValidationError('Wallet has no PIN');
+    const valid = await comparePassword(walletPassword, w.walletPassword);
+    if (!valid) throw new AuthenticationError('Incorrect wallet PIN');
+    key = Buffer.from(await deriveKeyPBKDF2(walletPassword, salt), 'base64');
+  } else {
+    const cached = await redis.get(`wallet:unlock-key:${w.userId}`);
+    if (!cached) throw new AuthenticationError('Wallet is locked');
+    key = Buffer.from(cached, 'base64');
+  }
+
   return decryptWalletBalance(
     w.encryptedHeldBalance,
     w.heldBalanceIv,
     w.heldBalanceAuthTag,
-    process.env['DATABASE_ENCRYPTION_KEY']!,
-    process.env['DATABASE_ENCRYPTION_KEY']!,
+    salt,
+    key,
   );
 }
 
 /**
- * Decrypt-then-encrypt a balance value, persisting fresh ciphertext.
- * Returns the ciphertext tuple to write back to the row.
+ * Decrypt the current value of an encrypted column, apply a delta
+ * (positive or negative integer in RWF), re-encrypt with a fresh IV,
+ * and persist. Must be called inside a transaction that already holds
+ * the wallet lock.
+ *
+ * `field` selects which column pair to reseal:
+ *   - 'encryptedBalance' -> available balance
+ *   - 'encryptedHeldBalance' -> held balance
  */
-async function resealNumericBalance(
+async function resealColumn(
   tx: Prisma.TransactionClient,
   walletId: string,
-  field:
-    | 'encryptedBalance'
-    | 'encryptedHeldBalance',
-  ivField: 'iv' | 'heldBalanceIv',
-  tagField: 'authTag' | 'heldBalanceAuthTag',
-  newValue: number,
+  field: 'encryptedBalance' | 'encryptedHeldBalance',
+  deltaRwf: number,
+  key: Buffer,
 ): Promise<void> {
   const w = await tx.wallet.findUniqueOrThrow({ where: { id: walletId } });
 
-  // Decrypt the existing value with the env-held master key. For balance
-  // rows that haven't been initialized yet (nullable ciphertext), treat
-  // the current value as 0.
-  let current = 0;
   const cipher =
     field === 'encryptedBalance' ? w.encryptedBalance : w.encryptedHeldBalance;
   const iv = field === 'encryptedBalance' ? w.iv : w.heldBalanceIv;
   const tag = field === 'encryptedBalance' ? w.authTag : w.heldBalanceAuthTag;
+
+  let current = 0;
   if (cipher && iv && tag) {
-    current = await decryptWalletBalance(
-      cipher,
-      iv,
-      tag,
-      // For balance: use the wallet's persisted salt.
-      // For heldBalance: use the env-held master key — synthetic salt.
-      field === 'encryptedBalance'
-        ? w.salt ?? process.env['DATABASE_ENCRYPTION_KEY']!
-        : process.env['DATABASE_ENCRYPTION_KEY']!,
-      process.env['DATABASE_ENCRYPTION_KEY']!,
+    current = await decryptWalletBalance(cipher, iv, tag, w.salt ?? '', key);
+  }
+
+  const next = current + deltaRwf;
+  if (next < 0) {
+    throw new ValidationError(
+      `Insufficient balance: have ${current} RWF, attempted delta ${deltaRwf}`,
     );
   }
 
-  // Re-issue a new IV (random) and re-encrypt. The salt for balance is
-  // reused (per-wallet); for heldBalance we accept the synthesized salt
-  // produced by the pool. Either way we only need the IV+ciphertext+tag.
-  const sealed = await encryptWalletBalance(
-    current + newValue,
-    field === 'encryptedBalance'
-      ? process.env['DATABASE_ENCRYPTION_KEY']!
-      : process.env['DATABASE_ENCRYPTION_KEY']!,
-  );
+  // Re-encrypt with a fresh IV. The salt is per-wallet and reused.
+  const sealed = await encryptWalletBalance(next, key);
 
   await tx.wallet.update({
     where: { id: walletId },
     data: {
       [field]: sealed.encryptedBalance,
-      [ivField]: sealed.iv,
-      [tagField]: sealed.authTag,
+      [field === 'encryptedBalance' ? 'iv' : 'heldBalanceIv']: sealed.iv,
+      [field === 'encryptedBalance' ? 'authTag' : 'heldBalanceAuthTag']:
+        sealed.authTag,
       version: { increment: 1 },
     },
   });
 }
 
+// ─── Public mutation primitives ────────────────────────────────────────────
+
 interface PlaceHoldInput {
   walletId: string;
-  amount: number;          // sum in whole RWF; must be > 0
-  direction: Direction;    // CREDIT (rare — topup) or DEBIT (parcel send etc.)
+  amount: number;          // whole RWF; must be > 0
+  direction: Direction;    // CREDIT (topup pending) or DEBIT (parcel send etc.)
   type: TransactionType;
   referenceId?: string;    // parcel id, ticket id, etc. — for joins
   idempotencyKeyId?: string;
   note?: string;
   metadata?: Record<string, unknown>;
+  /** User's wallet PIN. Optional — falls back to Redis unlock cache. */
+  walletPassword?: string;
 }
 
 /**
@@ -204,7 +258,11 @@ export async function placeHold(input: PlaceHoldInput): Promise<{ id: string }> 
     throw new ValidationError('amount must be a positive integer (RWF)');
   }
   return runSerializable(async (tx) => {
-    const w = await lockWallet(tx, input.walletId);
+    const { key, wallet } = await resolveWalletKey(
+      tx,
+      input.walletId,
+      input.walletPassword,
+    );
 
     // Idempotency short-circuit: if an Idempotency-Key already mapped
     // the same logical op, return its tx row.
@@ -217,13 +275,13 @@ export async function placeHold(input: PlaceHoldInput): Promise<{ id: string }> 
 
     // Compute available balance to validate sufficiency.
     let available = 0;
-    if (w.encryptedBalance && w.iv && w.authTag && w.salt) {
+    if (wallet.encryptedBalance && wallet.iv && wallet.authTag) {
       available = await decryptWalletBalance(
-        w.encryptedBalance,
-        w.iv,
-        w.authTag,
-        w.salt,
-        process.env['DATABASE_ENCRYPTION_KEY']!,
+        wallet.encryptedBalance,
+        wallet.iv,
+        wallet.authTag,
+        wallet.salt ?? '',
+        key,
       );
     }
     if (input.direction === 'DEBIT' && input.amount > available) {
@@ -234,28 +292,14 @@ export async function placeHold(input: PlaceHoldInput): Promise<{ id: string }> 
 
     // Mutate balance columns (DEBIT) or only held (CREDIT).
     if (input.direction === 'DEBIT') {
-      await resealNumericBalance(
-        tx,
-        w.id,
-        'encryptedBalance',
-        'iv',
-        'authTag',
-        -input.amount,
-      );
+      await resealColumn(tx, wallet.id, 'encryptedBalance', -input.amount, key);
     }
-    await resealNumericBalance(
-      tx,
-      w.id,
-      'encryptedHeldBalance',
-      'heldBalanceIv',
-      'heldBalanceAuthTag',
-      +input.amount,
-    );
+    await resealColumn(tx, wallet.id, 'encryptedHeldBalance', +input.amount, key);
 
     const txRow = await tx.walletTransaction.create({
       data: {
         id: randomUUID(),
-        walletId: w.id,
+        walletId: wallet.id,
         type: input.type,
         status: 'PENDING',
         direction: input.direction,
@@ -280,13 +324,14 @@ export async function placeHold(input: PlaceHoldInput): Promise<{ id: string }> 
 /**
  * Commit a held transaction. Operates only on rows that are still PENDING.
  * Idempotent on `stripeEventId`: if the event has already been processed
- * (i.e. another row already has this eventId, or this row already has it
+ * (another row already has this eventId, or this row already has it
  * committed in COMMITTED state), we return the existing outcome.
  */
 export async function commitHold(input: {
   transactionId: string;
   stripeEventId?: string;
   metadata?: Record<string, unknown>;
+  walletPassword?: string;
 }): Promise<{ id: string; alreadyApplied: boolean }> {
   return runSerializable(async (tx) => {
     // Stripe-level idempotency: if a row already claims this eventId,
@@ -324,19 +369,16 @@ export async function commitHold(input: {
       );
     }
 
-    const w = await lockWallet(tx, row.walletId);
+    const { key, wallet } = await resolveWalletKey(
+      tx,
+      row.walletId,
+      input.walletPassword,
+    );
 
     // On commit: heldBalance -= amount (regardless of direction). The
     // available balance was already debited at place-hold time; on
     // commit we just stop holding the funds.
-    await resealNumericBalance(
-      tx,
-      w.id,
-      'encryptedHeldBalance',
-      'heldBalanceIv',
-      'heldBalanceAuthTag',
-      -row.amount,
-    );
+    await resealColumn(tx, wallet.id, 'encryptedHeldBalance', -row.amount, key);
 
     const updated = await tx.walletTransaction.update({
       where: { id: row.id },
@@ -358,10 +400,7 @@ export async function commitHold(input: {
       amount: updated.amount,
     });
 
-    logger.info(
-      { txId: updated.id, type: updated.type },
-      'wallet: commitHold',
-    );
+    logger.info({ txId: updated.id, type: updated.type }, 'wallet: commitHold');
     return { id: updated.id, alreadyApplied: false };
   });
 }
@@ -375,6 +414,7 @@ export async function commitHold(input: {
 export async function releaseHold(input: {
   transactionId: string;
   reason?: string;
+  walletPassword?: string;
 }): Promise<{ id: string; alreadyApplied: boolean }> {
   return runSerializable(async (tx) => {
     const row = await tx.walletTransaction.findUnique({
@@ -391,27 +431,17 @@ export async function releaseHold(input: {
       );
     }
 
-    const w = await lockWallet(tx, row.walletId);
+    const { key, wallet } = await resolveWalletKey(
+      tx,
+      row.walletId,
+      input.walletPassword,
+    );
 
     // Reverse the held amount landing. For DEBIT holds, also recover the
     // available balance that was deducted at place-time.
-    await resealNumericBalance(
-      tx,
-      w.id,
-      'encryptedHeldBalance',
-      'heldBalanceIv',
-      'heldBalanceAuthTag',
-      -row.amount,
-    );
+    await resealColumn(tx, wallet.id, 'encryptedHeldBalance', -row.amount, key);
     if (row.direction === 'DEBIT') {
-      await resealNumericBalance(
-        tx,
-        w.id,
-        'encryptedBalance',
-        'iv',
-        'authTag',
-        +row.amount,
-      );
+      await resealColumn(tx, wallet.id, 'encryptedBalance', +row.amount, key);
     }
 
     const updated = await tx.walletTransaction.update({
@@ -446,6 +476,7 @@ export async function reverseTransaction(input: {
   transactionId: string;
   reason: string;
   metadata?: Record<string, unknown>;
+  walletPassword?: string;
 }): Promise<{ id: string; compensatingId: string }> {
   return runSerializable(async (tx) => {
     const row = await tx.walletTransaction.findUnique({
@@ -462,35 +493,25 @@ export async function reverseTransaction(input: {
       );
     }
 
-    const w = await lockWallet(tx, row.walletId);
+    const { key, wallet } = await resolveWalletKey(
+      tx,
+      row.walletId,
+      input.walletPassword,
+    );
 
     // Apply opposite direction: if original was DEBIT, refund CREDIT.
     const reverseDirection: Direction =
       row.direction === 'DEBIT' ? 'CREDIT' : 'DEBIT';
     if (reverseDirection === 'CREDIT') {
-      await resealNumericBalance(
-        tx,
-        w.id,
-        'encryptedBalance',
-        'iv',
-        'authTag',
-        +row.amount,
-      );
+      await resealColumn(tx, wallet.id, 'encryptedBalance', +row.amount, key);
     } else {
-      await resealNumericBalance(
-        tx,
-        w.id,
-        'encryptedBalance',
-        'iv',
-        'authTag',
-        -row.amount,
-      );
+      await resealColumn(tx, wallet.id, 'encryptedBalance', -row.amount, key);
     }
 
     const compensating = await tx.walletTransaction.create({
       data: {
         id: randomUUID(),
-        walletId: w.id,
+        walletId: wallet.id,
         // Map to a granular refinement type so the journal still tells
         // the audit story.
         type:
