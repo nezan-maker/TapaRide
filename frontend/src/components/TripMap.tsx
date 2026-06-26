@@ -59,7 +59,6 @@ export default function TripMap({
         zoom: vehicleCoords ? 14 : 12,
         pitch: 45,
         bearing: 0,
-        antialias: true,
         attributionControl: false,
       });
 
