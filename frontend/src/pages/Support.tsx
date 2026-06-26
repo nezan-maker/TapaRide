@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { cn } from '../lib/utils'
-import Fa from '../components/Fa';
+import Fa from '../components/Fa'
+import SupportChat from '../components/SupportChat'
 
 const channels = [
   { icon: 'phone', title: 'Call us', detail: '+250 788 000 000', note: 'Mon–Sun, 6am–10pm' },
   { icon: 'mail', title: 'Email', detail: 'support@taparide.rw', note: 'Replies within 24h' },
-  { icon: 'message', title: 'Live chat', detail: 'Start a conversation', note: 'Avg. wait 2 min' },
+  { icon: 'message', title: 'Live chat', detail: 'Tapa Assist below', note: 'AI support · instant' },
 ]
 
 const categories = [
@@ -45,7 +46,7 @@ export default function Support() {
           </span>
           <h1 className="text-3xl font-extrabold sm:text-4xl">How can we help?</h1>
           <p className="mt-2 text-white/70">
-            Search our help center or reach out to our support team directly.
+            Chat with Tapa Assist or browse FAQs for bookings, parcels, and payments.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {categories.map((c) => (
@@ -70,6 +71,8 @@ export default function Support() {
             </div>
           ))}
         </div>
+
+        <SupportChat />
 
         <div className="mx-auto mt-12 max-w-3xl">
           <h2 className="text-center text-2xl font-extrabold text-ink-900">

@@ -43,7 +43,7 @@ async function request(path: string, options: RequestInit = {}): Promise<any> {
 
   // Auto-inject Idempotency-Key if this is a mutating state modification
   const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method || 'GET');
-  if (isMutation && !headers.has('Idempotency-Key') && (path.startsWith('/api/tickets') || path.startsWith('/api/wallet'))) {
+  if (isMutation && !headers.has('Idempotency-Key') && (path.startsWith('/api/tickets') || path.startsWith('/api/wallet') || path.startsWith('/api/parcels') || path.startsWith('/api/payments'))) {
     headers.set('Idempotency-Key', crypto.randomUUID());
   }
   

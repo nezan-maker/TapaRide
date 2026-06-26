@@ -1,8 +1,9 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import "./index.css";
-import { AuthProvider, ProtectedRoute } from "./lib/auth";
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import "./index.css"
+import { AuthProvider, ProtectedRoute } from "./lib/auth"
+import FloatingAssistant from "./components/FloatingAssistant"
 
 import SiteLayout from "./components/SiteLayout";
 import Landing from "./pages/Landing";
@@ -35,6 +36,7 @@ import MyTrips from "./pages/dashboard/MyTrips";
 import MyParcels from "./pages/dashboard/MyParcels";
 import Notifications from "./pages/dashboard/Notifications";
 import PaymentMethods from "./pages/dashboard/PaymentMethods";
+import ReceiveParcel from "./pages/ReceiveParcel";
 import Settings from "./pages/dashboard/Settings";
 
 const router = createBrowserRouter([
@@ -53,6 +55,8 @@ const router = createBrowserRouter([
       { path: "/waitlist", element: <ProtectedRoute allowedRoles={['CLIENT']}><Waitlist /></ProtectedRoute> },
       { path: "/send-parcel", element: <ProtectedRoute allowedRoles={['CLIENT']}><SendParcel /></ProtectedRoute> },
       { path: "/parcel/confirmation", element: <ProtectedRoute allowedRoles={['CLIENT']}><ParcelConfirmation /></ProtectedRoute> },
+      { path: "/receive", element: <ReceiveParcel /> },
+      { path: "/parcels/receive", element: <ReceiveParcel /> },
       { path: "/track", element: <ProtectedRoute allowedRoles={['CLIENT', 'DRIVER', 'MANAGER', 'OWNER', 'ORGANIZATION']}><Track /></ProtectedRoute> },
       { path: "/support", element: <Support /> },
     ],
@@ -89,6 +93,7 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
+      <FloatingAssistant />
       <RouterProvider router={router} />
     </AuthProvider>
   </StrictMode>,
