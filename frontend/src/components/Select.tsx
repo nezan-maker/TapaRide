@@ -76,11 +76,11 @@ export default function Select({
               className={cn(
                 'flex w-full items-center gap-3 px-4 py-2.5 text-sm transition text-left',
                 opt.value === value
-                  ? 'bg-ink-900 text-white font-semibold'
+                  ? 'bg-ink-100 text-ink-900 font-semibold'
                   : 'text-ink-600 hover:bg-ink-50',
               )}
             >
-              {opt.value === value && <Fa name="check" className="h-3.5 w-3.5 shrink-0" />}
+              {opt.value === value && <Fa name="check" className="h-3.5 w-3.5 shrink-0 text-ink-700" />}
               <span className={opt.value === value ? '' : 'ml-[1.375rem]'}>{opt.label}</span>
             </button>
           ))}
