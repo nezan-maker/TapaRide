@@ -251,10 +251,6 @@ export default function Landing() {
                 <p className="mt-2 text-sm leading-relaxed text-ink-500">{s.blurb}</p>
                 {s.protected ? (
                   <>
-                    <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-ink-400">
-                      <Fa name="lock" className="h-3 w-3" />
-                      Login required
-                    </p>
                     <ProtectedLink
                       to={s.to}
                       className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-flame-600 transition hover:gap-2.5"
