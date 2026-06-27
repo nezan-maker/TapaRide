@@ -22,34 +22,35 @@ async function main() {
   await db.walletTransaction.deleteMany();
   await db.ticket.deleteMany();
   await db.parcel.deleteMany();
+  await db.journeyStop.deleteMany();
   await db.journey.deleteMany();
   await db.vehicle.deleteMany();
   await db.station.deleteMany();
   await db.passkey.deleteMany();
   await db.wallet.deleteMany();
-  // Agency must be deleted before User due to RESTRICT on ownerId FK
   await db.agency.deleteMany();
   await db.user.deleteMany();
 
   // ─── Users ────────────────────────────────────────────────────────────────
+  const passwords = {
+    owner: 'Owner@1234',
+    manager: 'Manager@1234',
+    driver: 'Driver@1234',
+    client: 'Client@1234',
+  };
 
-  const ownerPassword = 'Owner@1234';
-  const clientPassword = 'Client@1234';
-  const managerPassword = 'Manager@1234';
-  const driverPassword = 'Driver@1234';
-
-  const [ownerHash, clientHash, managerHash, driverHash] = await Promise.all([
-    argon2.hash(ownerPassword, ARGON2_CONFIG),
-    argon2.hash(clientPassword, ARGON2_CONFIG),
-    argon2.hash(managerPassword, ARGON2_CONFIG),
-    argon2.hash(driverPassword, ARGON2_CONFIG),
+  const [ownerHash, managerHash, driverHash, clientHash] = await Promise.all([
+    argon2.hash(passwords.owner, ARGON2_CONFIG),
+    argon2.hash(passwords.manager, ARGON2_CONFIG),
+    argon2.hash(passwords.driver, ARGON2_CONFIG),
+    argon2.hash(passwords.client, ARGON2_CONFIG),
   ]);
 
   const owner = await db.user.create({
     data: {
       email: 'owner@tapa.rw',
       password: ownerHash,
-      phone: '+250****0001',
+      phone: '+250788000001',
       role: 'OWNER',
       isVerified: true,
       phoneVerifiedAt: new Date(),
@@ -61,7 +62,7 @@ async function main() {
     data: {
       email: 'manager@tapa.rw',
       password: managerHash,
-      phone: '+250****0002',
+      phone: '+250788000002',
       role: 'MANAGER',
       isVerified: true,
       phoneVerifiedAt: new Date(),
@@ -73,7 +74,7 @@ async function main() {
     data: {
       email: 'driver@tapa.rw',
       password: driverHash,
-      phone: '+250****0003',
+      phone: '+250788000003',
       role: 'DRIVER',
       isVerified: true,
       phoneVerifiedAt: new Date(),
@@ -85,7 +86,30 @@ async function main() {
     data: {
       email: 'client@tapa.rw',
       password: clientHash,
-      phone: '+250****0004',
+      phone: '+250788000004',
+      role: 'CLIENT',
+      isVerified: true,
+      phoneVerifiedAt: new Date(),
+    },
+  });
+
+  // Additional clients for testing
+  const client2 = await db.user.create({
+    data: {
+      email: 'amina@tapa.rw',
+      password: clientHash,
+      phone: '+250788000005',
+      role: 'CLIENT',
+      isVerified: true,
+      phoneVerifiedAt: new Date(),
+    },
+  });
+
+  const client3 = await db.user.create({
+    data: {
+      email: 'jean@tapa.rw',
+      password: clientHash,
+      phone: '+250788000006',
       role: 'CLIENT',
       isVerified: true,
       phoneVerifiedAt: new Date(),
@@ -95,18 +119,17 @@ async function main() {
   console.log('✅ Users created');
 
   // ─── Wallets ──────────────────────────────────────────────────────────────
-
   const usersAndPasswords = [
-    { user: owner, password: ownerPassword },
-    { user: manager, password: managerPassword },
-    { user: driver, password: driverPassword },
-    { user: client, password: clientPassword },
+    { user: owner, password: passwords.owner },
+    { user: manager, password: passwords.manager },
+    { user: driver, password: passwords.driver },
+    { user: client, password: passwords.client, balance: 50_000 },
+    { user: client2, password: passwords.client, balance: 25_000 },
+    { user: client3, password: passwords.client, balance: 15_000 },
   ];
 
-  for (const { user, password } of usersAndPasswords) {
-    // Give client 50,000 to test purchases; others 10,000
-    const initialBalance = user.role === 'CLIENT' ? 50_000 : 10_000;
-    const encrypted = encryptBalance(initialBalance, password);
+  for (const { user, password, balance = 10_000 } of usersAndPasswords) {
+    const encrypted = encryptBalance(balance, password);
     const walletPasswordHash = await argon2.hash(password, ARGON2_CONFIG);
     await db.wallet.create({
       data: {
@@ -124,111 +147,166 @@ async function main() {
   console.log('✅ Wallets created');
 
   // ─── Agency ───────────────────────────────────────────────────────────────
-
   const agency = await db.agency.create({
     data: { name: 'Tapa Express', ownerId: owner.id, verified: true },
   });
 
-  // Assign manager and driver to agency
   await db.user.update({ where: { id: driver.id }, data: { driverAgencyId: agency.id } });
+  await db.user.update({
+    where: { id: manager.id },
+    data: { managedAgencyId: agency.id },
+  });
 
   console.log('✅ Agency created');
 
-  // ─── Stations ─────────────────────────────────────────────────────────────
+  // ─── Stations (all major Rwandan cities) ─────────────────────────────────
+  const stations = await Promise.all([
+    db.station.create({ data: { name: 'Kigali (Nyabugogo)', location: '-1.95,30.06', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Musanze (Ruhengeri)', location: '-1.50,29.63', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Huye (Butare)', location: '-2.60,29.74', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Rubavu (Gisenyi)', location: '-1.68,29.26', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Rusizi (Cyangugu)', location: '-2.47,28.90', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Nyagatare', location: '-1.28,30.32', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Muhanga (Gitarama)', location: '-2.08,29.75', agencyId: agency.id } }),
+    db.station.create({ data: { name: 'Karongi (Kibuye)', location: '-2.00,29.35', agencyId: agency.id } }),
+  ]);
 
-  const kigali = await db.station.create({
-    data: { name: 'Kigali Central Bus Park', location: 'Kigali, Rwanda', agencyId: agency.id },
-  });
-
-  const musanze = await db.station.create({
-    data: { name: 'Musanze Station', location: 'Musanze, Rwanda', agencyId: agency.id },
-  });
-
-  const huye = await db.station.create({
-    data: { name: 'Huye Station', location: 'Huye, Rwanda', agencyId: agency.id },
-  });
-
-  // Assign manager to agency + station
-  await db.user.update({
-    where: { id: manager.id },
-    data: { managedAgencyId: agency.id, managedStationId: kigali.id },
-  });
+  const [kigali, musanze, huye, rubavu, rusizi, nyagatare, muhanga, karongi] = stations;
 
   console.log('✅ Stations created');
 
-  // ─── Vehicle ──────────────────────────────────────────────────────────────
-
-  const vehicle = await db.vehicle.create({
-    data: {
-      plateNumber: 'RAB 001 A',
-      model: 'Toyota Coaster',
-      capacity: 30,
-      agencyId: agency.id,
-      driverId: driver.id,
-    },
+  // ─── Vehicles ─────────────────────────────────────────────────────────────
+  const vehicle1 = await db.vehicle.create({
+    data: { plateNumber: 'RAB 001 A', model: 'Toyota Coaster', capacity: 30, agencyId: agency.id, driverId: driver.id },
   });
 
-  console.log('✅ Vehicle created');
+  const vehicle2 = await db.vehicle.create({
+    data: { plateNumber: 'RAB 002 A', model: 'Toyota Hiace', capacity: 18, agencyId: agency.id, driverId: driver.id },
+  });
 
-  // ─── Journeys ─────────────────────────────────────────────────────────────
+  console.log('✅ Vehicles created');
 
-  const tomorrow = new Date();
+  // ─── Journeys (multiple routes and times) ─────────────────────────────────
+  const today = new Date();
+  const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(8, 0, 0, 0);
+  const dayAfter = new Date(today);
+  dayAfter.setDate(dayAfter.getDate() + 2);
 
-  const journey1 = await db.journey.create({
-    data: {
-      sourceStationId: kigali.id,
-      destinationStationId: musanze.id,
-      vehicleId: vehicle.id,
-      departureTime: tomorrow,
-      price: 3_000,
-    },
-  });
+  // Helper to create journey with stops
+  const createJourney = async (source: any, dest: any, vehicle: any, date: Date, price: number) => {
+    const journey = await db.journey.create({
+      data: {
+        sourceStationId: source.id,
+        destinationStationId: dest.id,
+        vehicleId: vehicle.id,
+        departureTime: date,
+        price,
+      },
+    });
 
-  const journey2Date = new Date(tomorrow);
-  journey2Date.setHours(14, 0, 0, 0);
+    await db.journeyStop.createMany({
+      data: [
+        { journeyId: journey.id, stationId: source.id, order: 1 },
+        { journeyId: journey.id, stationId: dest.id, order: 2 },
+      ],
+    });
 
-  await db.journey.create({
-    data: {
-      sourceStationId: kigali.id,
-      destinationStationId: huye.id,
-      vehicleId: vehicle.id,
-      departureTime: journey2Date,
-      price: 2_500,
-    },
-  });
+    return journey;
+  };
+
+  // Kigali → Musanze (popular route)
+  await createJourney(kigali, musanze, vehicle1, new Date(tomorrow.setHours(7, 0, 0, 0)), 3_000);
+  await createJourney(kigali, musanze, vehicle2, new Date(tomorrow.setHours(14, 0, 0, 0)), 3_000);
+
+  // Kigali → Huye
+  await createJourney(kigali, huye, vehicle1, new Date(tomorrow.setHours(8, 30, 0, 0)), 2_500);
+  await createJourney(kigali, huye, vehicle2, new Date(tomorrow.setHours(15, 0, 0, 0)), 2_500);
+
+  // Kigali → Rubavu
+  await createJourney(kigali, rubavu, vehicle1, new Date(tomorrow.setHours(9, 0, 0, 0)), 3_500);
+
+  // Kigali → Rusizi
+  await createJourney(kigali, rusizi, vehicle2, new Date(tomorrow.setHours(10, 0, 0, 0)), 4_000);
+
+  // Musanze → Kigali (return trips)
+  await createJourney(musanze, kigali, vehicle1, new Date(dayAfter.setHours(16, 0, 0, 0)), 3_000);
+
+  // Huye → Kigali (return trip)
+  await createJourney(huye, kigali, vehicle2, new Date(dayAfter.setHours(17, 0, 0, 0)), 2_500);
+
+  // Kigali → Nyagatare
+  await createJourney(kigali, nyagatare, vehicle1, new Date(dayAfter.setHours(6, 0, 0, 0)), 3_500);
+
+  // Kigali → Muhanga
+  await createJourney(kigali, muhanga, vehicle2, new Date(tomorrow.setHours(11, 0, 0, 0)), 1_500);
+
+  // Kigali → Karongi
+  await createJourney(kigali, karongi, vehicle1, new Date(dayAfter.setHours(8, 0, 0, 0)), 3_000);
 
   console.log('✅ Journeys created');
 
-  // ─── Sample Ticket ────────────────────────────────────────────────────────
-  // Pre-buy one seat so we can see the unique constraint in action
-  await db.ticket.create({
-    data: { userId: client.id, journeyId: journey1.id, seatNumber: 1, status: 'PAID' },
-  });
+  // ─── Sample Tickets ───────────────────────────────────────────────────────
+  const journeys = await db.journey.findMany({ take: 3 });
 
-  console.log('✅ Sample ticket created');
+  if (journeys.length > 0) {
+    await db.ticket.create({
+      data: { userId: client.id, journeyId: journeys[0].id, seatNumber: 1, status: 'PAID' },
+    });
+    await db.ticket.create({
+      data: { userId: client2.id, journeyId: journeys[0].id, seatNumber: 2, status: 'PAID' },
+    });
+    if (journeys.length > 1) {
+      await db.ticket.create({
+        data: { userId: client3.id, journeyId: journeys[1].id, seatNumber: 5, status: 'PAID' },
+      });
+    }
+  }
 
-  // ─── Sample Parcel ────────────────────────────────────────────────────────
-  await db.parcel.create({
-    data: {
-      senderId: client.id,
-      journeyId: journey1.id,
-      receiverName: 'Jane Doe',
-      receiverPhone: '+250780000099',
-      notes: 'Handle with care',
-    },
-  });
+  console.log('✅ Sample tickets created');
 
-  console.log('✅ Sample parcel created');
+  // ─── Sample Parcels ───────────────────────────────────────────────────────
+  if (journeys.length > 0) {
+    await db.parcel.create({
+      data: {
+        senderId: client.id,
+        journeyId: journeys[0].id,
+        receiverName: 'Aline Uwimana',
+        receiverPhone: '+250788000099',
+        notes: 'Fragile - handle with care',
+      },
+    });
+    await db.parcel.create({
+      data: {
+        senderId: client2.id,
+        journeyId: journeys.length > 1 ? journeys[1].id : journeys[0].id,
+        receiverName: 'Jean Paul Habimana',
+        receiverPhone: '+250788000088',
+        notes: 'Documents inside',
+      },
+    });
+  }
 
+  console.log('✅ Sample parcels created');
+
+  // ─── Summary ──────────────────────────────────────────────────────────────
   console.log('\n🎉 Seeding complete!\n');
   console.log('─────────────────────────────────────────');
   console.log('🔑 Test credentials:');
-  console.log(`  OWNER:   owner@tapa.rw   / ${ownerPassword}`);
-  console.log(`  MANAGER: manager@tapa.rw / ${managerPassword}`);
-  console.log(`  DRIVER:  driver@tapa.rw  / ${driverPassword}`);
-  console.log(`  CLIENT:  client@tapa.rw  / ${clientPassword}`);
+  console.log(`  OWNER:   owner@tapa.rw    / ${passwords.owner}`);
+  console.log(`  MANAGER: manager@tapa.rw  / ${passwords.manager}`);
+  console.log(`  DRIVER:  driver@tapa.rw   / ${passwords.driver}`);
+  console.log(`  CLIENT:  client@tapa.rw   / ${passwords.client} (50,000 RWF)`);
+  console.log(`  CLIENT:  amina@tapa.rw    / ${passwords.client} (25,000 RWF)`);
+  console.log(`  CLIENT:  jean@tapa.rw     / ${passwords.client} (15,000 RWF)`);
+  console.log('─────────────────────────────────────────');
+  console.log('📊 Seeded data:');
+  console.log('  6 users (1 owner, 1 manager, 1 driver, 3 clients)');
+  console.log('  8 stations (all major Rwandan cities)');
+  console.log('  2 vehicles (Toyota Coaster 30-seat, Toyota Hiace 18-seat)');
+  console.log('  10+ journeys across multiple routes and times');
+  console.log('  3 sample tickets');
+  console.log('  2 sample parcels');
   console.log('─────────────────────────────────────────\n');
 }
 
