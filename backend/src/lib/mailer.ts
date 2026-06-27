@@ -1,6 +1,6 @@
 import { env } from "../config/env.js";
 import { getNotificationsQueue } from "./notifications/queue.js";
-import { renderVerificationEmail, renderPhoneVerificationEmail } from "../emails/render.js";
+import { renderVerificationEmail } from "../emails/render.js";
 
 interface MailOptions {
   to: string;
@@ -25,17 +25,6 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   await sendMail({
     to,
     subject: "Verify your TapaRide account",
-    html,
-  });
-}
-
-/** Sends phone verification notification email. */
-export async function sendPhoneVerificationEmail(to: string): Promise<void> {
-  const html = await renderPhoneVerificationEmail();
-
-  await sendMail({
-    to,
-    subject: "Verify your phone number on TapaRide",
     html,
   });
 }
