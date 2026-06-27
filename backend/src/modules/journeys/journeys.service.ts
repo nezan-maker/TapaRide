@@ -88,11 +88,6 @@ export async function listJourneys(
       const effectiveSourceId = sourceId || undefined
       const effectiveDestId = destId || undefined
 
-      // Require at least one filter to avoid full table scans
-      if (!effectiveSourceId && !effectiveDestId) {
-        return { items: [], page: 1, pageSize: 0, total: 0, totalPages: 0 };
-      }
-
       const { page, pageSize, skip, take } = toPagination(pagination);
       const where = {
         ...(effectiveSourceId ? { sourceStationId: effectiveSourceId } : {}),

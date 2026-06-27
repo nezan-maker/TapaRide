@@ -64,30 +64,30 @@ export default function SearchResults() {
   }
 
   useEffect(() => {
-    if (from && to) fetchTrips()
-    else { setLoading(false); setTrips([]) }
+    fetchTrips()
   }, [from, to, date])
 
   const fetchTrips = async () => {
     setLoading(true)
     setError(null)
     try {
-      const stationsRes = await api.get('/api/stations')
-      const stations: Array<{ id: string; name: string }> = stationsRes.stations || stationsRes.items || []
-      const findStation = (name: string) =>
-        stations.find((s) => s.name?.toLowerCase().includes(name.toLowerCase().split('(')[0].trim().toLowerCase()))
-      const fromStation = findStation(from)
-      const toStation = findStation(to)
+      const data = await api.get(`/api/journeys`)
+      const allTrips: BusTrip[] = Array.isArray(data.items) ? data.items : Array.isArray(data.journeys) ? data.journeys : Array.isArray(data) ? data : []
 
-      if (!fromStation || !toStation) {
-        setError('Please select valid stations from the list')
-        setTrips([])
-        return
+      // Apply filters client-side if from/to provided
+      let filtered = allTrips
+      if (from) {
+        filtered = filtered.filter((t) =>
+          t.sourceStation?.name?.toLowerCase().includes(from.toLowerCase())
+        )
+      }
+      if (to) {
+        filtered = filtered.filter((t) =>
+          t.destinationStation?.name?.includes(to)
+        )
       }
 
-      const data = await api.get(`/api/journeys?sourceId=${fromStation.id}&destId=${toStation.id}`)
-      const list = data.items || data.journeys || data
-      setTrips(Array.isArray(list) ? list : [])
+      setTrips(filtered)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load journeys')
       setTrips([])
@@ -196,9 +196,9 @@ export default function SearchResults() {
             </>
           ) : (
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">Find your trip</h1>
+              <h1 className="text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">Available Trips</h1>
               <p className="mt-4 text-sm text-ink-500 max-w-md">
-                Select your departure and destination above to search for available bus routes across Rwanda.
+                All available bus routes across Rwanda. Use the filters above to narrow your search.
               </p>
             </div>
           )}
@@ -352,7 +352,7 @@ export default function SearchResults() {
               </div>
             )}
           </>
-        ) : from && to ? (
+        ) : from && to && filtered.length === 0 ? (
           <div className="card p-12 text-center">
             <Fa name="bus" className="mx-auto h-12 w-12 text-ink-100" />
             <h2 className="mt-4 text-xl font-bold text-ink-900">No trips available</h2>
@@ -363,6 +363,14 @@ export default function SearchResults() {
             <Link to="/" className="btn-primary mt-6 inline-flex">
               Try a different search
             </Link>
+          </div>
+        ) : trips.length === 0 ? (
+          <div className="card p-12 text-center">
+            <Fa name="bus" className="mx-auto h-12 w-12 text-ink-100" />
+            <h2 className="mt-4 text-xl font-bold text-ink-900">No trips available</h2>
+            <p className="mt-2 text-sm text-ink-500">
+              There are currently no journeys scheduled. Check back later.
+            </p>
           </div>
         ) : null}
       </div>
