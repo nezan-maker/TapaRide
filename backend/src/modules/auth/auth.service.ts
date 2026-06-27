@@ -149,7 +149,8 @@ export async function registerUser(dto: RegisterDto) {
   // In development, return tokens for easy testing/pitching
   const devInfo: Record<string, string> = {};
   if (env.NODE_ENV === "development") {
-    devInfo.verifyEmailLink = `${env.EMAIL_VERIFICATION_ORIGIN}/api/auth/verify-email?token=${emailToken}`;
+    const origin = env.EMAIL_VERIFICATION_ORIGIN || env.WEBAUTHN_ORIGIN || 'http://localhost:5175';
+    devInfo.verifyEmailLink = `${origin}/verify-email?token=${emailToken}`;
   }
 
   return {

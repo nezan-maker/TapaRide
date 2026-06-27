@@ -13,6 +13,7 @@ import Booking from "./pages/Booking";
 import SendParcel from "./pages/SendParcel";
 import Track from "./pages/Track";
 import Confirmation from "./pages/Confirmation";
+import VerifyEmail from "./pages/VerifyEmail";
 import ParcelConfirmation from "./pages/ParcelConfirmation";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
   },
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
+  { path: "/verify-email", element: <VerifyEmail /> },
   { path: "/verify-otp", element: <Otp /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
   { path: "/register-passkey", element: <RegisterPasskey /> },

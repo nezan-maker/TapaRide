@@ -19,7 +19,8 @@ export async function sendMail({ to, subject, html }: MailOptions): Promise<void
 
 /** Sends a professional email verification link. */
 export async function sendVerificationEmail(to: string, token: string): Promise<void> {
-  const link = `${env.EMAIL_VERIFICATION_ORIGIN}/api/auth/verify-email?token=${token}`;
+  const origin = env.EMAIL_VERIFICATION_ORIGIN || env.WEBAUTHN_ORIGIN || 'http://localhost:5175';
+  const link = `${origin}/verify-email?token=${token}`;
   const html = await renderVerificationEmail(link);
 
   await sendMail({
