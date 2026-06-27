@@ -137,25 +137,20 @@ export async function registerUser(dto: RegisterDto) {
     return newUser;
   });
 
-  // Send verification email (token is a signed JWT valid for 24h)
+  // Send verification email only (phone verification happens later when user interacts with money)
   const emailToken = jwt.sign({ userId: user.id }, env.JWT_SECRET, {
     expiresIn: "24h",
   });
   await sendVerificationEmail(user.email, emailToken);
 
-  // Send OTP to phone
-  const otp = await generateOtp(user.phone);
-  await sendOtpSms(user.phone, otp);
-
   // In development, return tokens for easy testing/pitching
   const devInfo: Record<string, string> = {};
   if (env.NODE_ENV === "development") {
     devInfo.verifyEmailLink = `${env.EMAIL_VERIFICATION_ORIGIN}/api/auth/verify-email?token=${emailToken}`;
-    devInfo.otpCode = otp;
   }
 
   return {
-    message: "Registration successful. Please verify your email and phone.",
+    message: "Registration successful. Please verify your email.",
     ...devInfo,
   };
 }
@@ -583,6 +578,26 @@ export async function completeOnboarding(userId: string, phone: string | undefin
   });
 
   return { success: true, message: 'Onboarding complete' };
+}
+
+// ─── Send Phone Verification OTP (when user interacts with money) ───────────
+
+export async function sendPhoneVerificationOtp(userId: string) {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new NotFoundError('User not found');
+
+  if (!user.phone) {
+    throw new ValidationError('No phone number on file. Please update your profile first.');
+  }
+
+  if (user.phoneVerifiedAt) {
+    return { success: true, message: 'Phone already verified' };
+  }
+
+  const otp = await generateOtp(user.phone);
+  await sendOtpSms(user.phone, otp);
+
+  return { success: true, message: 'OTP sent to your phone' };
 }
 
 // ─── Accept Invite (for manager/driver email invitations) ───────────────────

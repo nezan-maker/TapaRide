@@ -247,3 +247,15 @@ export async function onboarding(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+
+// ─── Phone Verification (triggered when user interacts with money) ──────────
+
+export async function sendPhoneOtp(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = req.user as { id: string };
+    const result = await AuthService.sendPhoneVerificationOtp(user.id);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+}

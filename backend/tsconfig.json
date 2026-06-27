@@ -20,6 +20,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
     }
