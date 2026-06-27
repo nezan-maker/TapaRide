@@ -94,23 +94,29 @@ export async function deliverSms(options: {
   message: string;
 }) {
   if (env.SMS_PROVIDER === 'console') {
-    logger.info({ phone: options.phone }, 'Console SMS delivery');
+    logger.info({ phone: options.phone, message: options.message }, 'Console SMS delivery');
     return;
   }
 
   if (env.SMS_PROVIDER === 'twilio') {
     if (!twilioClient || !env.TWILIO_FROM_NUMBER) {
-      throw new ExternalProviderError('Twilio not configured', {
-        reason: 'TWILIO_FROM_NUMBER or client missing',
-      });
+      logger.warn({ phone: options.phone }, 'Twilio not configured — falling back to console');
+      logger.info({ phone: options.phone, message: options.message }, 'Console SMS delivery (fallback)');
+      return;
     }
-    const result = await twilioClient.messages.create({
-      to: options.phone,
-      from: env.TWILIO_FROM_NUMBER,
-      body: options.message,
-    });
-    logger.info({ phone: options.phone, sid: result.sid }, 'Twilio SMS sent');
-    return;
+    try {
+      const result = await twilioClient.messages.create({
+        to: options.phone,
+        from: env.TWILIO_FROM_NUMBER,
+        body: options.message,
+      });
+      logger.info({ phone: options.phone, sid: result.sid }, 'Twilio SMS sent');
+      return;
+    } catch (error) {
+      logger.error({ err: error, phone: options.phone }, 'Twilio SMS failed — falling back to console');
+      logger.info({ phone: options.phone, message: options.message }, 'Console SMS delivery (fallback)');
+      return;
+    }
   }
 
   await postWebhook(env.SMS_PROVIDER_URL!, env.SMS_PROVIDER_TOKEN, {
