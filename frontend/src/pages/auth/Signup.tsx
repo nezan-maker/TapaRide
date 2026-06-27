@@ -3,9 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import { api, ApiError } from "../../lib/api";
-import { useAuth } from "../../lib/auth";
 import Fa from '../../components/Fa';
-import GoogleSignInButton from "../../components/GoogleSignInButton";
+// import GoogleSignInButton from "../../components/GoogleSignInButton";
+// import { useAuth } from "../../lib/auth";
+// import GoogleSignInButton from "../../components/GoogleSignInButton";
 
 type SignupRole = null | 'CLIENT' | 'OWNER';
 
@@ -16,10 +17,11 @@ const ROLE_INFO: Record<'CLIENT' | 'OWNER', { title: string; blurb: string }> = 
 
 export default function Signup() {
   const navigate = useNavigate();
-  const { loginOAuth } = useAuth();
+  // Google OAuth commented out — loginOAuth not needed
   const [role, setRole] = useState<SignupRole>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,6 +44,7 @@ export default function Signup() {
       const res = await api.post("/api/auth/register", {
         email,
         password,
+        phone: phone || undefined,
         role: role || 'CLIENT',
       });
       setSuccess({ verifyEmailLink: res.verifyEmailLink });
@@ -190,6 +193,22 @@ export default function Signup() {
             </div>
 
             <div>
+              <label className="label">Phone (optional)</label>
+              <div className="relative">
+                <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <input
+                  type="tel"
+                  className="input pl-10 h-12 text-base"
+                  placeholder="+250 7XX XXX XXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-ink-400">Used later for payment verification.</p>
+            </div>
+
+            <div>
               <label className="label">Password</label>
               <div className="relative">
                 <Fa name="lock" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
@@ -222,8 +241,8 @@ export default function Signup() {
             </button>
           </form>
 
-          {/* Google OAuth — at the bottom */}
-          <div className="space-y-3">
+          {/* Google OAuth — commented out */}
+          {/* <div className="space-y-3">
             <div className="flex items-center gap-3 text-xs text-ink-400">
               <span className="h-px flex-1 bg-ink-100" /> or sign up with <span className="h-px flex-1 bg-ink-100" />
             </div>
@@ -237,7 +256,7 @@ export default function Signup() {
               onError={(err) => setError(err)}
               disabled={loading}
             />
-          </div>
+          </div> */}
 
           <p className="text-center text-xs text-ink-400">
             By continuing you agree to our{' '}
