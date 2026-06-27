@@ -20,12 +20,11 @@ export default function Signup() {
   const [role, setRole] = useState<SignupRole>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{ verifyEmailLink?: string; otpCode?: string } | null>(null);
+  const [success, setSuccess] = useState<{ verifyEmailLink?: string } | null>(null);
 
   // Cheap transition animation: re-trigger fade on role change
   const [animKey, setAnimKey] = useState(0);
@@ -34,7 +33,7 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email || !phone || !password) {
+    if (!email || !password) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -43,11 +42,9 @@ export default function Signup() {
       const res = await api.post("/api/auth/register", {
         email,
         password,
-        phone: phone.startsWith("+") ? phone : `+${phone}`,
         role: role || 'CLIENT',
       });
-      sessionStorage.setItem('registrationPhone', phone.startsWith("+") ? phone : `+${phone}`);
-      setSuccess({ verifyEmailLink: res.verifyEmailLink, otpCode: res.otpCode });
+      setSuccess({ verifyEmailLink: res.verifyEmailLink });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed. Please try again.");
     } finally {
@@ -96,36 +93,13 @@ export default function Signup() {
             <div>
               <div className="font-semibold">Registration successful!</div>
               <p className="text-xs mt-1 opacity-90">
-                Verify your email + phone to continue — we'll handle the rest.
+                Check your email for a verification link — we'll handle the rest.
               </p>
             </div>
           </div>
 
-          {success.verifyEmailLink && (
-            <div className="card p-4 bg-ink-50">
-              <div className="text-[10px] uppercase tracking-wider font-bold text-flame-600 mb-2">
-                Dev tools · Email verification
-              </div>
-              <a href={success.verifyEmailLink} target="_blank" rel="noopener noreferrer"
-                className="block w-full rounded-xl bg-ink-900 text-white text-center py-3 font-semibold text-sm hover:bg-ink-700 transition">
-                ✅ Verify email
-              </a>
-              <p className="mt-2 text-[11px] text-ink-400 break-all select-all">{success.verifyEmailLink}</p>
-            </div>
-          )}
-          {success.otpCode && (
-            <div className="card p-4 bg-ink-50">
-              <div className="text-[10px] uppercase tracking-wider font-bold text-flame-600 mb-2">
-                Dev tools · OTP code
-              </div>
-              <div className="text-center">
-                <span className="text-3xl font-bold text-ink-900 tracking-widest select-all">{success.otpCode}</span>
-              </div>
-            </div>
-          )}
-
-          <button onClick={() => navigate("/verify-otp")} className="btn-primary w-full py-3.5">
-            Continue to verification →
+          <button onClick={() => navigate("/login")} className="btn-primary w-full py-3.5">
+            Continue to login →
           </button>
           <button onClick={() => navigate("/login")} className="btn-outline w-full py-3">
             I've already verified
@@ -211,21 +185,6 @@ export default function Signup() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                   autoFocus
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="label">Phone</label>
-              <div className="relative">
-                <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <input
-                  type="tel"
-                  className="input pl-10 h-12 text-base"
-                  placeholder="+250 7XX XXX XXX"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={loading}
                 />
               </div>
             </div>

@@ -98,7 +98,12 @@ export async function registerUser(dto: RegisterDto) {
 
   // Check uniqueness
   const existing = await db.user.findFirst({
-    where: { OR: [{ email: dto.email }, { phone: dto.phone }] },
+    where: {
+      OR: [
+        { email: dto.email },
+        ...(dto.phone ? [{ phone: dto.phone }] : []),
+      ].filter(Boolean) as any,
+    },
   });
   if (existing) {
     throw new ConflictError(
@@ -116,11 +121,9 @@ export async function registerUser(dto: RegisterDto) {
       data: {
         email: dto.email,
         password: hashedPassword,
-        phone: dto.phone,
+        phone: dto.phone || `temp_${Date.now()}`,
         role: dto.role,
         agencyIssuedId: dto.agencyIssuedId,
-        // ruraCode is intentionally NOT stored on the User anymore —
-        // it lives on Agency (one OWNER can have many agencies).
         isVerified: false,
         phoneVerifiedAt: null,
         passwordHistory: [hashedPassword],
