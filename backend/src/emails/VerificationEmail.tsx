@@ -1,12 +1,4 @@
-import { Body } from "@react-email/body";
-import { Html } from "@react-email/html";
-import { Text } from "@react-email/text";
-import { Button } from "@react-email/button";
-import { Container } from "@react-email/container";
-import { Head } from "@react-email/head";
-import { Preview } from "@react-email/preview";
-import { Section } from "@react-email/section";
-import { Heading } from "@react-email/heading";
+import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 
 
 interface VerificationEmailProps {
@@ -14,10 +6,7 @@ interface VerificationEmailProps {
   userName?: string;
 }
 
-export function VerificationEmail({
-  verificationLink,
-  userName = "there",
-}: VerificationEmailProps) {
+export function VerificationEmail({ verificationLink, userName = "there" }: VerificationEmailProps) {
   return (
     <Html>
       <Head />
@@ -28,11 +17,12 @@ export function VerificationEmail({
             <Text style={logo}>TapaRide</Text>
           </Section>
           <Heading style={heading}>Welcome to TapaRide!</Heading>
-          <Text style={text}>Hi {userName},</Text>
           <Text style={text}>
-            Thank you for creating your TapaRide account. We're excited to have
-            you on board. Click the button below to verify your email address
-            and get started.
+            Hi {userName},
+          </Text>
+          <Text style={text}>
+            Thank you for creating your TapaRide account. We're excited to have you on board.
+            Click the button below to verify your email address and get started.
           </Text>
           <Section style={buttonSection}>
             <Button style={button} href={verificationLink}>
@@ -40,8 +30,7 @@ export function VerificationEmail({
             </Button>
           </Section>
           <Text style={text}>
-            This link expires in 24 hours. If you didn't create this account,
-            you can safely ignore this email.
+            This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.
           </Text>
           <Section style={footerSection}>
             <Text style={footerText}>
@@ -59,8 +48,7 @@ export function VerificationEmail({
 
 const main = {
   backgroundColor: "#f5f4ff",
-  fontFamily:
-    "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 };
 
 const container = {

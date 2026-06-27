@@ -31,6 +31,7 @@
     "@exalabs/ai-sdk": "^2.1.0",
     "@prisma/adapter-neon": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.9",
     "@scalar/express-api-reference": "^0.4.164",
     "@simplewebauthn/browser": "^13.3.0",
