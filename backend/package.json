@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx watch src/server.ts",
-    "build": "pnpm prisma generate && pnpm run sync:openapi",
+    "build": "pnpm prisma generate && tsc && pnpm run sync:openapi",
     "sync:openapi": "node scripts/sync-openapi.mjs",
     "test": "NODE_ENV=test node --import tsx --test --test-concurrency=1 tests/**/*.test.ts",
     "test:integration": "NODE_ENV=test RUN_INTEGRATION_TESTS=true node --import tsx --test --test-concurrency=1 tests/integration/**/*.spec.ts",
