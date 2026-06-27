@@ -247,7 +247,7 @@ export default function Login() {
                     {/* Signup link - placed under the form */}
                     <div className="mt-6 text-center text-sm text-ink-500">
                       New here?{' '}
-                      <AuthLink to="/signup" className="font-semibold text-flame-600 hover:text-flame-700">
+                      <AuthLink to="/signup">
                         Create a free account
                       </AuthLink>
                     </div>
