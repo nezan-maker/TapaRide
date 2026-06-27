@@ -143,7 +143,7 @@ export default function StripeTopupForm({ amount, onSuccess, onCancel }: StripeT
       try {
         const result = await api.post('/api/payments/topup', { amount });
         if (cancelled) return;
-        if (!result.clientSecret) {
+        if (!result || !result.clientSecret) {
           throw new ApiError('Payment provider did not return a client secret', 500);
         }
         setSession({
