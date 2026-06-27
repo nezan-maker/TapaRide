@@ -1,9 +1,11 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { encryptBalance } from '../src/lib/crypto';
 import 'dotenv/config';
 
-const db = new PrismaClient();
+const db = new PrismaClient({
+  datasourceUrl: process.env['DATABASE_URL'],
+});
 
 const ARGON2_CONFIG = {
   type: argon2.argon2id,
@@ -302,11 +304,11 @@ async function main() {
   console.log('✅ Idempotency keys created (5)');
 
   // ─── Passkeys (5 records) ─────────────────────────────────────────────────
-  await db.passkey.create({ data: { userId: client.id, publicKey: Buffer.from('key1'), counter: 0n, deviceName: 'iPhone' } });
-  await db.passkey.create({ data: { userId: client2.id, publicKey: Buffer.from('key2'), counter: 0n, deviceName: 'MacBook' } });
-  await db.passkey.create({ data: { userId: owner.id, publicKey: Buffer.from('key3'), counter: 0n, deviceName: 'Pixel 8' } });
-  await db.passkey.create({ data: { userId: manager.id, publicKey: Buffer.from('key4'), counter: 0n, deviceName: 'Samsung S24' } });
-  await db.passkey.create({ data: { userId: driver.id, publicKey: Buffer.from('key5'), counter: 0n, deviceName: 'iPad' } });
+  await db.passkey.create({ data: { id: 'pk-1', userId: client.id, publicKey: Buffer.from('key1'), counter: 0n, deviceName: 'iPhone' } });
+  await db.passkey.create({ data: { id: 'pk-2', userId: client2.id, publicKey: Buffer.from('key2'), counter: 0n, deviceName: 'MacBook' } });
+  await db.passkey.create({ data: { id: 'pk-3', userId: owner.id, publicKey: Buffer.from('key3'), counter: 0n, deviceName: 'Pixel 8' } });
+  await db.passkey.create({ data: { id: 'pk-4', userId: manager.id, publicKey: Buffer.from('key4'), counter: 0n, deviceName: 'Samsung S24' } });
+  await db.passkey.create({ data: { id: 'pk-5', userId: driver.id, publicKey: Buffer.from('key5'), counter: 0n, deviceName: 'iPad' } });
 
   console.log('✅ Passkeys created (5)');
 
