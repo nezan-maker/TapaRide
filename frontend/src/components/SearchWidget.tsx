@@ -129,14 +129,16 @@ export default function SearchWidget() {
               <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
               <input
                 type="date"
-                className="input pl-9 pr-9"
+                className="input pl-9 pr-4 cursor-pointer appearance-none"
+                style={{ colorScheme: 'light' }}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
-              <Fa name="calendar" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-200" />
+              <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
-
           <button
             type="submit"
             disabled={!canSubmit}
