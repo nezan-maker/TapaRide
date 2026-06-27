@@ -16,6 +16,9 @@ let ioShutdown: (() => Promise<void>) | null = null;
 async function main() {
   const app = await buildApp();
 
+  // Trust proxy for Render's reverse proxy (required for rate-limiter X-Forwarded-For)
+  app.set('trust proxy', true);
+
   try {
     // ─── Infrastructure health checks ──────────────────────────────────────────
     registerCacheInvalidationHandlers();

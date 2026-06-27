@@ -2,16 +2,20 @@
 FROM node:22-alpine AS builder
 
 WORKDIR /build
-COPY package*.json ./
-RUN npm ci --ignore-scripts
+
+# Enable pnpm
+RUN corepack enable pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src/ src/
 COPY prisma/ prisma/
 COPY scripts/ scripts/
 
-RUN npx prisma generate
-RUN npm run build
+RUN pnpm prisma generate
+RUN pnpm run build
 
 # ─── Stage 2: Production ──────────────────────────────────────────────────────
 FROM node:22-alpine AS production
