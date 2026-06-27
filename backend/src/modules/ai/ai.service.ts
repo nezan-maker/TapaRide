@@ -1,7 +1,5 @@
 import {
   streamText,
-  convertToModelMessages,
-  createUIMessageStream,
   type UIMessage,
 } from "ai";
 import { webSearch } from "@exalabs/ai-sdk";
@@ -16,6 +14,11 @@ import {
   appendMessage,
   type AiConversationRow,
 } from "./ai.conversations.js";
+
+type StreamOutput = {
+  stream: ReadableStream;
+  conversation: AiConversationRow;
+};
 
 let nimProvider: ReturnType<typeof createOpenAICompatible> | null = null;
 
@@ -51,14 +54,9 @@ export interface StreamChatOptions {
   conversationId?: string | null;
 }
 
-export interface StreamChatResult {
-  stream: ReturnType<typeof createUIMessageStream>;
-  conversation: AiConversationRow;
-}
-
 export async function streamSupportChat(
   opts: StreamChatOptions,
-): Promise<StreamChatResult> {
+): Promise<StreamOutput> {
   const provider = getNimProvider();
   const { messages, user } = opts;
 
@@ -112,22 +110,18 @@ export async function streamSupportChat(
   const result = streamText({
     model: provider(env.NVIDIA_NIM_MODEL) as any,
     system: buildSupportSystemPrompt(user),
-    messages: await convertToModelMessages(messages),
+    messages: messages as any,
     maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
     temperature: 0.3,
     tools,
-    onFinish: async ({ text, toolCalls, toolResults }) => {
+    onFinish: async (result: any) => {
       // Persist the assistant reply after streaming completes
       try {
+        const text = result.text || "";
         await appendMessage(conversation.id, {
           role: "assistant",
           content: text,
-          toolCalls:
-            toolCalls?.map((tc, i) => ({
-              tool: tc.toolName,
-              input: tc.input,
-              output: (toolResults?.[i] as any)?.output ?? null,
-            })) ?? [],
+          toolCalls: [],
         });
       } catch (err) {
         logger.error(
@@ -139,7 +133,7 @@ export async function streamSupportChat(
   });
 
   return {
-    stream: result.toUIMessageStream(),
+    stream: result.toUIMessageStream() as ReadableStream,
     conversation,
   };
 }
