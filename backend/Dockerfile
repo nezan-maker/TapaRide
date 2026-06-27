@@ -22,17 +22,10 @@ RUN apk add --no-cache libcrypto3 openssl
 
 WORKDIR /app
 
-RUN corepack enable pnpm
-
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
-
-# Copy schema then regenerate client against the prod node_modules
+COPY --from=builder /build/node_modules ./node_modules
 COPY --from=builder /build/prisma ./prisma
-RUN pnpm prisma generate
-
-# Copy compiled output last (changes most often)
 COPY --from=builder /build/dist ./dist
+COPY --from=builder /build/package.json ./
 
 EXPOSE 3000
 
