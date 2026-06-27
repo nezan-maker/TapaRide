@@ -1,7 +1,7 @@
 import {
   streamText,
   convertToModelMessages,
-  toUIMessageStream,
+  createUIMessageStream,
   type UIMessage,
 } from "ai";
 import { webSearch } from "@exalabs/ai-sdk";
@@ -52,7 +52,7 @@ export interface StreamChatOptions {
 }
 
 export interface StreamChatResult {
-  stream: ReturnType<typeof toUIMessageStream>;
+  stream: ReturnType<typeof createUIMessageStream>;
   conversation: AiConversationRow;
 }
 
@@ -110,7 +110,7 @@ export async function streamSupportChat(
   }
 
   const result = streamText({
-    model: provider(env.NVIDIA_NIM_MODEL),
+    model: provider(env.NVIDIA_NIM_MODEL) as any,
     system: buildSupportSystemPrompt(user),
     messages: await convertToModelMessages(messages),
     maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
@@ -139,10 +139,7 @@ export async function streamSupportChat(
   });
 
   return {
-    stream: toUIMessageStream({
-      stream: result.stream,
-      originalMessages: messages,
-    }),
+    stream: result.toUIMessageStream(),
     conversation,
   };
 }
