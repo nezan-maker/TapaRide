@@ -545,6 +545,41 @@ export async function loginWithApple(idToken: string) {
   return registerOrLoginOauthUser(email);
 }
 
+// ─── Complete Onboarding (Google OAuth users) ────────────────────────────────
+
+export async function completeOnboarding(userId: string, phone: string, walletPassword: string) {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new NotFoundError('User not found');
+
+  const walletPasswordHash = await hashPassword(walletPassword, BCRYPT_ROUNDS);
+
+  // Update user phone + wallet password
+  await db.$transaction(async (tx: Prisma.TransactionClient) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { phone, phoneVerifiedAt: new Date() },
+    });
+
+    const wallet = await tx.wallet.findUnique({ where: { userId } });
+    if (wallet) {
+      await tx.wallet.update({
+        where: { userId },
+        data: { walletPassword: walletPasswordHash },
+      });
+    } else {
+      await tx.wallet.create({
+        data: {
+          userId,
+          walletPassword: walletPasswordHash,
+          status: 'ACTIVE',
+        },
+      });
+    }
+  });
+
+  return { success: true, message: 'Onboarding complete' };
+}
+
 // ─── Accept Invite (for manager/driver email invitations) ───────────────────
 
 export interface InvitePayload {

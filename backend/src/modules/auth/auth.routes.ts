@@ -32,6 +32,9 @@ router.post('/reset-password', otpLimiter, AuthController.resetPassword);
 router.post('/google', authWriteLimiter, AuthController.googleLogin);
 router.post('/apple', authWriteLimiter, AuthController.appleLogin);
 
+// ─── Onboarding (for Google OAuth users) ─────────────────────────────────────
+router.post('/onboarding', authenticate, AuthController.onboarding);
+
 // ─── WebAuthn – auth options (pre-login, no JWT required) ─────────────────
 router.get('/passkey/auth-options', authWriteLimiter, AuthController.passkeyAuthOptions);
 router.post('/passkey/auth-verify', authWriteLimiter, AuthController.passkeyAuthVerify);

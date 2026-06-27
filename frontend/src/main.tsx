@@ -69,7 +69,7 @@ const router = createBrowserRouter([
   { path: "/accept-invite", element: <AcceptInvite /> },
   {
     path: "/onboarding",
-    element: <ProtectedRoute allowedRoles={['OWNER']}><Onboarding /></ProtectedRoute>,
+    element: <ProtectedRoute allowedRoles={['CLIENT', 'OWNER', 'DRIVER', 'MANAGER']}><Onboarding /></ProtectedRoute>,
   },
   {
     path: "/dashboard",

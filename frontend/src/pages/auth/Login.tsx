@@ -74,17 +74,7 @@ export default function Login() {
           : 'How are you using TapaRide today?'
       }
       footer={
-        role ? (
-          <>
-            New here?{' '}
-            <AuthLink to="/signup">Create a free account</AuthLink>
-          </>
-        ) : (
-          <>
-            New here?{' '}
-            <AuthLink to="/signup">Create account</AuthLink>
-          </>
-        )
+        null
       }
     >
       {/* Invite card — always visible at the top so invited users can accept from login too */}
