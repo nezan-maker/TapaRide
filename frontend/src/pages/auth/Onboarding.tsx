@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -8,6 +8,9 @@ import Fa from '../../components/Fa';
 export default function Onboarding() {
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isGoogleAuth = searchParams.get("provider") === "google";
+
   const [phone, setPhone] = useState("");
   const [walletPassword, setWalletPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,8 +21,13 @@ export default function Onboarding() {
     e.preventDefault();
     setError(null);
 
-    if (!phone || !walletPassword || !confirmPassword) {
+    if (!walletPassword || !confirmPassword) {
       setError("Please fill in all fields.");
+      return;
+    }
+
+    if (isGoogleAuth && !phone) {
+      setError("Please enter your phone number.");
       return;
     }
 
@@ -35,11 +43,11 @@ export default function Onboarding() {
 
     setLoading(true);
     try {
-      const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
-      await api.post("/api/auth/onboarding", {
-        phone: formattedPhone,
-        walletPassword,
-      });
+      const payload: { walletPassword: string; phone?: string } = { walletPassword };
+      if (isGoogleAuth) {
+        payload.phone = phone.startsWith("+") ? phone : `+${phone}`;
+      }
+      await api.post("/api/auth/onboarding", payload);
       await refreshUser();
       navigate("/dashboard", { replace: true });
     } catch (err) {
@@ -52,7 +60,11 @@ export default function Onboarding() {
   return (
     <AuthLayout
       title="Complete your setup"
-      subtitle="Just a couple more things to get you started with TapaRide."
+      subtitle={
+        isGoogleAuth
+          ? "Just a couple more things to get you started with TapaRide."
+          : "Set up your wallet password to secure your account."
+      }
       footer={
         <>
           Already have an account?{' '}
@@ -63,7 +75,11 @@ export default function Onboarding() {
       <div className="space-y-5 animate-fade-up">
         <div className="rounded-2xl bg-ink-50 p-4 text-sm text-ink-600 flex items-start gap-3">
           <Fa name="info-circle" className="h-5 w-5 text-flame-600 shrink-0 mt-0.5" />
-          <p>Your Google account is connected. We just need your phone number and a wallet password to secure your account.</p>
+          <p>
+            {isGoogleAuth
+              ? "Your Google account is connected. We just need your phone number and a wallet password to secure your account."
+              : "Create a wallet password to secure your Tapa wallet for payments and top-ups."}
+          </p>
         </div>
 
         {error && (
@@ -74,22 +90,24 @@ export default function Onboarding() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="label">Phone number</label>
-            <div className="relative">
-              <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-              <input
-                type="tel"
-                className="input pl-10 h-12 text-base"
-                placeholder="+250 7XX XXX XXX"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={loading}
-                autoFocus
-              />
+          {isGoogleAuth && (
+            <div>
+              <label className="label">Phone number</label>
+              <div className="relative">
+                <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
+                <input
+                  type="tel"
+                  className="input pl-10 h-12 text-base"
+                  placeholder="+250 7XX XXX XXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-ink-400">We'll send you an SMS code to verify this number.</p>
             </div>
-            <p className="mt-1.5 text-xs text-ink-400">We'll send you an SMS code to verify this number.</p>
-          </div>
+          )}
 
           <div>
             <label className="label">Wallet password</label>
@@ -102,6 +120,7 @@ export default function Onboarding() {
                 value={walletPassword}
                 onChange={(e) => setWalletPassword(e.target.value)}
                 disabled={loading}
+                autoFocus={!isGoogleAuth}
               />
             </div>
             <p className="mt-1.5 text-xs text-ink-400">This PIN secures your Tapa wallet for payments and top-ups.</p>

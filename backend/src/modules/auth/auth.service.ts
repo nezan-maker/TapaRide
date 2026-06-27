@@ -545,21 +545,26 @@ export async function loginWithApple(idToken: string) {
   return registerOrLoginOauthUser(email);
 }
 
-// ─── Complete Onboarding (Google OAuth users) ────────────────────────────────
+// ─── Complete Onboarding ─────────────────────────────────────────────────────
+// For Google OAuth users: set phone + wallet password
+// For normal password auth (CLIENT only): set wallet password only
 
-export async function completeOnboarding(userId: string, phone: string, walletPassword: string) {
+export async function completeOnboarding(userId: string, phone: string | undefined, walletPassword: string) {
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) throw new NotFoundError('User not found');
 
   const walletPasswordHash = await hashPassword(walletPassword, BCRYPT_ROUNDS);
 
-  // Update user phone + wallet password
   await db.$transaction(async (tx: Prisma.TransactionClient) => {
-    await tx.user.update({
-      where: { id: userId },
-      data: { phone, phoneVerifiedAt: new Date() },
-    });
+    // Update phone if provided (Google OAuth users)
+    if (phone) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { phone, phoneVerifiedAt: new Date() },
+      });
+    }
 
+    // Update or create wallet password
     const wallet = await tx.wallet.findUnique({ where: { userId } });
     if (wallet) {
       await tx.wallet.update({

@@ -273,7 +273,7 @@ export default function Signup() {
                 try {
                   const mockToken = `mock-google-${Date.now()}`;
                   await loginOAuth('google', mockToken);
-                  navigate('/onboarding', { replace: true });
+                  navigate('/onboarding?provider=google', { replace: true });
                 } catch {}
               }}
               disabled={loading}

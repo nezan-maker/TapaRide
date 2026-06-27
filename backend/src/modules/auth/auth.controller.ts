@@ -230,15 +230,15 @@ export async function appleLogin(req: Request, res: Response, next: NextFunction
   }
 }
 
-// ─── Onboarding (Google OAuth users) ─────────────────────────────────────────
+// ─── Onboarding (Google OAuth + normal password auth) ───────────────────────
 
 export async function onboarding(req: Request, res: Response, next: NextFunction) {
   try {
     const user = req.user as { id: string };
-    const { phone, walletPassword } = req.body as { phone: string; walletPassword: string };
+    const { phone, walletPassword } = req.body as { phone?: string; walletPassword: string };
 
-    if (!phone || !walletPassword) {
-      throw new ValidationError('Phone and wallet password are required');
+    if (!walletPassword) {
+      throw new ValidationError('Wallet password is required');
     }
 
     const result = await AuthService.completeOnboarding(user.id, phone, walletPassword);
