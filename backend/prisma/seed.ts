@@ -1,12 +1,9 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaClient, Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { encryptBalance } from '../src/lib/crypto';
 import 'dotenv/config';
 
-const connectionString = `${process.env['DATABASE_URL']}`;
-const adapter = new PrismaNeon({ connectionString });
-const db = new PrismaClient({ adapter });
+const db = new PrismaClient();
 
 const ARGON2_CONFIG = {
   type: argon2.argon2id,
@@ -264,16 +261,16 @@ async function main() {
   console.log('✅ Bulk bookings created (5)');
 
   // ─── Bulk Passengers (10 records) ─────────────────────────────────────────
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb1.id, name: 'Student A', nationalId: '11990001', seatNumber: 10, status: 'BOARDED' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb1.id, name: 'Student B', nationalId: '11990002', seatNumber: 11, status: 'BOARDED' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb2.id, name: 'Employee A', nationalId: '11990003', seatNumber: 5, status: 'PENDING' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb2.id, name: 'Employee B', nationalId: '11990004', seatNumber: 6, status: 'PENDING' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb3.id, name: 'Staff A', nationalId: '11990005', seatNumber: 8, status: 'BOARDED' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb3.id, name: 'Staff B', nationalId: '11990006', seatNumber: 9, status: 'ALIGHTED' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb4.id, name: 'Officer A', nationalId: '11990007', seatNumber: 3, status: 'PENDING' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb4.id, name: 'Officer B', nationalId: '11990008', seatNumber: 4, status: 'PENDING' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb5.id, name: 'Doctor A', nationalId: '11990009', seatNumber: 1, status: 'BOARDED' } });
-  await db.bulkPassenger.create({ data: { bulkBookingId: bb5.id, name: 'Nurse A', nationalId: '11990010', seatNumber: 2, status: 'BOARDED' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb1.id, name: 'Student A', nationalId: '11990001', seatNumber: 10, status: 'BOARDED', boardingHash: 'bh1' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb1.id, name: 'Student B', nationalId: '11990002', seatNumber: 11, status: 'BOARDED', boardingHash: 'bh2' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb2.id, name: 'Employee A', nationalId: '11990003', seatNumber: 5, status: 'PENDING', boardingHash: 'bh3' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb2.id, name: 'Employee B', nationalId: '11990004', seatNumber: 6, status: 'PENDING', boardingHash: 'bh4' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb3.id, name: 'Staff A', nationalId: '11990005', seatNumber: 8, status: 'BOARDED', boardingHash: 'bh5' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb3.id, name: 'Staff B', nationalId: '11990006', seatNumber: 9, status: 'ALIGHTED', boardingHash: 'bh6' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb4.id, name: 'Officer A', nationalId: '11990007', seatNumber: 3, status: 'PENDING', boardingHash: 'bh7' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb4.id, name: 'Officer B', nationalId: '11990008', seatNumber: 4, status: 'PENDING', boardingHash: 'bh8' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb5.id, name: 'Doctor A', nationalId: '11990009', seatNumber: 1, status: 'BOARDED', boardingHash: 'bh9' } });
+  await db.bulkPassenger.create({ data: { bulkBookingId: bb5.id, name: 'Nurse A', nationalId: '11990010', seatNumber: 2, status: 'BOARDED', boardingHash: 'bh10' } });
 
   console.log('✅ Bulk passengers created (10)');
 
