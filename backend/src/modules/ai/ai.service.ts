@@ -1,5 +1,7 @@
 import {
   streamText,
+  convertToModelMessages,
+  toUIMessageStream,
   type UIMessage,
 } from "ai";
 import { webSearch } from "@exalabs/ai-sdk";
@@ -15,15 +17,11 @@ import {
   type AiConversationRow,
 } from "./ai.conversations.js";
 
-type StreamOutput = {
-  stream: ReadableStream;
-  conversation: AiConversationRow;
-};
-
 let nimProvider: ReturnType<typeof createOpenAICompatible> | null = null;
 
 function getNimProvider() {
-  if (!env.NVIDIA_NIM_API_KEY) {
+  const apiKey = process.env["NVIDIA_NIM_API_KEY"];
+  if (!apiKey) {
     throw new ValidationError(
       "AI support is not configured. Set NVIDIA_NIM_API_KEY on the server.",
     );
@@ -31,8 +29,8 @@ function getNimProvider() {
   if (!nimProvider) {
     nimProvider = createOpenAICompatible({
       name: "nvidia-nim",
-      baseURL: env.NVIDIA_NIM_BASE_URL,
-      apiKey: env.NVIDIA_NIM_API_KEY,
+      baseURL: env["NVIDIA_NIM_BASE_URL"],
+      apiKey: apiKey,
     });
   }
   return nimProvider;
@@ -40,11 +38,11 @@ function getNimProvider() {
 
 export function getAiStatus() {
   return {
-    enabled: Boolean(env.NVIDIA_NIM_API_KEY),
-    model: env.NVIDIA_NIM_MODEL,
+    enabled: Boolean(env["NVIDIA_NIM_API_KEY"]),
+    model: env["NVIDIA_NIM_MODEL"],
     provider: "nvidia-nim",
     tools: AI_TOOLS.map((t) => t.name),
-    webSearch: Boolean(env.EXA_API_KEY),
+    webSearch: Boolean(env["EXA_API_KEY"]),
   };
 }
 
@@ -54,9 +52,14 @@ export interface StreamChatOptions {
   conversationId?: string | null;
 }
 
+export interface StreamChatResult {
+  stream: ReturnType<typeof toUIMessageStream>;
+  conversation: AiConversationRow;
+}
+
 export async function streamSupportChat(
   opts: StreamChatOptions,
-): Promise<StreamOutput> {
+): Promise<StreamChatResult> {
   const provider = getNimProvider();
   const { messages, user } = opts;
 
@@ -93,9 +96,10 @@ export async function streamSupportChat(
     ...internalTools,
   };
 
-  if (env.EXA_API_KEY) {
+  const exaKey = process.env["EXA_API_KEY"] || env["EXA_API_KEY"];
+  if (exaKey) {
     tools["webSearch"] = webSearch({
-      apiKey: env.EXA_API_KEY,
+      apiKey: exaKey,
       type: "neural",
       numResults: 5,
       contents: {
@@ -108,20 +112,24 @@ export async function streamSupportChat(
   }
 
   const result = streamText({
-    model: provider(env.NVIDIA_NIM_MODEL) as any,
+    model: provider(env["NVIDIA_NIM_MODEL"]),
     system: buildSupportSystemPrompt(user),
-    messages: messages as any,
-    maxOutputTokens: env.AI_MAX_OUTPUT_TOKENS,
+    messages: await convertToModelMessages(messages),
+    maxOutputTokens: env["AI_MAX_OUTPUT_TOKENS"],
     temperature: 0.3,
     tools,
-    onFinish: async (result: any) => {
+    onFinish: async ({ text, toolCalls, toolResults }) => {
       // Persist the assistant reply after streaming completes
       try {
-        const text = result.text || "";
         await appendMessage(conversation.id, {
           role: "assistant",
           content: text,
-          toolCalls: [],
+          toolCalls:
+            toolCalls?.map((tc, i) => ({
+              tool: tc.toolName,
+              input: tc.input,
+              output: (toolResults?.[i] as any)?.output ?? null,
+            })) ?? [],
         });
       } catch (err) {
         logger.error(
@@ -133,7 +141,10 @@ export async function streamSupportChat(
   });
 
   return {
-    stream: result.toUIMessageStream() as ReadableStream,
+    stream: toUIMessageStream({
+      stream: result.stream,
+      originalMessages: messages,
+    }),
     conversation,
   };
 }
