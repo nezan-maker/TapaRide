@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, type UIMessage } from 'ai';
-import { cn } from '../lib/utils';
-import Fa from './Fa';
-import { MarkdownContent } from './MarkdownContent';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { cn } from "../lib/utils";
+import Fa from "./Fa";
+import { MarkdownContent } from "./MarkdownContent";
+import { friendlyError } from "../lib/errors";
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
@@ -270,7 +271,7 @@ export default function FloatingAssistant() {
               className="border-t border-white/20 px-4 py-2.5 text-xs text-flame-700"
               style={{ background: 'rgba(254, 215, 215, 0.6)' }}
             >
-              {error.message}
+              {friendlyError(error.message)}
             </div>
           )}
 

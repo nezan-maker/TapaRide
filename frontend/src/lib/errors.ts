@@ -13,6 +13,7 @@ const errorCodeMap: Record<string, string> = {
   RATE_LIMIT_ERROR: 'Too many attempts. Please wait a moment before trying again.',
   EXTERNAL_PROVIDER_ERROR: 'A service we use is temporarily unavailable. Please try again in a few minutes.',
   INTERNAL_SERVER_ERROR: 'Something went wrong on our end. We\'ve been notified and are working on it. Please try again.',
+  AI_NOT_CONFIGURED: 'AI support is currently unavailable. Please try again later.',
   PAYMENT_FAILED: 'Your payment could not be processed. Please check your card details or try a different payment method.',
   PAYMENT_REQUIRED: 'Payment is required to complete this action. Please add funds to your wallet.',
   WALLET_LOCKED: 'Your wallet is locked. Please enter your wallet password to continue.',

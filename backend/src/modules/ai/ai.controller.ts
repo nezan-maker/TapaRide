@@ -4,6 +4,7 @@ import { chatRequestSchema } from './ai.schema.js';
 import { streamSupportChat, getAiStatus } from './ai.service.js';
 import { listUserConversations, deleteConversation as deleteConversationSvc } from './ai.conversations.js';
 import type { AiUserContext } from './ai.context.js';
+import { env } from '../../config/env.js';
 
 function resolveUserContext(req: Request): AiUserContext {
   const user = req.user as { id?: string; role?: string; email?: string } | undefined;
@@ -48,6 +49,14 @@ export async function deleteConversationHandler(req: Request, res: Response, nex
 
 export async function chat(req: Request, res: Response, next: NextFunction) {
   try {
+    if (!env.NVIDIA_NIM_API_KEY) {
+      res.status(503).json({
+        error: 'AI support is currently unavailable. Please try again later.',
+        code: 'AI_NOT_CONFIGURED',
+      });
+      return;
+    }
+
     const dto = chatRequestSchema.parse(req.body);
     const result = await streamSupportChat({
       messages: dto.messages as any,

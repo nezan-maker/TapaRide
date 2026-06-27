@@ -4,6 +4,7 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 import { cn } from '../lib/utils';
 import Fa from './Fa';
 import { MarkdownContent } from './MarkdownContent';
+import { friendlyError } from '../lib/errors';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
@@ -152,7 +153,7 @@ export default function SupportChat() {
 
         {error && (
           <div className="border-t border-flame-100 bg-flame-50 px-4 py-3 text-sm text-flame-700">
-            {error.message}
+            {friendlyError(error.message)}
           </div>
         )}
 
