@@ -256,7 +256,7 @@ export async function confirmParcelPayment(parcelId: string) {
   try {
     await deliverSms({
       phone: parcel.receiverPhone,
-      message: 'You have a parcel from ' + parcel.receiverName + ' via Tapa. Claim key: ' + claimKey + '. Tap https://tapa.rw/receive?key=' + claimKey + ' or enter the code at tapa.rw/receive. Expires in ' + CLAIM_KEY_TTL_DAYS + ' days.',
+      message: 'You have a parcel from ' + parcel.receiverName + ' via Tapa. Claim key: ' + claimKey + '. Tap https://taparide.onrender.com/receive?key=' + claimKey + ' or enter the code at taparide.onrender.com/receive. Expires in ' + CLAIM_KEY_TTL_DAYS + ' days.',
     });
   } catch (err) {
     logger.error({ parcelId, err }, 'Failed to send claimKey SMS');

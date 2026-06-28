@@ -117,7 +117,7 @@ export async function buildApp() {
   });
   app.use(
     cors({
-      origin: env.NODE_ENV === "production" ? "https://tapa.rw" : true,
+      origin: env.NODE_ENV === "production" ? "https://taparide.onrender.com" : true,
       credentials: true,
     }),
   );

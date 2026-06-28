@@ -55,7 +55,7 @@ async function enforceSocketRateLimit(
 export async function initSocket(server: HttpServer) {
   io = new Server(server, {
     cors: {
-      origin: env.NODE_ENV === "production" ? "https://tapa.rw" : "*",
+      origin: env.NODE_ENV === "production" ? "https://taparide.onrender.com" : "*",
       methods: ["GET", "POST"],
     },
   });

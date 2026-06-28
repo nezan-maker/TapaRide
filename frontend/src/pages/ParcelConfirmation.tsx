@@ -130,7 +130,7 @@ export default function ParcelConfirmation() {
             <p className="text-sm text-ink-500">
               The receiver can open{' '}
               <Link to="/receive" className="font-semibold text-flame-600">
-                tapa.rw/receive
+                taparide.onrender.com/receive
               </Link>{' '}
               and enter the claim code to confirm pickup.
             </p>

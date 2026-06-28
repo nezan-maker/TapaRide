@@ -227,7 +227,7 @@ Real-time Events:
 | SEC-08 | Pino logger redacts sensitive fields (password, walletPassword, tokens) | ✅ GOOD | Verified |
 | SEC-09 | AES-256-GCM with random IV per encryption | ✅ GOOD | Verified |
 | SEC-10 | Helmet CSP configured with restrictive directives | ✅ GOOD | Verified |
-| SEC-11 | CORS restricted to `https://tapa.rw` in production | ✅ GOOD | Verified |
+| SEC-11 | CORS restricted to `https://taparide.onrender.com` in production | ✅ GOOD | Verified |
 
 ### Detailed Security Findings
 

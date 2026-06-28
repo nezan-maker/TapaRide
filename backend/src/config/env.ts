@@ -19,7 +19,7 @@ const envSchema = z
     JWT_REFRESH_SECRET: z.string().min(64),
     JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
 
-    WEBAUTHN_RP_ID: z.string().default("localhost"),
+    WEBAUTHN_RP_ID: z.string().default("taparide.onrender.com"),
     WEBAUTHN_RP_NAME: z.string().default("Tapa Transport Platform"),
     WEBAUTHN_ORIGIN: z.string().url(),
 

@@ -72,7 +72,7 @@ export default function DashboardLayout() {
               />
               <div className="hidden text-sm leading-tight sm:block">
                 <div className="font-semibold text-ink-900">{user?.role || 'Guest'}</div>
-                <div className="text-xs text-ink-400">{user?.email || 'email@tapa.rw'}</div>
+                <div className="text-xs text-ink-400">{user?.email || 'email@taparide.onrender.com'}</div>
               </div>
             </div>
           </div>

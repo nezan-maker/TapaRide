@@ -86,7 +86,7 @@ Tapa follows a **Modular Monolith** architecture — a single Express.js process
 HTTP Request
   │
   ├─ Helmet (Security Headers)
-  ├─ CORS (Restricted to tapa.rw in production)
+  ├─ CORS (Restricted to taparide.onrender.com in production)
   ├─ Rate Limiter (Global: 100 req/min)
   ├─ Request ID (pino-http, x-request-id header)
   │
@@ -271,7 +271,7 @@ All configuration is via environment variables, validated at startup by Zod in `
 | `JWT_REFRESH_SECRET` | Secret for signing refresh tokens (min 32 chars) |
 | `DATABASE_ENCRYPTION_KEY` | 64 hex characters (32 bytes) for AES-256-GCM master key |
 | `HMAC_SECRET` | Secret for manifest signatures (min 32 chars) |
-| `WEBAUTHN_ORIGIN` | Allowed origin for WebAuthn (e.g., `https://tapa.rw`) |
+| `WEBAUTHN_ORIGIN` | Allowed origin for WebAuthn (e.g., `https://taparide.onrender.com`) |
 | `EMAIL_VERIFICATION_ORIGIN` | Base URL for email verification links |
 
 ### Optional Variables
@@ -707,7 +707,7 @@ Available at `GET /metrics` (requires `METRICS_TOKEN` bearer auth):
 ### API Security
 - **Rate limiting** — Global (100/min) + per-endpoint limits
 - **Helmet** — Security headers (CSP, HSTS, X-Frame-Options, etc.)
-- **CORS** — Restricted to `https://tapa.rw` in production
+- **CORS** — Restricted to `https://taparide.onrender.com` in production
 - **Request ID** — Every request tracked via `x-request-id`
 - **Sensitive data redaction** — Pino logger redacts passwords, tokens, OTP codes
 - **Constant-time comparison** — Metrics token validation uses `timingSafeEqual`
