@@ -1,0 +1,17 @@
+{
+  "name": "taparide",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:integration": "pnpm --filter tapa-backend test:integration",
+    "db:migrate": "pnpm --filter tapa-backend db:migrate",
+    "db:seed": "pnpm --filter tapa-backend db:seed",
+    "db:studio": "pnpm --filter tapa-backend db:studio",
+    "env:generate": "pnpm --filter tapa-backend env:generate"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

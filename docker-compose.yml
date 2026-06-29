@@ -1,0 +1,20 @@
+# Local development stack for TapaRide.
+# PostgreSQL is expected to run on the host (see backend/.env.example).
+# Redis is provided here for cache, queues, and Socket.IO fan-out.
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - taparide-redis:/data
+
+volumes:
+  taparide-redis:
