@@ -3,6 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { cn, rwf } from '../lib/utils';
 import { api, ApiError } from '../lib/api';
 import Fa from '../components/Fa';
+import DatePicker from '../components/DatePicker';
 import { Skeleton } from '../components/Skeleton';
 
 interface BusTrip {
@@ -151,17 +152,11 @@ export default function SearchResults() {
               />
             </div>
             <div className="w-[180px]">
-              <label className="label">Travel date</label>
-              <div className="relative">
-                <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <input
-                  type="date"
-                  className="input pl-9 pr-9"
-                  value={modifyDate}
-                  onChange={(e) => setModifyDate(e.target.value)}
-                />
-                <Fa name="calendar" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-200" />
-              </div>
+              <DatePicker
+                label="Travel date"
+                value={modifyDate}
+                onChange={setModifyDate}
+              />
             </div>
             <button
               type="submit"

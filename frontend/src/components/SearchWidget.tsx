@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import Fa from './Fa';
 import Select from './Select';
+import DatePicker from './DatePicker';
 
 export default function SearchWidget() {
   const navigate = useNavigate()
@@ -123,22 +124,12 @@ export default function SearchWidget() {
             </div>
           </div>
 
-          <div>
-            <label className="label">Travel date</label>
-            <div className="relative">
-              <Fa name="calendar" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-              <input
-                type="date"
-                className="input pl-9 pr-4 cursor-pointer appearance-none"
-                style={{ colorScheme: 'light' }}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-              <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          </div>
+          <DatePicker
+            label="Travel date"
+            value={date}
+            onChange={setDate}
+            disabled={loading}
+          />
           <button
             type="submit"
             disabled={!canSubmit}
