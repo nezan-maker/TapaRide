@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../lib/utils'
 import Fa from './Fa'
 
@@ -38,6 +39,7 @@ const MONTH_NAMES = [
 
 export default function DatePicker({ value, onChange, label, className, disabled }: DatePickerProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const selected = fromISO(value)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -45,10 +47,40 @@ export default function DatePicker({ value, onChange, label, className, disabled
   const [open, setOpen] = useState(false)
   const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear())
   const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth())
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 })
+
+  const updatePosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 4,
+        left: Math.min(rect.left + window.scrollX, window.innerWidth - 296),
+        width: Math.max(rect.width, 280),
+      })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      updatePosition()
+      window.addEventListener('scroll', updatePosition)
+      window.addEventListener('resize', updatePosition)
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [open, updatePosition])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement).closest('[data-datepicker-dropdown]')
+      ) {
+        setOpen(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -90,10 +122,99 @@ export default function DatePicker({ value, onChange, label, className, disabled
     ? `${MONTH_NAMES[selected.getMonth()].slice(0, 3)} ${selected.getDate()}, ${selected.getFullYear()}`
     : ''
 
+  const dropdown = open ? (
+    <div
+      data-datepicker-dropdown
+      className="fixed z-[100] overflow-hidden rounded-2xl border border-ink-100 bg-white p-3 shadow-card animate-fade-up origin-top"
+      style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width }}
+    >
+      {/* Header */}
+      <div className="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => goMonth(-1)}
+          className="grid h-8 w-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-50 hover:text-ink-900 transition"
+          aria-label="Previous month"
+        >
+          <Fa name="chevron-left" className="h-3.5 w-3.5" />
+        </button>
+        <span className="text-sm font-semibold text-ink-900">
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </span>
+        <button
+          type="button"
+          onClick={() => goMonth(1)}
+          className="grid h-8 w-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-50 hover:text-ink-900 transition"
+          aria-label="Next month"
+        >
+          <Fa name="chevron-right" className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="mb-1 grid grid-cols-7 gap-0.5">
+        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+          <div key={d} className="py-1 text-center text-[11px] font-medium text-ink-400">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Day grid */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((day, i) =>
+          day === null ? (
+            <div key={`empty-${i}`} />
+          ) : (
+            <button
+              key={day}
+              type="button"
+              onClick={() => handleSelect(day)}
+              className={cn(
+                'grid h-8 w-8 place-items-center rounded-full text-sm transition',
+                isSelected(day)
+                  ? 'bg-ink-900 text-white font-semibold'
+                  : isToday(day)
+                    ? 'bg-ink-100 text-ink-900 font-semibold'
+                    : 'text-ink-600 hover:bg-ink-50',
+              )}
+            >
+              {day}
+            </button>
+          ),
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-2 flex items-center justify-between border-t border-ink-100 pt-2">
+        <button
+          type="button"
+          onClick={() => {
+            onChange(toISO(today))
+            setViewYear(today.getFullYear())
+            setViewMonth(today.getMonth())
+            setOpen(false)
+          }}
+          className="text-xs font-semibold text-flame-600 hover:text-flame-700"
+        >
+          Today
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-xs font-medium text-ink-400 hover:text-ink-600"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  ) : null
+
   return (
     <div ref={ref} className={cn('relative', className)}>
       {label && <div className="label mb-1.5">{label}</div>}
       <button
+        ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen(!open)}
@@ -111,89 +232,7 @@ export default function DatePicker({ value, onChange, label, className, disabled
         />
       </button>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 w-[280px] overflow-hidden rounded-2xl border border-ink-100 bg-white p-3 shadow-card animate-fade-up origin-top">
-          {/* Header */}
-          <div className="mb-2 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => goMonth(-1)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-50 hover:text-ink-900 transition"
-              aria-label="Previous month"
-            >
-              <Fa name="chevron-left" className="h-3.5 w-3.5" />
-            </button>
-            <span className="text-sm font-semibold text-ink-900">
-              {MONTH_NAMES[viewMonth]} {viewYear}
-            </span>
-            <button
-              type="button"
-              onClick={() => goMonth(1)}
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-400 hover:bg-ink-50 hover:text-ink-900 transition"
-              aria-label="Next month"
-            >
-              <Fa name="chevron-right" className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="mb-1 grid grid-cols-7 gap-0.5">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-              <div key={d} className="py-1 text-center text-[11px] font-medium text-ink-400">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* Day grid */}
-          <div className="grid grid-cols-7 gap-0.5">
-            {cells.map((day, i) =>
-              day === null ? (
-                <div key={`empty-${i}`} />
-              ) : (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => handleSelect(day)}
-                  className={cn(
-                    'grid h-8 w-8 place-items-center rounded-full text-sm transition',
-                    isSelected(day)
-                      ? 'bg-ink-900 text-white font-semibold'
-                      : isToday(day)
-                        ? 'bg-ink-100 text-ink-900 font-semibold'
-                        : 'text-ink-600 hover:bg-ink-50',
-                  )}
-                >
-                  {day}
-                </button>
-              ),
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="mt-2 flex items-center justify-between border-t border-ink-100 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                onChange(toISO(today))
-                setViewYear(today.getFullYear())
-                setViewMonth(today.getMonth())
-                setOpen(false)
-              }}
-              className="text-xs font-semibold text-flame-600 hover:text-flame-700"
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="text-xs font-medium text-ink-400 hover:text-ink-600"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {createPortal(dropdown, document.body)}
     </div>
   )
 }
