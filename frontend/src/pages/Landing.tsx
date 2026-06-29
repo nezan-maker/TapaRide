@@ -199,8 +199,8 @@ export default function Landing() {
               <Link to="/search" className="btn-primary px-6 py-3.5 text-base">
                 Get Started <Fa name="arrow-right" className="h-4 w-4" />
               </Link>
-              <a href="#download" className="btn-outline px-6 py-3.5 text-base">
-                <Fa name="smartphone" className="h-4 w-4" /> Download App
+              <a href="#web-app" className="btn-outline px-6 py-3.5 text-base">
+                <Fa name="smartphone" className="h-4 w-4" /> Open on Phone
               </a>
             </div>
             <div className="mt-10 grid max-w-md grid-cols-4 gap-4">
@@ -378,7 +378,7 @@ export default function Landing() {
       </section>
 
       {/* CTA / Access on any device */}
-      <section id="download" className="container-page pb-20">
+      <section id="web-app" className="container-page pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-ink-900 px-8 py-14 text-white shadow-glow sm:px-14">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-flame-600/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
