@@ -76,6 +76,9 @@ const envSchema = z
     // Google OAuth — required for production Google Sign-In.
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
 
+    // Comma-separated browser origins allowed in production CORS checks.
+    CORS_ORIGIN: z.string().optional(),
+
     // NVIDIA NIM — OpenAI-compatible LLM for Tapa Assist support chat.
     NVIDIA_NIM_API_KEY: z.string().min(1).optional(),
     NVIDIA_NIM_BASE_URL: z
