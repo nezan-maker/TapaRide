@@ -195,13 +195,10 @@ export default function Landing() {
               Book premium bus tickets or send parcels securely across Rwanda. The
               easiest way to move you and your goods.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/search" className="btn-primary px-6 py-3.5 text-base">
+            <div className="mt-8">
+              <Link to="/search" className="btn-primary inline-flex w-full max-w-xs justify-center px-8 py-4 text-base">
                 Get Started <Fa name="arrow-right" className="h-4 w-4" />
               </Link>
-              <a href="#web-app" className="btn-outline px-6 py-3.5 text-base">
-                <Fa name="smartphone" className="h-4 w-4" /> Open on Phone
-              </a>
             </div>
             <div className="mt-10 grid max-w-md grid-cols-4 gap-4">
               {stats.map((s) => (
