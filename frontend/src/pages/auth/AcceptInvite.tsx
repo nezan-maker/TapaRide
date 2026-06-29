@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
+import AuthSpinner from '../../components/AuthSpinner'
 import { api, ApiError } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import Fa from '../../components/Fa';
@@ -132,7 +133,7 @@ export default function AcceptInvite() {
           </div>
 
           <button type="submit" disabled={loading} className="btn-primary w-full py-3.5 disabled:opacity-50">
-            {loading ? 'Setting up…' : 'Accept & Join'}
+            {loading ? <AuthSpinner label="Setting up…" /> : 'Accept & Join'}
           </button>
         </form>
       )}

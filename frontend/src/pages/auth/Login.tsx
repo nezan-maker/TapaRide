@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import AuthSpinner from '../../components/AuthSpinner';
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import Select from "../../components/Select";
 import PasskeyButton from "../../components/PasskeyButton";
@@ -195,7 +196,7 @@ export default function Login() {
                         disabled={loading}
                         className="btn-primary w-full py-4 text-base shadow-card-sm hover:shadow-card disabled:opacity-50 disabled:shadow-none"
                       >
-                        {loading ? 'Signing in…' : `Sign in as ${selectedMeta!.title}`}
+                        <AuthSpinner label="Signing in…" />
                       </button>
                     </form>
 

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AuthLayout, { AuthLink } from './AuthLayout'
+import AuthLayout, { AuthLink } from './AuthLayout';
+import AuthSpinner from '../../components/AuthSpinner';
 import { api, ApiError } from '../../lib/api'
 import Fa from '../../components/Fa';
 
@@ -81,7 +82,7 @@ export default function Otp() {
           disabled={loading || digits.join('').length !== 6}
           className="btn-primary w-full py-3.5 disabled:opacity-50"
         >
-          {loading ? 'Verifying...' : 'Verify'}
+          {loading ? <AuthSpinner label="Verifying…" /> : 'Verify'}
         </button>
 
         <p className="text-center text-sm text-ink-500">

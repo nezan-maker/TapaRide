@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout, { AuthLink } from "./AuthLayout";
+import AuthSpinner from '../../components/AuthSpinner';
 import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import Fa from '../../components/Fa';
@@ -146,7 +147,7 @@ export default function Onboarding() {
             disabled={loading}
             className="btn-primary w-full py-4 text-base shadow-card-sm hover:shadow-card disabled:opacity-50 disabled:shadow-none"
           >
-            {loading ? 'Setting up…' : 'Complete setup'}
+            {loading ? <AuthSpinner label="Setting up…" /> : 'Complete setup'}
           </button>
         </form>
       </div>

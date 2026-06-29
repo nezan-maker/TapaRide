@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AuthLayout from './AuthLayout'
+import AuthSpinner from '../../components/AuthSpinner'
 import { api, ApiError } from '../../lib/api'
 import Fa from '../../components/Fa';
 
@@ -127,7 +128,7 @@ export default function ForgotPassword() {
             disabled={loading}
             className="btn-primary w-full py-3.5 disabled:opacity-50"
           >
-            {loading ? 'Sending…' : 'Send Reset Code'}
+            {loading ? <AuthSpinner label="Sending…" /> : 'Send Reset Code'}
           </button>
         </form>
       ) : (
@@ -189,7 +190,7 @@ export default function ForgotPassword() {
               disabled={loading || code.length !== 6 || passwordIssues.length > 0}
               className="btn-primary flex-1 py-3 disabled:opacity-50"
             >
-              {loading ? 'Updating…' : 'Update password'}
+              {loading ? <AuthSpinner label="Updating…" /> : 'Update password'}
             </button>
           </div>
         </form>

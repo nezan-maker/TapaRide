@@ -4,6 +4,7 @@ import { cn } from "../../lib/utils";
 import AuthLayout, { AuthLink } from "./AuthLayout";
 import { api, ApiError } from "../../lib/api";
 import Fa from '../../components/Fa';
+import AuthSpinner from '../../components/AuthSpinner';
 // import GoogleSignInButton from "../../components/GoogleSignInButton";
 // import { useAuth } from "../../lib/auth";
 // import GoogleSignInButton from "../../components/GoogleSignInButton";
@@ -238,7 +239,7 @@ export default function Signup() {
               disabled={loading}
               className="btn-primary w-full py-4 text-base shadow-card-sm hover:shadow-card disabled:opacity-50 disabled:shadow-none"
             >
-              {loading ? 'Creating account…' : role === 'OWNER' ? 'Create owner account' : 'Create traveler account'}
+              {loading ? <AuthSpinner label="Creating account…" /> : role === 'OWNER' ? 'Create owner account' : 'Create traveler account'}
             </button>
           </form>
 
