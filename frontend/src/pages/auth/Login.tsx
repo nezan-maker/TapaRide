@@ -196,7 +196,7 @@ export default function Login() {
                         disabled={loading}
                         className="btn-primary w-full py-4 text-base shadow-card-sm hover:shadow-card disabled:opacity-50 disabled:shadow-none"
                       >
-                        <AuthSpinner label="Signing in…" />
+                        {loading ? <AuthSpinner label="Signing in…" /> : `Sign in as ${selectedMeta!.title}`}
                       </button>
                     </form>
 
