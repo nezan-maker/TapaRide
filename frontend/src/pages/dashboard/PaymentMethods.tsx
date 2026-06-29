@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { cn, rwf } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
+import BusSpinner from '../../components/BusSpinner'
 import Fa from '../../components/Fa';
 import StripeTopupForm from '../../components/StripeTopupForm';
 
@@ -219,7 +220,7 @@ export default function PaymentMethods() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+          <BusSpinner />
         </div>
       ) : (
         <>

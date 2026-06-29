@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { api, ApiError } from '../../lib/api'
-import Fa from '../../components/Fa';
+import Fa from '../../components/Fa'
+import BusSpinner from '../../components/BusSpinner'
 
 interface NotificationItem {
   id: string
@@ -182,7 +183,7 @@ export default function Notifications() {
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+          <BusSpinner />
         </div>
       ) : notifications.length > 0 ? (
         <div className="space-y-3">{notifications.map(renderItem)}</div>

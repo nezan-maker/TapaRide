@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { cn, rwf } from "../../lib/utils";
 import { useAuth } from "../../lib/auth";
 import { api, ApiError } from "../../lib/api";
+import BusSpinner from "../../components/BusSpinner";
 import DriverDashboard from "./DriverDashboard";
 import ManagerDashboard from "./ManagerDashboard";
 import OwnerDashboard from "./OwnerDashboard";
@@ -54,7 +55,7 @@ export default function Dashboard() {
   if (!user) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        <BusSpinner />
       </div>
     );
   }

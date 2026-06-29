@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api, ApiError } from '../../lib/api'
+import BusSpinner from '../../components/BusSpinner'
 import QRCode from 'qrcode'
 import Fa from '../../components/Fa';
 import Select from '../../components/Select';
@@ -319,7 +320,7 @@ export default function OrganizationDashboard() {
   if (loading && organizations.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ink-100 border-t-flame-600" />
+        <BusSpinner />
       </div>
     )
   }

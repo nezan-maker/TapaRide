@@ -81,3 +81,13 @@
     @apply text-xs font-bold uppercase tracking-[0.18em] text-flame-600;
   }
 }
+
+@keyframes road {
+  0% { transform: translateX(-32px); }
+  100% { transform: translateX(96px); }
+}
+
+@keyframes bounce {
+  0% { transform: translateX(-50%) translateY(0); }
+  100% { transform: translateX(-50%) translateY(-3px); }
+}

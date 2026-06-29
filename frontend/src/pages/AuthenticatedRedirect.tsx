@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import BusSpinner from '../components/BusSpinner'
 import Landing from './Landing'
 
 export default function AuthenticatedRedirect() {
@@ -8,7 +9,7 @@ export default function AuthenticatedRedirect() {
   if (loading) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-ink-900" />
+        <BusSpinner />
       </div>
     )
   }
