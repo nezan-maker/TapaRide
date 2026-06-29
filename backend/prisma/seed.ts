@@ -20,26 +20,37 @@ const ARGON2_CONFIG = {
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // ─── Clear existing data (order matters for FK constraints) ────────────────
+  // ─── Clear existing data (order matters: delete children before parents) ────
+  // RESTRICT FK chain (each child must be deleted before its parent):
+  //   BoardingEvent ← BulkPassenger, BulkBooking
+  //   BulkPassenger ← BulkBooking
+  //   BulkBooking ← Journey, Organization
+  //   TripPositionLog, Ticket, Parcel, WaitlistEntry, JourneyStop ← Journey
+  //   Journey ← Vehicle, Station
+  //   Vehicle ← Agency
+  //   Station ← Agency
+  //   WalletTransaction ← Wallet, IdempotencyKey
+  //   Passkey, WaitlistEntry, Ticket, Parcel, Organization, Agency, IdempotencyKey ← User
+  //   AiMessage ← AiConversation
   await db.boardingEvent.deleteMany();
   await db.bulkPassenger.deleteMany();
   await db.bulkBooking.deleteMany();
-  await db.organization.deleteMany();
-  await db.walletTransaction.deleteMany();
+  await db.tripPositionLog.deleteMany();
   await db.ticket.deleteMany();
   await db.parcel.deleteMany();
-  await db.waitlistEntry.deleteMany();  // must delete before Journey (RESTRICT FK)
+  await db.waitlistEntry.deleteMany();
   await db.journeyStop.deleteMany();
   await db.journey.deleteMany();
-  await db.tripPositionLog.deleteMany();
   await db.vehicle.deleteMany();
   await db.station.deleteMany();
-  await db.passkey.deleteMany();
+  await db.organization.deleteMany();
+  await db.walletTransaction.deleteMany();
   await db.idempotencyKey.deleteMany();
+  await db.passkey.deleteMany();
   await db.wallet.deleteMany();
-  await db.agency.deleteMany();
   await db.aiMessage.deleteMany();
   await db.aiConversation.deleteMany();
+  await db.agency.deleteMany();
   await db.user.deleteMany();
 
   // ─── Users (10 records) ───────────────────────────────────────────────────
