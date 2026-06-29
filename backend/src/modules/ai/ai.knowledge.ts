@@ -32,8 +32,8 @@ TapaRide is a Rwanda-focused transport platform for intercity bus tickets, parce
 - Wallet password is separate from login password and is required to authorize payments.
 
 ## Support channels
-- Phone: +250 788 000 000 (Mon–Sun, 6am–10pm)
-- Email: support@taparide.rw (replies within 24h)
+- Phone: +250 795 652 826 (Mon–Sun, 6am–10pm)
+- Email: nielneza@outlook.com(replies within 24h)
 
 ## Important limitations (do not invent features)
 - You cannot book or pay on behalf of the user in this chat — direct them to the app screens.

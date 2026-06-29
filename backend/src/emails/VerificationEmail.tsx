@@ -1,12 +1,24 @@
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
-
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Preview,
+  Section,
+  Text,
+} from "@react-email/components";
 
 interface VerificationEmailProps {
   verificationLink: string;
   userName?: string;
 }
 
-export function VerificationEmail({ verificationLink, userName = "there" }: VerificationEmailProps) {
+export function VerificationEmail({
+  verificationLink,
+  userName = "there",
+}: VerificationEmailProps) {
   return (
     <Html>
       <Head />
@@ -17,12 +29,11 @@ export function VerificationEmail({ verificationLink, userName = "there" }: Veri
             <Text style={logo}>TapaRide</Text>
           </Section>
           <Heading style={heading}>Welcome to TapaRide!</Heading>
+          <Text style={text}>Hi {userName},</Text>
           <Text style={text}>
-            Hi {userName},
-          </Text>
-          <Text style={text}>
-            Thank you for creating your TapaRide account. We're excited to have you on board.
-            Click the button below to verify your email address and get started.
+            Thank you for creating your TapaRide account. We're excited to have
+            you on board. Click the button below to verify your email address
+            and get started.
           </Text>
           <Section style={buttonSection}>
             <Button style={button} href={verificationLink}>
@@ -30,14 +41,15 @@ export function VerificationEmail({ verificationLink, userName = "there" }: Veri
             </Button>
           </Section>
           <Text style={text}>
-            This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.
+            This link expires in 24 hours. If you didn't create this account,
+            you can safely ignore this email.
           </Text>
           <Section style={footerSection}>
             <Text style={footerText}>
-              © 2025 TapaRide Rwanda · Made in Kigali
+              © 2026 TapaRide Rwanda · Made in Kigali
             </Text>
             <Text style={footerText}>
-              Need help? Contact us at support@taparide.rw
+              Need help? Contact us at nielneza@outlook.com
             </Text>
           </Section>
         </Container>
@@ -48,7 +60,8 @@ export function VerificationEmail({ verificationLink, userName = "there" }: Veri
 
 const main = {
   backgroundColor: "#f5f4ff",
-  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  fontFamily:
+    "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 };
 
 const container = {
