@@ -377,75 +377,143 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA / download */}
+      {/* CTA / Access on any device */}
       <section id="download" className="container-page pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-ink-900 px-8 py-14 text-white shadow-glow sm:px-14">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-flame-600/30 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="relative grid items-center gap-8 lg:grid-cols-2">
+          <div className="relative grid items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="mb-3 flex items-center gap-1 text-flame-500">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Fa name="star" key={i} className="h-4 w-4 fill-current" />
-                ))}
-                <span className="ml-2 text-sm text-white/70">Loved by 50,000+ travelers</span>
-              </div>
-              <h2 className="text-3xl font-extrabold sm:text-4xl">
-                Get the TapaRide app
+              <span className="eyebrow text-flame-500">Works everywhere</span>
+              <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+                Use TapaRide on any device
               </h2>
               <p className="mt-3 max-w-md text-white/70">
-                Book faster, track parcels live, and never miss a trip. Available on iOS
-                and Android.
+                Open TapaRide in your phone browser — no download needed. Book tickets,
+                track parcels, and pay instantly. It feels like an app, without taking
+                up storage.
               </p>
-              <div className="mt-7 flex flex-wrap gap-3">
-                <a href="#" className="flex items-center gap-3 rounded-xl bg-white px-5 py-3 text-ink-900 transition hover:bg-white/90">
-                  <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                  </svg>
-                  <span className="text-left leading-tight">
-                    <span className="block text-[10px] text-ink-500">Download on the</span>
-                    <span className="block text-sm font-semibold">App Store</span>
-                  </span>
-                </a>
-                <a href="#" className="flex items-center gap-3 rounded-xl border border-white/25 px-5 py-3 text-white transition hover:bg-white/10">
-                  <svg className="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
-                  </svg>
-                  <span className="text-left leading-tight">
-                    <span className="block text-[10px] text-white/50">Get it on</span>
-                    <span className="block text-sm font-semibold">Google Play</span>
-                  </span>
-                </a>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-[10px]">✓</span>
+                  No app store needed
+                </div>
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-[10px]">✓</span>
+                  Works offline
+                </div>
+                <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm">
+                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-[10px]">✓</span>
+                  Install as PWA
+                </div>
+              </div>
+              <div className="mt-7 flex items-center gap-3">
+                <Link to="/search" className="inline-flex items-center gap-2 rounded-full bg-flame-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-flame-700">
+                  Open in browser <Fa name="arrow-right" className="h-4 w-4" />
+                </Link>
+                <Link to="/search" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                  Try it now
+                </Link>
+              </div>
+              <div className="mt-6 flex items-center gap-1 text-sm text-white/50">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Fa name="star" key={i} className="h-3.5 w-3.5 fill-flame-500 text-flame-500" />
+                ))}
+                <span className="ml-2">4.8 · 50,000+ travelers</span>
               </div>
             </div>
             <div className="hidden justify-end lg:flex">
-              <div className="w-64 rounded-3xl border border-white/15 bg-white/5 p-5 backdrop-blur">
-                <SearchPreview />
+              <div className="relative">
+                {/* Phone frame */}
+                <div className="w-60 rounded-[2.5rem] border-[3px] border-white/20 bg-ink-950 p-2 shadow-2xl">
+                  <div className="overflow-hidden rounded-[2rem] bg-white">
+                    {/* Status bar */}
+                    <div className="flex items-center justify-between bg-ink-900 px-4 py-1.5 text-[9px] text-white/60">
+                      <span>9:41</span>
+                      <div className="h-2 w-12 rounded-full bg-white/20" />
+                    </div>
+                    {/* App header */}
+                    <div className="bg-ink-900 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="grid h-7 w-7 place-items-center rounded-lg bg-flame-600 text-[10px] font-bold text-white">T</div>
+                        <span className="text-sm font-semibold text-white">TapaRide</span>
+                      </div>
+                    </div>
+                    {/* Search UI */}
+                    <div className="space-y-2 bg-mist p-3">
+                      <div className="rounded-xl bg-white p-2.5 shadow-soft">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                          <span className="text-[10px] text-ink-500">Kigali</span>
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-white p-2.5 shadow-soft">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-flame-500" />
+                          <span className="text-[10px] text-ink-500">Musanze</span>
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-white p-2.5 shadow-soft">
+                        <div className="flex items-center gap-2">
+                          <Fa name="calendar" className="h-2.5 w-2.5 text-ink-400" />
+                          <span className="text-[10px] text-ink-500">Jun 29, 2026</span>
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-ink-900 p-2.5 text-center text-[10px] font-semibold text-white">
+                        Search Buses
+                      </div>
+                    </div>
+                    {/* Results */}
+                    <div className="space-y-2 p-3">
+                      <div className="rounded-xl border border-ink-100 bg-white p-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-ink-900">Tapa Express</span>
+                          <span className="text-[10px] font-bold text-flame-600">3,000 RWF</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-[9px] text-ink-400">
+                          <span>08:00</span>
+                          <div className="h-px flex-1 bg-ink-100" />
+                          <span>2h 30m</span>
+                          <div className="h-px flex-1 bg-ink-100" />
+                          <span>10:30</span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1">
+                          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8px] font-medium text-emerald-700">2 seats left</span>
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-ink-100 bg-white p-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-ink-900">Horizon Coaches</span>
+                          <span className="text-[10px] font-bold text-flame-600">2,800 RWF</span>
+                        </div>
+                        <div className="mt-1 flex items-center gap-2 text-[9px] text-ink-400">
+                          <span>09:30</span>
+                          <div className="h-px flex-1 bg-ink-100" />
+                          <span>2h 30m</span>
+                          <div className="h-px flex-1 bg-ink-100" />
+                          <span>12:00</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Floating notification badge */}
+                <div className="absolute -left-8 top-16 rounded-2xl border border-ink-100 bg-white px-3 py-2 shadow-card">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-6 w-6 place-items-center rounded-full bg-emerald-100">
+                      <Fa name="check" className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-semibold text-ink-900">Ticket booked!</div>
+                      <div className="text-[9px] text-ink-400">Kigali → Musanze</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
-    </div>
-  )
-}
-
-function SearchPreview() {
-  return (
-    <div className="space-y-3 text-sm">
-      <div className="rounded-xl bg-white/10 p-3">
-        <div className="text-[10px] uppercase tracking-wide text-white/50">Next trip</div>
-        <div className="mt-1 font-semibold">Kigali → Huye</div>
-        <div className="text-xs text-white/60">Tue, 15 Jul · 08:00 AM · Seat A2</div>
-      </div>
-      <div className="rounded-xl bg-white/10 p-3">
-        <div className="text-[10px] uppercase tracking-wide text-white/50">Parcel</div>
-        <div className="mt-1 font-semibold">TR-9K2L-88X</div>
-        <div className="text-xs text-flame-500">In transit · Huye</div>
-      </div>
-      <div className="rounded-xl bg-flame-600 p-3 text-center font-semibold">
-        Open TapaRide
-      </div>
     </div>
   )
 }
