@@ -130,33 +130,43 @@ async function cleanupContext(ctx: TestContext) {
     await redis.del(...ctx.redisKeys);
   }
 
-  await db.waitlistEntry.deleteMany({
-    where: {
-      OR: [
-        ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
-        ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
-      ].filter(Boolean) as { userId?: { in: string[] }; journeyId?: { in: string[] } }[],
-    },
-  });
-  await db.ticket.deleteMany({
-    where: {
-      OR: [
-        ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
-        ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
-      ].filter(Boolean) as { userId?: { in: string[] }; journeyId?: { in: string[] } }[],
-    },
-  });
-  await db.tripPositionLog.deleteMany({
-    where: ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
-  });
-  await db.journeyStop.deleteMany({
-    where: ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
-  });
-  await db.walletTransaction.deleteMany({
-    where: {
-      wallet: ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
-    },
-  });
+  // Only delete entities created by this test context. If the arrays are empty,
+  // we do NOT run broad deleteMany calls (which would affect seeded/dev data).
+  if (ctx.userIds.length > 0 || ctx.journeyIds.length > 0) {
+    await db.waitlistEntry.deleteMany({
+      where: {
+        OR: [
+          ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
+          ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
+        ].filter(Boolean) as { userId?: { in: string[] }; journeyId?: { in: string[] } }[],
+      },
+    });
+    await db.ticket.deleteMany({
+      where: {
+        OR: [
+          ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
+          ctx.journeyIds.length > 0 ? { journeyId: { in: ctx.journeyIds } } : undefined,
+        ].filter(Boolean) as { userId?: { in: string[] }; journeyId?: { in: string[] } }[],
+      },
+    });
+  }
+
+  if (ctx.journeyIds.length > 0) {
+    await db.tripPositionLog.deleteMany({
+      where: { journeyId: { in: ctx.journeyIds } },
+    });
+    await db.journeyStop.deleteMany({
+      where: { journeyId: { in: ctx.journeyIds } },
+    });
+  }
+
+  if (ctx.userIds.length > 0) {
+    await db.walletTransaction.deleteMany({
+      where: {
+        wallet: { userId: { in: ctx.userIds } },
+      },
+    });
+  }
 
   if (ctx.userIds.length > 0) {
     await db.user.updateMany({
@@ -169,27 +179,37 @@ async function cleanupContext(ctx: TestContext) {
     });
   }
 
-  await db.journey.deleteMany({
-    where: ctx.journeyIds.length > 0 ? { id: { in: ctx.journeyIds } } : undefined,
-  });
-  await db.vehicle.deleteMany({
-    where: ctx.vehicleIds.length > 0 ? { id: { in: ctx.vehicleIds } } : undefined,
-  });
-  await db.station.deleteMany({
-    where: ctx.stationIds.length > 0 ? { id: { in: ctx.stationIds } } : undefined,
-  });
-  await db.agency.deleteMany({
-    where: ctx.agencyIds.length > 0 ? { id: { in: ctx.agencyIds } } : undefined,
-  });
-  await db.wallet.deleteMany({
-    where: ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
-  });
-  await db.passkey.deleteMany({
-    where: ctx.userIds.length > 0 ? { userId: { in: ctx.userIds } } : undefined,
-  });
-  await db.user.deleteMany({
-    where: ctx.userIds.length > 0 ? { id: { in: ctx.userIds } } : undefined,
-  });
+  if (ctx.journeyIds.length > 0) {
+    await db.journey.deleteMany({
+      where: { id: { in: ctx.journeyIds } },
+    });
+  }
+  if (ctx.vehicleIds.length > 0) {
+    await db.vehicle.deleteMany({
+      where: { id: { in: ctx.vehicleIds } },
+    });
+  }
+  if (ctx.stationIds.length > 0) {
+    await db.station.deleteMany({
+      where: { id: { in: ctx.stationIds } },
+    });
+  }
+  if (ctx.agencyIds.length > 0) {
+    await db.agency.deleteMany({
+      where: { id: { in: ctx.agencyIds } },
+    });
+  }
+  if (ctx.userIds.length > 0) {
+    await db.wallet.deleteMany({
+      where: { userId: { in: ctx.userIds } },
+    });
+    await db.passkey.deleteMany({
+      where: { userId: { in: ctx.userIds } },
+    });
+    await db.user.deleteMany({
+      where: { id: { in: ctx.userIds } },
+    });
+  }
 }
 
 async function registerVerifiedClient(ctx: TestContext, suffix: string) {
