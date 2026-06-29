@@ -176,6 +176,11 @@ export default function SupportChat() {
           )}
         </div>
 
+        {/* AI Disclaimer — centered */}
+        <div className="border-t border-ink-100 bg-ink-50/50 px-4 py-2 text-center">
+          <p className="text-[11px] text-ink-400">Powered by AI · Responses are generated, not human</p>
+        </div>
+
         {/* Error state */}
         {error && (
           <div className="border-t border-flame-100 bg-flame-50 px-4 py-3 text-sm text-flame-700">
@@ -221,7 +226,6 @@ export default function SupportChat() {
               </svg>
             </button>
           </div>
-          <p className="mt-1.5 text-[10px] text-ink-300">Powered by AI · Responses are generated, not human</p>
         </form>
       </div>
     </section>

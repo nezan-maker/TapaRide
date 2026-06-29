@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { cn } from '../lib/utils'
 import Fa from '../components/Fa'
 import SupportChat from '../components/SupportChat'
+import { useAuth } from '../lib/auth'
 
 const channels = [
-  { icon: 'phone', title: 'Call us', detail: '+250 788 000 000', note: 'Mon–Sun, 6am–10pm' },
+  { icon: 'phone', title: 'Call us', detail: '+250 795 652 826', note: 'Mon–Sun, 6am–10pm' },
   { icon: 'mail', title: 'Email', detail: 'support@taparide.rw', note: 'Replies within 24h' },
   { icon: 'message', title: 'Live chat', detail: 'Tapa Assist below', note: 'AI support · instant' },
 ]
@@ -36,6 +37,8 @@ const faqs = [
 
 export default function Support() {
   const [open, setOpen] = useState(0)
+  const { user } = useAuth()
+  const isLoggedIn = !!user
 
   return (
     <div className="bg-mist">
@@ -72,7 +75,7 @@ export default function Support() {
           ))}
         </div>
 
-        <SupportChat />
+        {!isLoggedIn && <SupportChat />}
 
         <div className="mx-auto mt-12 max-w-3xl">
           <h2 className="text-center text-2xl font-extrabold text-ink-900">

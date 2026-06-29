@@ -62,14 +62,14 @@ export default function DashboardLayout() {
             <button
               type="button"
               onClick={() => setTrekOpen(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-600 hover:bg-ink-50"
+              className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-900 hover:bg-ink-50"
               aria-label="Open Trek assistant"
             >
               <svg className="h-5 w-5" viewBox="0 0 100 50" fill="none">
-                <rect x="8" y="10" width="72" height="24" rx="6" fill="currentColor" opacity="0.9" />
+                <rect x="8" y="10" width="72" height="24" rx="6" fill="currentColor" />
                 <rect x="8" y="32" width="72" height="3" fill="#EA580C" />
-                <circle cx="20" cy="38" r="4" fill="currentColor" opacity="0.7" />
-                <circle cx="68" cy="38" r="4" fill="currentColor" opacity="0.7" />
+                <circle cx="20" cy="38" r="4" fill="currentColor" />
+                <circle cx="68" cy="38" r="4" fill="currentColor" />
               </svg>
             </button>
             <Link
