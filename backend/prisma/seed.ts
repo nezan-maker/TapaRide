@@ -20,7 +20,7 @@ const ARGON2_CONFIG = {
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // ─── Clear existing data ───────────────────────────────────────────────────
+  // ─── Clear existing data (order matters for FK constraints) ────────────────
   await db.boardingEvent.deleteMany();
   await db.bulkPassenger.deleteMany();
   await db.bulkBooking.deleteMany();
@@ -28,13 +28,13 @@ async function main() {
   await db.walletTransaction.deleteMany();
   await db.ticket.deleteMany();
   await db.parcel.deleteMany();
+  await db.waitlistEntry.deleteMany();  // must delete before Journey (RESTRICT FK)
   await db.journeyStop.deleteMany();
   await db.journey.deleteMany();
   await db.tripPositionLog.deleteMany();
   await db.vehicle.deleteMany();
   await db.station.deleteMany();
   await db.passkey.deleteMany();
-  await db.waitlistEntry.deleteMany();
   await db.idempotencyKey.deleteMany();
   await db.wallet.deleteMany();
   await db.agency.deleteMany();
