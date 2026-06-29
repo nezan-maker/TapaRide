@@ -146,6 +146,13 @@ export async function registerUser(dto: RegisterDto) {
   });
   await sendVerificationEmail(user.email, emailToken);
 
+  // If a phone number was supplied at registration, issue an OTP immediately
+  // so the user can complete verification before logging in.
+  if (dto.phone) {
+    const otp = await generateOtp(dto.phone);
+    await sendOtpSms(dto.phone, otp);
+  }
+
   // In development, return tokens for easy testing/pitching
   const devInfo: Record<string, string> = {};
   if (env.NODE_ENV === "development") {

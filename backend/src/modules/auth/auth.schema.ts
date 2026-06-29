@@ -11,7 +11,7 @@ export const registerSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
-  phone: z.string().regex(/^\\+?[1-9]\\d{7,14}$/, 'Invalid phone number').optional(),
+  phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, 'Invalid phone number').optional(),
   role: z.nativeEnum(Role).optional().default('CLIENT'),
   // Required only for DRIVER and MANAGER
   agencyIssuedId: z.string().optional(),

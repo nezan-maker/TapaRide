@@ -22,6 +22,7 @@ const otpLimiter = rateLimit({
 // ─── Public routes ────────────────────────────────────────────────────────
 router.post('/register', authWriteLimiter, AuthController.register);
 router.get('/verify-email', otpLimiter, AuthController.verifyEmail);
+router.post('/verify-otp', otpLimiter, AuthController.verifyOtp);
 router.post('/login', authWriteLimiter, AuthController.login);
 router.post('/refresh', authWriteLimiter, AuthController.refresh);
 router.post('/forgot-password', otpLimiter, AuthController.forgotPassword);
@@ -42,7 +43,6 @@ router.post('/passkey/register-verify', authenticate, AuthController.passkeyRegi
 // ─── Authenticated routes ────────────────────────────────────────────────
 router.post('/onboarding', authenticate, AuthController.onboarding);
 router.post('/send-phone-otp', authenticate, AuthController.sendPhoneOtp);
-router.post('/verify-otp', authenticate, AuthController.verifyOtp);
 router.post('/change-password', authWriteLimiter, authenticate, AuthController.changePassword);
 router.post('/logout', authenticate, AuthController.logout);
 
