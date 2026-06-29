@@ -5,8 +5,12 @@ import { logger } from './logger.js';
 export function createRedisConnection() {
   const url = env.REDIS_URL;
   const isSSL = url.startsWith('rediss://');
+  const isTest = env.NODE_ENV === 'test';
   return new Redis(url, {
-    maxRetriesPerRequest: 3,
+    // BullMQ recommends disabling maxRetriesPerRequest so jobs do not fail
+    // because of transient reconnects. We apply that in tests so integration
+    // runs are deterministic.
+    maxRetriesPerRequest: isTest ? null : 3,
     retryStrategy: (times) => {
       if (times > 10) {
         logger.error('Redis max retries reached, giving up');
@@ -15,7 +19,9 @@ export function createRedisConnection() {
       const delay = Math.min(times * 200, 2000);
       return delay;
     },
-    lazyConnect: true,
+    // BullMQ expects an active connection; lazyConnect causes Worker/Queue
+    // startup to fail in some environments (integration tests).
+    lazyConnect: isTest ? false : true,
     enableOfflineQueue: true,
     ...(isSSL ? { tls: {} } : {}),
   });
