@@ -3,6 +3,8 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { cn } from "../lib/utils";
 import Fa from "./Fa";
+import { MAP_DEFAULT_CENTER, MAP_STYLE_URL } from "../lib/config";
+import { parseStationLocationToLngLat } from "../lib/station-location";
 
 interface MapTrackingProps {
   position: { lat: number; lng: number; speed: number; timestamp: number } | null;
@@ -13,10 +15,9 @@ interface MapTrackingProps {
   className?: string;
 }
 
-// Parse "lat,lng" string to [lng, lat] array for MapLibre
+// Parse station location to [lng, lat] for MapLibre
 function parseLocation(loc: string): [number, number] | null {
-  const [lat, lng] = loc.split(",").map(Number);
-  return Number.isFinite(lat) && Number.isFinite(lng) ? [lng, lat] : null;
+  return parseStationLocationToLngLat(loc);
 }
 
 export default function TripMap({
@@ -45,8 +46,8 @@ export default function TripMap({
     try {
       map.current = new maplibregl.Map({
         container: mapContainer.current,
-        style: "https://demotiles.maplibre.org/style.json",
-        center: vehicleCoords || sourceCoords || [30.06, -1.94],
+        style: MAP_STYLE_URL,
+        center: vehicleCoords || sourceCoords || MAP_DEFAULT_CENTER,
         zoom: vehicleCoords ? 14 : 8,
         attributionControl: false,
       });
