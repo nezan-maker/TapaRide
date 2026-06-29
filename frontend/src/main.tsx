@@ -32,6 +32,7 @@ import AcceptInvite from "./pages/auth/AcceptInvite";
 
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
+import TrekDashboard from "./pages/dashboard/TrekDashboard";
 import MyTrips from "./pages/dashboard/MyTrips";
 import MyParcels from "./pages/dashboard/MyParcels";
 import Notifications from "./pages/dashboard/Notifications";
@@ -87,6 +88,14 @@ const router = createBrowserRouter([
       { path: "payments", element: <PaymentMethods /> },
       { path: "settings", element: <Settings /> },
     ],
+  },
+  {
+    path: "dashboard/trek",
+    element: (
+      <ProtectedRoute allowedRoles={['CLIENT', 'DRIVER', 'MANAGER', 'OWNER', 'ORGANIZATION']}>
+        <TrekDashboard />
+      </ProtectedRoute>
+    ),
   },
   { path: "*", element: <NotFound /> },
 ]);

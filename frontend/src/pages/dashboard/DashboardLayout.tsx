@@ -5,11 +5,9 @@ import { cn } from '../../lib/utils'
 
 import { useAuth } from '../../lib/auth'
 import Fa from '../../components/Fa';
-import TrekChat from '../../components/TrekChat'
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false)
-  const [trekOpen, setTrekOpen] = useState(false)
   const location = useLocation()
   const { user, logout } = useAuth()
 
@@ -40,6 +38,7 @@ export default function DashboardLayout() {
 
   nav.push(
     { to: '/dashboard/notifications', label: 'Notifications', icon: 'bell' },
+    { to: '/dashboard/trek', label: 'Trek', icon: 'message' },
     { to: '/dashboard/settings', label: 'Settings', icon: 'settingsicon' },
   )
 
@@ -59,19 +58,6 @@ export default function DashboardLayout() {
             <Logo />
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setTrekOpen(true)}
-              className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-900 hover:bg-ink-50"
-              aria-label="Open Trek assistant"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 100 50" fill="none">
-                <rect x="8" y="10" width="72" height="24" rx="6" fill="currentColor" />
-                <rect x="8" y="32" width="72" height="3" fill="#EA580C" />
-                <circle cx="20" cy="38" r="4" fill="currentColor" />
-                <circle cx="68" cy="38" r="4" fill="currentColor" />
-              </svg>
-            </button>
             <Link
               to="/dashboard/notifications"
               className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-600 hover:bg-ink-50"
@@ -164,7 +150,6 @@ export default function DashboardLayout() {
         </main>
       </div>
       <ScrollRestoration />
-      <TrekChat isOpen={trekOpen} onClose={() => setTrekOpen(false)} />
     </div>
   )
 }
