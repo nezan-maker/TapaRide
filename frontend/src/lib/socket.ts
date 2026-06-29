@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+import { API_BASE } from './config';
 
 let socket: Socket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;

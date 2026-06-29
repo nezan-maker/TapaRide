@@ -5,8 +5,8 @@ import { api, ApiError } from '../lib/api';
 import { rwf } from '../lib/utils';
 import Fa from './Fa';
 
-const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
+import { STRIPE_PUBLISHABLE_KEY } from '../lib/config';
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 interface TopupCheckoutProps {
   amount: number;

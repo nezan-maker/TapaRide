@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { GOOGLE_CLIENT_ID } from "../lib/config";
 
 declare global {
   interface Window {
@@ -17,7 +18,7 @@ let scriptLoaded = false;
 export default function GoogleSignInButton({ onSuccess, onError, disabled }: GoogleSignInButtonProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const [isReady, setIsReady] = useState(false);
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientId = GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     if (!clientId) return;

@@ -1,4 +1,5 @@
 import { friendlyError } from './errors';
+import { API_BASE } from './config';
 
 export class ApiError extends Error {
   status: number;
@@ -13,8 +14,6 @@ export class ApiError extends Error {
     this.details = details;
   }
 }
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
