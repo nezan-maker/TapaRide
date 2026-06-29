@@ -101,8 +101,8 @@ export async function registerUser(dto: RegisterDto) {
     where: {
       OR: [
         { email: dto.email },
-        ...(dto.phone ? [{ phone: dto.phone }] : []),
-      ].filter(Boolean) as any,
+        { phone: dto.phone },
+      ],
     },
   });
   if (existing) {
@@ -121,7 +121,7 @@ export async function registerUser(dto: RegisterDto) {
       data: {
         email: dto.email,
         password: hashedPassword,
-        phone: dto.phone || `temp_${Date.now()}`,
+        phone: dto.phone,
         role: dto.role,
         agencyIssuedId: dto.agencyIssuedId,
         isVerified: false,
@@ -140,18 +140,12 @@ export async function registerUser(dto: RegisterDto) {
     return newUser;
   });
 
-  // Send verification email only (phone verification happens later when user interacts with money)
+  // Send verification email (phone is stored but NOT verified at signup —
+  // phone verification is required only for money-related actions).
   const emailToken = jwt.sign({ userId: user.id }, env.JWT_SECRET, {
     expiresIn: "24h",
   });
   await sendVerificationEmail(user.email, emailToken);
-
-  // If a phone number was supplied at registration, issue an OTP immediately
-  // so the user can complete verification before logging in.
-  if (dto.phone) {
-    const otp = await generateOtp(dto.phone);
-    await sendOtpSms(dto.phone, otp);
-  }
 
   // In development, return tokens for easy testing/pitching
   const devInfo: Record<string, string> = {};
@@ -218,11 +212,6 @@ export async function loginUser(dto: LoginDto) {
   if (!user.isVerified) {
     throw new AuthenticationError(
       "Email verification is still pending for this account.",
-    );
-  }
-  if (!user.phoneVerifiedAt) {
-    throw new AuthenticationError(
-      "Phone verification is still pending for this account.",
     );
   }
 

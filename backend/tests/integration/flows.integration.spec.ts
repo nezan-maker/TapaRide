@@ -241,6 +241,18 @@ async function registerVerifiedClient(ctx: TestContext, suffix: string) {
   );
   assert.equal(verifyEmailResponse.status, 200);
 
+  // Phone OTP is NOT issued at signup — it is triggered by the authenticated
+  // send-phone-otp endpoint (used before money-related actions).
+  const tokenRes = await db.user.findUniqueOrThrow({ where: { email } });
+  const loginToken = jwt.sign({ userId: tokenRes.id }, env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
+  const sendOtpResponse = await requestJson('/api/auth/send-phone-otp', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${loginToken}` },
+  });
+  assert.equal(sendOtpResponse.status, 200);
+
   const otp = await redis.get(`otp:phone:${phone}`);
   assert.ok(otp);
   const verifyOtpResponse = await requestJson('/api/auth/verify-otp', {
@@ -411,10 +423,10 @@ after(async () => {
   redis.disconnect();
 });
 
-integrationTest('auth flow requires both email and phone verification', async () => {
+integrationTest('auth flow: email gates login, phone gates money actions', async () => {
   const ctx = createContext();
   const email = 'auth.flow@example.com';
-  const phone = '+250790000001';
+  const phone = '+250****0001';
   const password = 'Password123!';
   ctx.redisKeys.push(`otp:phone:${phone}`);
 
@@ -429,6 +441,7 @@ integrationTest('auth flow requires both email and phone verification', async ()
     const user = await db.user.findUniqueOrThrow({ where: { email } });
     ctx.userIds.push(user.id);
 
+    // Cannot login before email verification.
     const loginBeforeVerify = await requestJson('/api/auth/login', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -437,6 +450,7 @@ integrationTest('auth flow requires both email and phone verification', async ()
     assert.equal(loginBeforeVerify.status, 401);
     assert.match(loginBeforeVerify.body.error, /Email verification/);
 
+    // Verify email.
     const emailToken = jwt.sign({ userId: user.id }, env.JWT_SECRET, {
       expiresIn: '24h',
     });
@@ -445,13 +459,31 @@ integrationTest('auth flow requires both email and phone verification', async ()
     );
     assert.equal(verifyEmailResponse.status, 200);
 
-    const loginBeforePhone = await requestJson('/api/auth/login', {
+    // Login succeeds after email verification (phone NOT required for login).
+    const loginResponse = await requestJson('/api/auth/login', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    assert.equal(loginBeforePhone.status, 401);
-    assert.match(loginBeforePhone.body.error, /Phone verification/);
+    assert.equal(loginResponse.status, 200);
+    assert.ok(loginResponse.body.accessToken);
+    assert.ok(loginResponse.body.refreshToken);
+
+    // Money-related action blocked by phone verification (authenticate middleware).
+    const paymentBlocked = await requestJson('/api/payments/topup', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${loginResponse.body.accessToken}` },
+      body: JSON.stringify({ amount: 1000 }),
+    });
+    assert.equal(paymentBlocked.status, 403);
+    assert.match(paymentBlocked.body.error, /fully verified/);
+
+    // Trigger phone OTP via authenticated endpoint.
+    const sendOtpResponse = await requestJson('/api/auth/send-phone-otp', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${loginResponse.body.accessToken}` },
+    });
+    assert.equal(sendOtpResponse.status, 200);
 
     const otp = await redis.get(`otp:phone:${phone}`);
     assert.ok(otp);
@@ -462,15 +494,7 @@ integrationTest('auth flow requires both email and phone verification', async ()
     });
     assert.equal(verifyOtpResponse.status, 200);
 
-    const loginResponse = await requestJson('/api/auth/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    assert.equal(loginResponse.status, 200);
-    assert.ok(loginResponse.body.accessToken);
-    assert.ok(loginResponse.body.refreshToken);
-
+    // Refresh token works.
     const refreshResponse = await requestJson('/api/auth/refresh', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -478,6 +502,7 @@ integrationTest('auth flow requires both email and phone verification', async ()
     });
     assert.equal(refreshResponse.status, 200);
 
+    // Logout works.
     const logoutResponse = await requestJson('/api/auth/logout', {
       method: 'POST',
       headers: { authorization: `Bearer ${loginResponse.body.accessToken}` },

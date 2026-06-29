@@ -35,7 +35,7 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!email || !password) {
+    if (!email || !password || !phone) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -44,7 +44,7 @@ export default function Signup() {
       const res = await api.post("/api/auth/register", {
         email,
         password,
-        phone: phone || undefined,
+        phone: phone,
         role: role || 'CLIENT',
       });
       setSuccess({ verifyEmailLink: res.verifyEmailLink });
@@ -193,7 +193,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="label">Phone (optional)</label>
+              <label className="label">Phone</label>
               <div className="relative">
                 <Fa name="phone" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
@@ -203,6 +203,7 @@ export default function Signup() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={loading}
+                  required
                 />
               </div>
               <p className="mt-1.5 text-xs text-ink-400">Used later for payment verification.</p>
