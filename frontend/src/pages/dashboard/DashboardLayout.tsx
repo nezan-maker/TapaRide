@@ -5,7 +5,7 @@ import { cn } from '../../lib/utils'
 
 import { useAuth } from '../../lib/auth'
 import Fa from '../../components/Fa';
-
+import DarkModeToggle from '../../components/DarkModeToggle'
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
@@ -58,6 +58,7 @@ export default function DashboardLayout() {
             <Logo />
           </div>
           <div className="flex items-center gap-3">
+            <DarkModeToggle />
             <Link
               to="/dashboard/notifications"
               className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink-100 text-ink-600 hover:bg-ink-50"

@@ -6,7 +6,36 @@
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #fafafa;
+    --surface: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #aeaeb2;
+    --border: #e5e5ea;
+    --border-light: #f0f0f5;
+    --accent: #10075C;
+    --accent-light: #1a0d7a;
+    --flame: #EA580C;
+    --flame-light: #F97316;
+  }
+
+  html.dark {
+    --bg: #000000;
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --surface: #1c1c1e;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-tertiary: #636366;
+    --border: #38383a;
+    --border-light: #2c2c2e;
+    --accent: #4a3aff;
+    --accent-light: #5e5ce6;
+    --flame: #F97316;
+    --flame-light: #fb923c;
   }
 
   html {
@@ -14,11 +43,21 @@
   }
 
   body {
-    @apply bg-white text-ink-900 font-sans antialiased;
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
     @apply bg-ink-900/90 text-white;
+  }
+
+  .dark ::selection {
+    background: var(--accent);
+    color: white;
   }
 
   /* Slim, on-brand scrollbars */
