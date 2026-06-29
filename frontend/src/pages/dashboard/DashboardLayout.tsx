@@ -65,11 +65,12 @@ export default function DashboardLayout() {
               <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-flame-600" />
             </Link>
             <div className="flex items-center gap-2">
-              <img
-                src={`https://api.dicebear.com/7.x/bottts/svg?seed=${user?.email || 'default'}`}
-                alt="avatar"
-                className="h-9 w-9 rounded-full object-cover bg-ink-50"
-              />
+              <div className="grid h-9 w-9 place-items-center rounded-full bg-ink-100 text-ink-500">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                </svg>
+              </div>
               <div className="hidden text-sm leading-tight sm:block">
                 <div className="font-semibold text-ink-900">{user?.role || 'Guest'}</div>
                 <div className="text-xs text-ink-400">{user?.email || 'email@taparide.onrender.com'}</div>

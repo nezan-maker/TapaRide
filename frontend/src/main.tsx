@@ -6,7 +6,7 @@ import { AuthProvider, ProtectedRoute } from "./lib/auth"
 import FloatingAssistant from "./components/FloatingAssistant"
 
 import SiteLayout from "./components/SiteLayout";
-import Landing from "./pages/Landing";
+import AuthenticatedRedirect from "./pages/AuthenticatedRedirect";
 import SearchResults from "./pages/SearchResults";
 import TripDetail from "./pages/TripDetail";
 import Booking from "./pages/Booking";
@@ -44,7 +44,7 @@ const router = createBrowserRouter([
   {
     element: <SiteLayout />,
     children: [
-      { path: "/", element: <Landing /> },
+      { path: "/", element: <AuthenticatedRedirect /> },
       { path: "/search", element: <SearchResults /> },
       { path: "/trip/:tripId", element: <TripDetail /> },
       { path: "/booking", element: <ProtectedRoute allowedRoles={['CLIENT']}><Booking /></ProtectedRoute> },
