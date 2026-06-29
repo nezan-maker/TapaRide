@@ -431,10 +431,16 @@ async function verifyGoogleToken(idToken: string) {
     };
   }
 
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new AuthenticationError(
+      "Google Sign-In is not configured on the server (missing GOOGLE_CLIENT_ID)",
+    );
+  }
+
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: env.GOOGLE_CLIENT_ID, // optional: if not set, audience is not verified
+      audience: env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     if (!payload?.email) {
