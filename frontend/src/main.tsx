@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import "./index.css"
 import { AuthProvider, ProtectedRoute } from "./lib/auth"
-import FloatingAssistant from "./components/FloatingAssistant"
 
 import SiteLayout from "./components/SiteLayout";
 import AuthenticatedRedirect from "./pages/AuthenticatedRedirect";
@@ -95,7 +94,6 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
-      <FloatingAssistant />
       <RouterProvider router={router} />
     </AuthProvider>
   </StrictMode>,
