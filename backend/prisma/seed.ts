@@ -1,19 +1,14 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
 import * as argon2 from 'argon2';
 import { encryptBalance } from '../src/lib/crypto';
+import { createPrismaClient } from '../src/lib/prisma-client';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL not found — check backend/.env exists');
 }
 
-neonConfig.webSocketConstructor = ws;
-
-const adapter = new PrismaNeon({ connectionString: process.env['DATABASE_URL'] });
-const db = new PrismaClient({ adapter });
+const db = createPrismaClient() as PrismaClient;
 
 const ARGON2_CONFIG = {
   type: argon2.argon2id,

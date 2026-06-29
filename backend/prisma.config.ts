@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
+    // Neon: set DIRECT_URL to the non-pooler host for migrations.
+    // Local: omit DIRECT_URL — falls back to DATABASE_URL (with your password).
     url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

@@ -1,12 +1,8 @@
 import 'dotenv/config';
 import { PrismaClient, Prisma } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
 
 import { logger } from './logger.js';
-
-const connectionString = `${process.env['DATABASE_URL']}`;
-
-const adapter = new PrismaNeon({ connectionString });
+import { createPrismaClient } from './prisma-client.js';
 
 // Singleton pattern — reuse the same connection across the app.
 // In development, attach to `global` to prevent multiple instances
@@ -24,8 +20,7 @@ const prismaLogging =
 
 export const db =
   globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
+  createPrismaClient({
     log: prismaLogging,
   });
 

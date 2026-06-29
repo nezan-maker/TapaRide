@@ -37,7 +37,8 @@ const token = (bytes) =>
 //
 const vars = [
   // ── Database ───────────────────────────────────────────────────────────────
-  { key: 'DATABASE_URL',       kind: 'input',    desc: 'PostgreSQL connection string (full URL)' },
+  { key: 'DATABASE_URL',       kind: 'input',    desc: 'PostgreSQL connection string (local or Neon pooled URL)' },
+  { key: 'DIRECT_URL',         kind: 'input',    desc: 'Direct PostgreSQL URL for Prisma migrations (Neon: non-pooler host; optional locally)' },
 
   // ── Server ─────────────────────────────────────────────────────────────────
   { key: 'PORT',               kind: 'optional', default: '3000',        desc: 'HTTP listen port' },
